@@ -2,6 +2,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.ikigai import Ikigai
-
-__all__ = ["Ikigai"]
+__all__: list[str] = []
