@@ -10,9 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 keywords = []
-authors = [
-  { name = "Harsh Parekh", email = "harsh@ikigailabs.io" },
-]
+authors = [{ name = "Harsh Parekh", email = "harsh@ikigailabs.io" }]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
@@ -23,58 +21,66 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = ["pydantic>=2.0", "email-validator", "requests"]
 
 [project.urls]
-Documentation = "https://github.com/ikigailabs/ikigai#readme"
-Issues = "https://github.com/ikigailabs/ikigai/issues"
-Source = "https://github.com/ikigailabs/ikigai"
+Documentation = "https://github.com/ikigailabs/ikigai#readme" # TODO: Update
+Issues = "https://github.com/ikigailabs/ikigai/issues"        # TODO: Update
+Source = "https://github.com/ikigailabs/ikigai"               # TODO: Update
 
+# Confiuring Tooling
+
+## Configure hatch
+
+### Point hatch's build tool to the package version
 [tool.hatch.version]
 path = "src/ikigai/__about__.py"
 
-[tool.hatch.envs.default]
-dependencies = [
-  "coverage[toml]>=6.5",
-  "pytest",
-]
-[tool.hatch.envs.default.scripts]
-test = "pytest {args:tests}"
-test-cov = "coverage run -m pytest {args:tests}"
-cov-report = [
-  "- coverage combine",
-  "coverage report",
-]
-cov = [
-  "test-cov",
-  "cov-report",
-]
-
+### Setup hatch for testing package across multiple python versions
 [[tool.hatch.envs.all.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
 
+### Setup venv used for development
+[tool.hatch.envs.default]
+dependencies = ["coverage[toml]>=6.5", "pytest"]
+
+### Setup scripts for testing and coverage reporting
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = ["- coverage combine", "coverage report", "coverage html"]
+cov = ["test-cov", "cov-report"]
+cov-display = ["cov", "open htmlcov/index.html || xdg-open htmlcov/index.html"]
+
+### Setup venv for linting and static analysis
+[tool.hatch.envs.hatch-static-analysis]
+config-path = "none"
+
+### Setup venv for type-checking
 [tool.hatch.envs.types]
-dependencies = [
-  "mypy>=1.0.0",
-]
+dependencies = ["mypy>=1.0.0", "pytest"]
+
+### Setup scripts to run type checking
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/ikigai tests}"
 
+## Configure coverage
 [tool.coverage.run]
 source_pkgs = ["ikigai", "tests"]
 branch = true
 parallel = true
-omit = [
-  "src/ikigai/__about__.py",
-]
+omit = ["src/ikigai/__about__.py"]
 
 [tool.coverage.paths]
 ikigai = ["src/ikigai", "*/ikigai/src/ikigai"]
 tests = ["tests", "*/ikigai/tests"]
 
 [tool.coverage.report]
-exclude_lines = [
+exclude_also = [
   "no cov",
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
 ]
