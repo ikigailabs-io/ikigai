@@ -42,7 +42,7 @@ python = ["3.9", "3.10", "3.11", "3.12"]
 
 ### Setup venv used for development
 [tool.hatch.envs.default]
-dependencies = ["coverage[toml]>=6.5", "pytest"]
+dependencies = ["coverage[toml]>=6.5", "pytest", "ipython"]
 
 ### Setup scripts for testing and coverage reporting
 [tool.hatch.envs.default.scripts]
