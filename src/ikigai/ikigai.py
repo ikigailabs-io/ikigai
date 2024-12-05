@@ -35,3 +35,7 @@ class Ikigai:
         }
 
         return NamedMapping(projects)
+
+    @property
+    def project(self) -> components.ProjectBuilder:
+        return components.ProjectBuilder(session=self.__session)

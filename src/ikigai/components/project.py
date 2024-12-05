@@ -7,6 +7,57 @@ import sys
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from ikigai.client.session import Session
+from ikigai.utils.protocols import Directory
+
+
+class ProjectBuilder:
+    _name: str
+    _description: str
+    _directory: dict[str, str]
+    _icon: str
+    _images: list[str]
+    __session: Session
+
+    def __init__(self, session: Session) -> None:
+        self.__session = session
+        self._name = ""
+        self._description = ""
+        self._directory = dict()
+        self._icon = ""
+        self._images = list()
+
+    def new(self, name: str) -> Self:
+        self._name = name
+        return self
+
+    def description(self, description: str) -> Self:
+        self._description = description
+        return self
+
+    def directory(self, directory: Directory) -> Self:
+        self._directory = {
+            "directory_id": directory.directory_id,
+            "type": directory.type,
+        }
+        return self
+
+    def build(self) -> Project:
+        resp = self.__session.post(
+            path="/component/create-project",
+            json={
+                "project": {
+                    "name": self._name,
+                    "description": self._description,
+                    "directory": self._directory,
+                },
+            },
+        ).json()
+        project_id = resp["project_id"]
+        resp = self.__session.get(
+            path="/component/get-project", params={"project_id": project_id}
+        ).json()
+        project = Project.from_dict(data=resp["project"], session=self.__session)
+        return project
 
 # Multiple python version compatible import for Self
 if sys.version_info >= (3, 11):

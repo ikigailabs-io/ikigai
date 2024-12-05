@@ -7,3 +7,8 @@ from typing import Protocol
 
 class Named(Protocol):
     name: str
+
+
+class Directory(Protocol):
+    directory_id: str
+    type: str
