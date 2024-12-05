@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from typing import Generic, Optional, Mapping, TypeVar
+from typing import Generic, Mapping, TypeVar
 from collections import abc
 
 from ikigai.utils.protocols import Named
@@ -31,5 +31,5 @@ class NamedMapping(Generic[VT], Mapping[str, VT]):
     def __len__(self) -> int:
         return len(self._mapping)
 
-    def get_id(self, id: str) -> Optional[VT]:
+    def get_id(self, id: str) -> VT:
         return self._mapping[id]
