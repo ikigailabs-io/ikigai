@@ -30,3 +30,10 @@ class Project(BaseModel):
         self = cls.model_validate(data)
         self.__session = session
         return self
+
+    def delete(self) -> None:
+        self.__session.post(
+            path="/component/delete-project",
+            json={"project": {"project_id": self.project_id}},
+        )
+        return None
