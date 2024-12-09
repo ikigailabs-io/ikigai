@@ -5,9 +5,16 @@
 from __future__ import annotations
 import sys
 from datetime import datetime
+from typing import Any
 from pydantic import BaseModel, EmailStr
 from ikigai.client.session import Session
 from ikigai.utils.protocols import Directory
+
+# Multiple python version compatible import for Self
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 
 class ProjectBuilder:
@@ -59,12 +66,6 @@ class ProjectBuilder:
         project = Project.from_dict(data=resp["project"], session=self.__session)
         return project
 
-# Multiple python version compatible import for Self
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
-
 
 class Project(BaseModel):
     project_id: str
@@ -82,9 +83,52 @@ class Project(BaseModel):
         self.__session = session
         return self
 
+    def to_dict(self) -> dict:
+        return {
+            "project_id": self.project_id,
+            "name": self.name,
+            "owner": self.owner,
+            "description": self.description,
+            "created_at": self.created_at,
+            "modified_at": self.modified_at,
+            "last_used_at": self.last_used_at,
+        }
+
     def delete(self) -> None:
         self.__session.post(
             path="/component/delete-project",
             json={"project": {"project_id": self.project_id}},
         )
         return None
+
+    def rename(self, name: str) -> Self:
+        _ = self.__session.post(
+            path="/component/edit-pipeline",
+            json={"project": {"project_id": self.project_id, "name": name}},
+        )
+        # TODO: handle error case, currently it is a raise NotImplemented from Session
+        self.name = name
+        return self
+
+    def update_description(self, description: str) -> Self:
+        _ = self.__session.post(
+            path="/component/edit-pipeline",
+            json={
+                "project": {"project_id": self.project_id, "description": description}
+            },
+        ).json()
+        # TODO: handle error case, currently it is a raise NotImplemented from Session
+        self.description = description
+        return self
+
+    def describe(self) -> dict:
+        response: dict[str, Any] = self.__session.get(
+            path="/component/get-components-for-project",
+            params={"project_id": self.project_id},
+        ).json()
+
+        # Combine components information with project info
+        return_value = dict(response)
+        return_value["project"] = self.to_dict()
+
+        return return_value
