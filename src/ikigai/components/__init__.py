@@ -2,6 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.components.project import Project
+from ikigai.components.project import Project, ProjectBuilder
 
-__all__ = ["Project"]
+__all__ = ["Project", "ProjectBuilder"]
