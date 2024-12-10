@@ -6,12 +6,10 @@ import pytest
 from ikigai import Ikigai
 
 
-def test_project_creation(ikigai: Ikigai) -> None:
+def test_project_creation(ikigai: Ikigai, project_name: str) -> None:
     projects = ikigai.projects()
     project = (
-        ikigai.project.new(name="TODO random name")
-        .description("A test project")
-        .build()
+        ikigai.project.new(name=project_name).description("A test project").build()
     )
     projects_after_creation = ikigai.projects()
 

@@ -10,3 +10,8 @@ from ikigai import Ikigai
 @pytest.fixture
 def ikigai(cred: dict[str, Any]) -> Ikigai:
     return Ikigai(**cred)
+
+
+@pytest.fixture
+def project_name(random_name: str) -> str:
+    return f"proj-{random_name}"
