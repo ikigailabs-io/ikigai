@@ -103,7 +103,7 @@ class Project(BaseModel):
 
     def rename(self, name: str) -> Self:
         _ = self.__session.post(
-            path="/component/edit-pipeline",
+            path="/component/edit-project",
             json={"project": {"project_id": self.project_id, "name": name}},
         )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
@@ -112,7 +112,7 @@ class Project(BaseModel):
 
     def update_description(self, description: str) -> Self:
         _ = self.__session.post(
-            path="/component/edit-pipeline",
+            path="/component/edit-project",
             json={
                 "project": {"project_id": self.project_id, "description": description}
             },
@@ -128,7 +128,10 @@ class Project(BaseModel):
         ).json()
 
         # Combine components information with project info
-        return_value = dict(response)
+        return_value = {
+            "project": self.to_dict(),
+            "components": response["project_components"][self.project_id],
+        }
         return_value["project"] = self.to_dict()
 
         return return_value
