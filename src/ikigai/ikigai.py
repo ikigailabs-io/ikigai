@@ -22,20 +22,20 @@ class Ikigai:
         session.headers.update({"user": self.user_email, "api-key": self.api_key})
         self.__session = Session(base_url=str(self.base_url), session=session)
 
-    def projects(self) -> NamedMapping[components.Project]:
+    def apps(self) -> NamedMapping[components.App]:
         resp = self.__session.get("/component/get-projects-for-user").json()
-        projects = {
-            project.project_id: project
-            for project in map(
-                lambda project_dict: components.Project.from_dict(
-                    data=project_dict, session=self.__session
+        apps = {
+            app.app_id: app
+            for app in map(
+                lambda app_dict: components.App.from_dict(
+                    data=app_dict, session=self.__session
                 ),
                 resp["projects"],
             )
         }
 
-        return NamedMapping(projects)
+        return NamedMapping(apps)
 
     @property
-    def project(self) -> components.ProjectBuilder:
-        return components.ProjectBuilder(session=self.__session)
+    def app(self) -> components.AppBuilder:
+        return components.AppBuilder(session=self.__session)

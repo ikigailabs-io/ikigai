@@ -13,5 +13,5 @@ def ikigai(cred: dict[str, Any]) -> Ikigai:
 
 
 @pytest.fixture
-def project_name(random_name: str) -> str:
+def app_name(random_name: str) -> str:
     return f"proj-{random_name}"

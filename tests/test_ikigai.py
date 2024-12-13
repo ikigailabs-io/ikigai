@@ -13,14 +13,14 @@ def test_client_init(cred: dict[str, Any]) -> None:
     assert ikigai
 
 
-def test_client_projects(cred: dict[str, Any]) -> None:
+def test_client_apps(cred: dict[str, Any]) -> None:
     ikigai = Ikigai(**cred)
-    projects = ikigai.projects()
-    assert len(projects) > 0
+    apps = ikigai.apps()
+    assert len(apps) > 0
 
 
-def test_client_project_get_item(cred: dict[str, Any]) -> None:
+def test_client_app_get_item(cred: dict[str, Any]) -> None:
     ikigai = Ikigai(**cred)
-    projects = ikigai.projects()
+    apps = ikigai.apps()
     with pytest.raises(KeyError):
-        projects["Testing"]
+        apps["Testing"]

@@ -88,7 +88,6 @@ If everything went well, you will see something like:
 cmd [1] | coverage run -m pytest tests
 ======================== test session starts =========================
 platform linux -- Python 3.12.7, pytest-8.3.3, pluggy-1.5.0
-rootdir: /home/hpar/Documents/hXtreme/ikigai
 configfile: pyproject.toml
 collected 2 items
 
@@ -96,7 +95,6 @@ tests/test_ikigai.py ..                                        [100%]
 
 ========================= 2 passed in 2.26s ==========================
 cmd [2] | - coverage combine
-Combined data file .coverage.shinobu.1737439.XRdReulx
 cmd [3] | coverage report
 Name                                Stmts   Miss Branch BrPart  Cover
 ---------------------------------------------------------------------
@@ -104,15 +102,13 @@ src/ikigai/__init__.py                  2      0      0      0   100%
 src/ikigai/client/__init__.py           1      0      0      0   100%
 src/ikigai/client/session.py           25      6      6      1    65%
 src/ikigai/components/__init__.py       2      0      0      0   100%
-src/ikigai/components/project.py       19      0      0      0   100%
+src/ikigai/components/app.py           19      0      0      0   100%
 src/ikigai/ikigai.py                   19      0      0      0   100%
 tests/__init__.py                       0      0      0      0   100%
 tests/conftest.py                       4      0      0      0   100%
 tests/test_ikigai.py                    9      0      0      0   100%
 ---------------------------------------------------------------------
 TOTAL                                  81      6      6      1    87%
-cmd [4] | coverage html
-Wrote HTML report to htmlcov/index.html
 ```
 
 ## Tips and Tricks

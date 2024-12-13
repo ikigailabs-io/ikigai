@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 from datetime import datetime
 from typing import Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from ikigai.client.session import Session
 from ikigai.utils.protocols import Directory
 
@@ -17,7 +17,7 @@ else:
     from typing_extensions import Self
 
 
-class ProjectBuilder:
+class AppBuilder:
     _name: str
     _description: str
     _directory: dict[str, str]
@@ -48,7 +48,7 @@ class ProjectBuilder:
         }
         return self
 
-    def build(self) -> Project:
+    def build(self) -> App:
         resp = self.__session.post(
             path="/component/create-project",
             json={
@@ -59,16 +59,16 @@ class ProjectBuilder:
                 },
             },
         ).json()
-        project_id = resp["project_id"]
+        app_id = resp["project_id"]
         resp = self.__session.get(
-            path="/component/get-project", params={"project_id": project_id}
+            path="/component/get-project", params={"project_id": app_id}
         ).json()
-        project = Project.from_dict(data=resp["project"], session=self.__session)
-        return project
+        app = App.from_dict(data=resp["project"], session=self.__session)
+        return app
 
 
-class Project(BaseModel):
-    project_id: str
+class App(BaseModel):
+    app_id: str = Field(validation_alias="project_id")
     name: str
     owner: EmailStr
     description: str
@@ -85,7 +85,7 @@ class Project(BaseModel):
 
     def to_dict(self) -> dict:
         return {
-            "project_id": self.project_id,
+            "app_id": self.app_id,
             "name": self.name,
             "owner": self.owner,
             "description": self.description,
@@ -97,14 +97,14 @@ class Project(BaseModel):
     def delete(self) -> None:
         self.__session.post(
             path="/component/delete-project",
-            json={"project": {"project_id": self.project_id}},
+            json={"project": {"project_id": self.app_id}},
         )
         return None
 
     def rename(self, name: str) -> Self:
         _ = self.__session.post(
             path="/component/edit-project",
-            json={"project": {"project_id": self.project_id, "name": name}},
+            json={"project": {"project_id": self.app_id, "name": name}},
         )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
@@ -113,9 +113,7 @@ class Project(BaseModel):
     def update_description(self, description: str) -> Self:
         _ = self.__session.post(
             path="/component/edit-project",
-            json={
-                "project": {"project_id": self.project_id, "description": description}
-            },
+            json={"project": {"project_id": self.app_id, "description": description}},
         ).json()
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.description = description
@@ -124,14 +122,13 @@ class Project(BaseModel):
     def describe(self) -> dict:
         response: dict[str, Any] = self.__session.get(
             path="/component/get-components-for-project",
-            params={"project_id": self.project_id},
+            params={"project_id": self.app_id},
         ).json()
 
-        # Combine components information with project info
+        # Combine components information with app info
         return_value = {
-            "project": self.to_dict(),
-            "components": response["project_components"][self.project_id],
+            "app": self.to_dict(),
+            "components": response["project_components"][self.app_id],
         }
-        return_value["project"] = self.to_dict()
 
         return return_value
