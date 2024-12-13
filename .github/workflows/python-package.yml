@@ -41,4 +41,8 @@ jobs:
       with:
         version: 1.13.0
     - name: Run tests
-      run: hatch test -py ${{ matrix.python-version }}
+      env:
+        TEST_ENV: ${{ secrets.TEST_ENV_TOML }}
+      run: |
+        printf "%s" "$TEST_ENV" > ./test-env.toml
+        hatch test -py ${{ matrix.python-version }}

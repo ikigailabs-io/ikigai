@@ -72,6 +72,19 @@ Let's get a quick run-down of the structure of the project:
     └── test_ikigai.py
 ```
 
+Next let's setup your `test-env.toml`.
+Get your api key by logging in on [ikigai](https://app.ikigailabs.io) > Profile > Keys
+Fill in your email id and api key into the following command and run it.
+
+```sh
+cat > ./test-env.toml <<'/EOF'
+[credentials.users.test-user]
+user_email="<YOUR-REGISTERED-EMAIL>"
+api_key="<YOUR-API-KEY>"
+base_url="https://api.ikigailabs.io"
+/EOF
+```
+
 With that you are set to contribute to this project.
 Let try to run the tests and see coverage statistics to validate that setup was a success.
 

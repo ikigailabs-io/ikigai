@@ -22,7 +22,12 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["pydantic>=2.0", "email-validator", "requests"]
+dependencies = [
+  "pydantic>=2.0",
+  "email-validator",
+  "requests",
+  "tomli; python_version<'3.11'",
+]
 
 [project.urls]
 Documentation = "https://github.com/ikigailabs-io/ikigai#readme"
