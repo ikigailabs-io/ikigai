@@ -26,6 +26,7 @@ dependencies = [
   "pydantic>=2.0",
   "email-validator",
   "requests",
+  "pandas>=1.5",
   "tomli; python_version<'3.11'",
 ]
 
