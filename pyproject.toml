@@ -18,15 +18,16 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = ["pydantic>=2.0", "email-validator", "requests"]
 
 [project.urls]
-Documentation = "https://github.com/ikigailabs/ikigai#readme" # TODO: Update
-Issues = "https://github.com/ikigailabs/ikigai/issues"        # TODO: Update
-Source = "https://github.com/ikigailabs/ikigai"               # TODO: Update
+Documentation = "https://github.com/ikigailabs-io/ikigai#readme"
+Issues = "https://github.com/ikigailabs-io/ikigai/issues"
+Source = "https://github.com/ikigailabs-io/ikigai"
 
 # Confiuring Tooling
 
@@ -38,11 +39,11 @@ path = "src/ikigai/__about__.py"
 
 ### Setup hatch for testing package across multiple python versions
 [[tool.hatch.envs.all.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 ### Setup venv used for development
 [tool.hatch.envs.default]
-dependencies = ["coverage[toml]>=6.5", "pytest"]
+dependencies = ["coverage[toml]>=6.5", "pytest", "ipython"]
 
 ### Setup scripts for testing and coverage reporting
 [tool.hatch.envs.default.scripts]

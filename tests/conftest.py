@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+import random
+from contextlib import ExitStack
+from typing import Generator
 import pytest
 
 
@@ -17,3 +20,21 @@ import pytest
 )
 def cred(request) -> dict[str, str]:
     return request.param
+
+
+ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789-"
+
+
+@pytest.fixture
+def random_name() -> str:
+    name_length = int(random.triangular(low=5, high=20, mode=20))
+    return "".join(random.choices(ALPHABET, k=name_length))
+
+
+@pytest.fixture
+def cleanup() -> Generator[ExitStack, None, None]:
+    exit_stack = ExitStack()
+    try:
+        yield exit_stack
+    finally:
+        exit_stack.close()
