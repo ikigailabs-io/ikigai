@@ -3,11 +3,17 @@
 # SPDX-License-Identifier: MIT
 
 import random
-import tomllib
+import sys
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, Generator
 import pytest
+
+# Multiple python version compatible import for reading toml
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 
 def read_credentials(env_file: Path) -> dict[str, Any]:
