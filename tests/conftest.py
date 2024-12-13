@@ -3,21 +3,20 @@
 # SPDX-License-Identifier: MIT
 
 import random
+import tomllib
 from contextlib import ExitStack
-from typing import Generator
+from pathlib import Path
+from typing import Any, Generator
 import pytest
 
 
-@pytest.fixture(
-    params=[
-        dict(
-            user_email="harsh@ikigailabs.io",
-            api_key="2gnVFartBD9i2XDt7AhAsAo8WY7",
-            base_url="https://dev-api.ikigailabs.io",
-        )
-    ],
-    ids=["dev-api"],
-)
+def read_credentials(env_file: Path) -> dict[str, Any]:
+    with env_file.open("rb") as env:
+        users: dict[str, dict[str, str]] = tomllib.load(env)["credentials"]["users"]
+    return {"ids": users.keys(), "params": users.values()}
+
+
+@pytest.fixture(**read_credentials(Path("./test-env.toml")))
 def cred(request) -> dict[str, str]:
     return request.param
 
