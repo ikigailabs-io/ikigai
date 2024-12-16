@@ -7,7 +7,9 @@ import sys
 from datetime import datetime
 from typing import Any
 from pydantic import BaseModel, EmailStr, Field
+from ikigai import components
 from ikigai.client.session import Session
+from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.protocols import Directory
 
 # Multiple python version compatible import for Self
@@ -83,6 +85,10 @@ class App(BaseModel):
         self.__session = session
         return self
 
+    """
+    Operations on App
+    """
+
     def to_dict(self) -> dict:
         return {
             "app_id": self.app_id,
@@ -132,3 +138,28 @@ class App(BaseModel):
         }
 
         return return_value
+
+    """
+    Access Components in the App
+    """
+
+    def datasets(self) -> NamedMapping[components.Dataset]:
+        resp = self.__session.get(
+            path="/component/get-datasets-for-project",
+            params={"project_id": self.app_id},
+        ).json()
+        datasets = {
+            dataset.dataset_id: dataset
+            for dataset in map(
+                lambda dataset_dict: components.Dataset.from_dict(
+                    data=dataset_dict, session=self.__session
+                ),
+                resp["datasets"],
+            )
+        }
+
+        return NamedMapping(datasets)
+
+    @property
+    def dataset(self) -> components.DatasetBuilder:
+        return components.DatasetBuilder(session=self.__session, app_id=self.app_id)
