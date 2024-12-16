@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import sys
 import requests
 from typing import Any, Optional
 from pydantic import ConfigDict
@@ -34,9 +35,23 @@ class Session:
             return resp
         elif resp.status_code < 500:
             # A 4XX error happened
+            print(
+                f"""{method} {path}\n"""
+                f"""{resp.request.body}\n\n"""
+                f"""{resp.raw.headers}\n"""
+                f"""{resp.text}""",
+                file=sys.stderr,
+            )
             raise NotImplementedError("TODO: Add error reporting")
         elif resp.status_code < 600:
             # A 5XX error happened
+            print(
+                f"""{method} {path}\n"""
+                f"""{resp.request.body}\n\n"""
+                f"""{resp.raw.headers}\n"""
+                f"""{resp.text}""",
+                file=sys.stderr,
+            )
             raise NotImplementedError("TODO: Add error reporting")
         return resp
 
