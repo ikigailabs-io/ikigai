@@ -29,8 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
@@ -45,4 +43,4 @@ jobs:
         TEST_ENV: ${{ secrets.TEST_ENV_TOML }}
       run: |
         printf "%s" "$TEST_ENV" > ./test-env.toml
-        hatch test -py ${{ matrix.python-version }}
+        hatch test --all

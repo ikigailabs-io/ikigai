@@ -45,15 +45,34 @@ path = "src/ikigai/__about__.py"
 
 ### Setup hatch for testing package across multiple python versions
 [[tool.hatch.envs.all.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+python = ["3.13"]
 
 ### Setup venv used for development
 [tool.hatch.envs.default]
-dependencies = ["coverage[toml]>=6.5", "pytest", "ipython", "Faker>=33.1.0"]
+dependencies = ["coverage[toml]>=6.5", "pytest", "pytest-profiling", "ipython", "Faker>=33.1.0"]
+
+### Setup venv used for test
+[tool.hatch.envs.hatch-test]
+dependencies = [
+  "coverage-enable-subprocess==1.0",
+  "coverage[toml]~=7.4",
+  "pytest-mock~=3.12",
+  "pytest-randomly~=3.15",
+  "pytest-rerunfailures~=14.0",
+  "pytest-xdist[psutil]~=3.5",
+  "pytest~=8.1",
+  # Custom Deps
+  "pytest-profiling",
+  "Faker>=33.1.0",
+]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 ### Setup scripts for testing and coverage reporting
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
+test-prof = ["pytest --profile --profile-svg {args:tests}", "open prof/combined.svg || xgd-open prof/combined.svg"]
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report", "coverage html"]
 cov = ["test-cov", "cov-report"]
