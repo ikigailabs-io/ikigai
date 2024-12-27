@@ -4,12 +4,17 @@
 
 from contextlib import ExitStack
 
+import pandas as pd
 import pytest
 from ikigai.ikigai import Ikigai
 
 
 def test_dataset_creation(
-    ikigai: Ikigai, app_name: str, dataset_name: str, cleanup: ExitStack
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
 ) -> None:
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
@@ -17,7 +22,7 @@ def test_dataset_creation(
     datasets = app.datasets()
     assert len(datasets) == 0
 
-    dataset = app.dataset.new(name=dataset_name).build()
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
     cleanup.callback(dataset.delete)
 
     with pytest.raises(KeyError):
@@ -31,11 +36,15 @@ def test_dataset_creation(
 
 
 def test_dataset_editing(
-    ikigai: Ikigai, app_name: str, dataset_name: str, cleanup: ExitStack
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
 ) -> None:
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
-    dataset = app.dataset.new(name=dataset_name).build()
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
     cleanup.callback(dataset.delete)
 
     dataset.rename(f"updated {dataset_name}")
@@ -46,15 +55,18 @@ def test_dataset_editing(
 
 
 def test_dataset_describe(
-    ikigai: Ikigai, app_name: str, dataset_name: str, cleanup: ExitStack
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
 ) -> None:
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
-    dataset = app.dataset.new(name=dataset_name).build()
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
     cleanup.callback(dataset.delete)
 
     description = dataset.describe()
-    print(description)
     assert description is not None
     assert "dataset" in description
     assert description["dataset"]["name"] == dataset_name
