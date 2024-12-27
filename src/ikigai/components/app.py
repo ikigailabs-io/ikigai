@@ -3,20 +3,14 @@
 # SPDX-License-Identifier: MIT
 
 from __future__ import annotations
-import sys
 from datetime import datetime
 from typing import Any
 from pydantic import BaseModel, EmailStr, Field
 from ikigai import components
 from ikigai.client.session import Session
+from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.protocols import Directory
-
-# Multiple python version compatible import for Self
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 
 class AppBuilder:
