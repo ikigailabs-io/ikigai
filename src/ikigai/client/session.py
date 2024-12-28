@@ -3,12 +3,16 @@
 # SPDX-License-Identifier: MIT
 
 from __future__ import annotations
+
 import sys
-import requests
+from http import HTTPStatus
 from typing import Any
+
+import requests
 from pydantic import ConfigDict
-from requests import Response
 from pydantic.dataclasses import dataclass
+from requests import Response
+
 from ikigai.utils.compatibility import HTTPMethod
 
 
@@ -33,9 +37,9 @@ class Session:
             params=params,
             json=json,
         )
-        if resp.status_code < 400:
+        if resp.status_code < HTTPStatus.BAD_REQUEST:
             return resp
-        elif resp.status_code < 500:
+        elif resp.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
             # A 4XX error happened
             print(
                 f"""{method} {path}\n"""
@@ -44,8 +48,9 @@ class Session:
                 f"""{resp.text}""",
                 file=sys.stderr,
             )
-            raise NotImplementedError("TODO: Add error reporting")
-        elif resp.status_code < 600:
+            todo = "TODO: Add error reporting"
+            raise NotImplementedError(todo)
+        else:
             # A 5XX error happened
             print(
                 f"""{method} {path}\n"""
@@ -54,7 +59,8 @@ class Session:
                 f"""{resp.text}""",
                 file=sys.stderr,
             )
-            raise NotImplementedError("TODO: Add error reporting")
+            todo = "TODO: Add error reporting"
+            raise NotImplementedError(todo)
         return resp
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Response:

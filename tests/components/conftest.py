@@ -5,9 +5,10 @@
 import math
 import random
 from typing import Any, Callable
-from faker import Faker
+
 import pandas as pd
 import pytest
+from faker import Faker
 from ikigai import Ikigai
 
 ColumnNames = list[str]

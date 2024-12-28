@@ -90,6 +90,55 @@ dependencies = ["mypy>=1.0.0", "pytest", "Faker>=33.1.0"]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/ikigai tests}"
 
+## Setup ruff for formatting
+[tool.ruff.lint]
+select = [
+  # Pyflakes
+  "F",
+  # Pycodestyle,
+  "E",
+  "W",
+  # isort
+  "I",
+  # pep8
+  "N",
+  # pyupgrade
+  "UP",
+  # Flake8
+  "C4",
+  "EM",
+  "FA",
+  "PIE",
+  # "T20", # TODO: Enable in future after establising logging
+  "SIM",
+  "TID",
+  "PTH",
+  # Flake8 - Logging
+  "LOG",
+  "G",
+  # Commented out code not allowed
+  "ERA",
+  # Pandas & numpy best practices
+  "PD",
+  "NPY",
+  # noqa best practices
+  "PGH004",
+  # Pylint
+  "PLC",
+  "PLE",
+  "PLR",
+  "PLW",
+  # flynt
+  "FLY",
+  # Performance
+  "PERF",
+]
+ignore = [
+  "PLR1711",  # It's better to have explicit return even if it may be useless
+  "PLR0913",  # Some functions require many args to effectively use ikigai's api
+]
+
+
 ## Configure coverage
 [tool.coverage.run]
 source_pkgs = ["ikigai", "tests"]

@@ -3,9 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
+
 from pydantic import BaseModel, EmailStr, Field
+
 from ikigai import components
 from ikigai.client.session import Session
 from ikigai.utils.compatibility import Self
@@ -25,9 +28,9 @@ class AppBuilder:
         self.__session = session
         self._name = ""
         self._description = ""
-        self._directory = dict()
+        self._directory = {}
         self._icon = ""
-        self._images = list()
+        self._images = []
 
     def new(self, name: str) -> Self:
         self._name = name
@@ -144,11 +147,9 @@ class App(BaseModel):
         ).json()
         datasets = {
             dataset.dataset_id: dataset
-            for dataset in map(
-                lambda dataset_dict: components.Dataset.from_dict(
-                    data=dataset_dict, session=self.__session
-                ),
-                resp["datasets"],
+            for dataset in (
+                components.Dataset.from_dict(data=dataset_dict, session=self.__session)
+                for dataset_dict in resp["datasets"]
             )
         }
 

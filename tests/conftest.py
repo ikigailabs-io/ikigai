@@ -4,9 +4,11 @@
 
 import random
 import sys
+from collections.abc import Generator
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
+
 import pytest
 
 # Multiple python version compatible import for reading toml
