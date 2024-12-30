@@ -14,7 +14,7 @@ from ikigai.utils.named_mapping import NamedMapping
 @dataclass
 class Ikigai:
     user_email: EmailStr
-    api_key: str
+    api_key: str = Field(repr=False)
     base_url: AnyUrl = Field(default=AnyUrl("https://api.ikigailabs.io"))
     __session: Session = Field(init=False)
 

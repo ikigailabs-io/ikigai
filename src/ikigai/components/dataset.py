@@ -326,6 +326,17 @@ class Dataset(BaseModel):
         self.name = name
         return self
 
+    def df(self, **parser_options) -> pd.DataFrame:
+        resp = self.__session.get(
+            path="/component/get-dataset-download-url",
+            params={
+                "dataset_id": self.dataset_id,
+                "project_id": self.app_id,
+            },
+        ).json()
+        dataset_url = resp["url"]
+        return pd.read_csv(dataset_url, index_col=0, **parser_options)
+
     def describe(self) -> dict:
         response: dict[str, Any] = self.__session.get(
             path="/component/get-dataset",

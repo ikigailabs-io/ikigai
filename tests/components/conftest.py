@@ -25,8 +25,11 @@ def create_table_generator(fake: Faker, k: int) -> TableGenerator:
     available_column_generators: list[list[tuple[str, ColumnGenerator]]] = [
         [("name", fake.name), ("age", lambda: random.randint(20, 90))],
         [("ssn", fake.ssn)],
-        [("lat", fake.latitude), ("lon", fake.longitude)],
-        [("date", fake.date_time)],
+        [
+            ("lat", lambda: float(fake.latitude())),
+            ("lon", lambda: float(fake.longitude())),
+        ],
+        [("date", lambda: str(fake.date_time()))],
         [("email", fake.free_email)],
         [("work_email", fake.company_email)],
         [("job", fake.job), ("salary", fake.pricetag)],

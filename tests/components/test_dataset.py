@@ -54,6 +54,32 @@ def test_dataset_editing(
     assert dataset_after_edit.name == f"updated {dataset_name}"
 
 
+def test_dataset_download(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("A test app").build()
+    cleanup.callback(app.delete)
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
+    cleanup.callback(dataset.delete)
+
+    round_trip_df1 = dataset.df()
+    assert len(df1) == len(round_trip_df1)
+    assert df1.columns.equals(round_trip_df1.columns)
+
+    # v. helpful debug message when the test fails
+    print(
+        df1.dtypes, df1.head(), round_trip_df1.dtypes, round_trip_df1.head(), sep="\n"
+    )
+
+    pd.testing.assert_frame_equal(
+        df1, round_trip_df1, check_dtype=False, check_exact=False
+    )
+
+
 def test_dataset_describe(
     ikigai: Ikigai,
     app_name: str,
