@@ -40,6 +40,7 @@ def test_dataset_editing(
     app_name: str,
     dataset_name: str,
     df1: pd.DataFrame,
+    df2: pd.DataFrame,
     cleanup: ExitStack,
 ) -> None:
     app = ikigai.app.new(name=app_name).description("A test app").build()
@@ -48,10 +49,17 @@ def test_dataset_editing(
     cleanup.callback(dataset.delete)
 
     dataset.rename(f"updated {dataset_name}")
+    dataset.edit_data(df2)
 
     dataset_after_edit = app.datasets().get_id(dataset.dataset_id)
+    round_trip_df2 = dataset_after_edit.df()
+
     assert dataset_after_edit.name == dataset.name
     assert dataset_after_edit.name == f"updated {dataset_name}"
+    assert df2.columns.equals(round_trip_df2.columns)
+    pd.testing.assert_frame_equal(
+        df2, round_trip_df2, check_dtype=False, check_exact=False
+    )
 
 
 def test_dataset_download(

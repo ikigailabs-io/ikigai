@@ -337,6 +337,18 @@ class Dataset(BaseModel):
         dataset_url = resp["url"]
         return pd.read_csv(dataset_url, index_col=0, **parser_options)
 
+    def edit_data(self, data: pd.DataFrame) -> None:
+        buffer = io.BytesIO()
+        data.to_csv(buffer)
+
+        _upload_data(
+            session=self.__session,
+            app_id=self.app_id,
+            dataset_id=self.dataset_id,
+            name=self.name,
+            data=bytearray(buffer.getvalue()),
+        )
+
     def describe(self) -> dict:
         response: dict[str, Any] = self.__session.get(
             path="/component/get-dataset",

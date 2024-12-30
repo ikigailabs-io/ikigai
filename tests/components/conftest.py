@@ -71,5 +71,13 @@ def df1(faker: Faker) -> pd.DataFrame:
 
 
 @pytest.fixture
+def df2(faker: Faker) -> pd.DataFrame:
+    num_generator_selections = random.randint(1, 10)
+    num_rows = math.ceil(random.triangular(1, 100))
+    table_generator = create_table_generator(faker, num_generator_selections)
+    return generate_df(table_generator=table_generator, num_rows=num_rows)
+
+
+@pytest.fixture
 def dataset_name(random_name: str) -> str:
     return f"dats-{random_name}"
