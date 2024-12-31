@@ -3,18 +3,17 @@
 # SPDX-License-Identifier: MIT
 
 from __future__ import annotations
-import sys
+
 from datetime import datetime
 from typing import Any
-from pydantic import BaseModel, EmailStr, Field
-from ikigai.client.session import Session
-from ikigai.utils.protocols import Directory
 
-# Multiple python version compatible import for Self
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
+from pydantic import BaseModel, EmailStr, Field
+
+from ikigai import components
+from ikigai.client.session import Session
+from ikigai.utils.compatibility import Self
+from ikigai.utils.named_mapping import NamedMapping
+from ikigai.utils.protocols import Directory
 
 
 class AppBuilder:
@@ -29,9 +28,9 @@ class AppBuilder:
         self.__session = session
         self._name = ""
         self._description = ""
-        self._directory = dict()
+        self._directory = {}
         self._icon = ""
-        self._images = list()
+        self._images = []
 
     def new(self, name: str) -> Self:
         self._name = name
@@ -83,6 +82,10 @@ class App(BaseModel):
         self.__session = session
         return self
 
+    """
+    Operations on App
+    """
+
     def to_dict(self) -> dict:
         return {
             "app_id": self.app_id,
@@ -132,3 +135,26 @@ class App(BaseModel):
         }
 
         return return_value
+
+    """
+    Access Components in the App
+    """
+
+    def datasets(self) -> NamedMapping[components.Dataset]:
+        resp = self.__session.get(
+            path="/component/get-datasets-for-project",
+            params={"project_id": self.app_id},
+        ).json()
+        datasets = {
+            dataset.dataset_id: dataset
+            for dataset in (
+                components.Dataset.from_dict(data=dataset_dict, session=self.__session)
+                for dataset_dict in resp["datasets"]
+            )
+        }
+
+        return NamedMapping(datasets)
+
+    @property
+    def dataset(self) -> components.DatasetBuilder:
+        return components.DatasetBuilder(session=self.__session, app_id=self.app_id)

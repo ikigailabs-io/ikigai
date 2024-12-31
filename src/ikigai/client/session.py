@@ -2,11 +2,18 @@
 #
 # SPDX-License-Identifier: MIT
 
+from __future__ import annotations
+
+import sys
+from http import HTTPStatus
+from typing import Any
+
 import requests
-from typing import Any, Optional
 from pydantic import ConfigDict
-from requests import Response
 from pydantic.dataclasses import dataclass
+from requests import Response
+
+from ikigai.utils.compatibility import HTTPMethod
 
 
 @dataclass
@@ -18,10 +25,10 @@ class Session:
 
     def request(
         self,
-        method: str,
+        method: HTTPMethod,
         path: str,
-        params: Optional[dict[str, str]] = None,
-        json: Optional[dict[Any, Any]] = None,
+        params: dict[str, str] | None = None,
+        json: dict | None = None,
     ) -> Response:
         url = f"{self.base_url}{path}"
         resp = self.session.request(
@@ -30,21 +37,37 @@ class Session:
             params=params,
             json=json,
         )
-        if resp.status_code < 400:
+        if resp.status_code < HTTPStatus.BAD_REQUEST:
             return resp
-        elif resp.status_code < 500:
+        elif resp.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
             # A 4XX error happened
-            raise NotImplementedError("TODO: Add error reporting")
-        elif resp.status_code < 600:
+            print(
+                f"""{method} {path}\n"""
+                f"""{resp.request.body!r}\n\n"""
+                f"""{resp.raw.headers}\n"""
+                f"""{resp.text}""",
+                file=sys.stderr,
+            )
+            todo = "TODO: Add error reporting"
+            raise NotImplementedError(todo)
+        else:
             # A 5XX error happened
-            raise NotImplementedError("TODO: Add error reporting")
+            print(
+                f"""{method} {path}\n"""
+                f"""{resp.request.body!r}\n\n"""
+                f"""{resp.raw.headers}\n"""
+                f"""{resp.text}""",
+                file=sys.stderr,
+            )
+            todo = "TODO: Add error reporting"
+            raise NotImplementedError(todo)
         return resp
 
-    def get(self, path: str, params: Optional[dict[str, str]] = None) -> Response:
-        return self.request(method="GET", path=path, params=params)
+    def get(self, path: str, params: dict[str, Any] | None = None) -> Response:
+        return self.request(method=HTTPMethod.GET, path=path, params=params)
 
-    def post(self, path: str, json: Optional[dict[Any, Any]] = None) -> Response:
-        return self.request(method="POST", path=path, json=json)
+    def post(self, path: str, json: dict[Any, Any] | None = None) -> Response:
+        return self.request(method=HTTPMethod.POST, path=path, json=json)
 
     def __del__(self) -> None:
         self.session.close()

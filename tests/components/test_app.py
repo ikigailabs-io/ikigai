@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 from contextlib import ExitStack
+
 import pytest
 from ikigai import Ikigai
 

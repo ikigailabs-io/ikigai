@@ -89,7 +89,7 @@ With that you are set to contribute to this project.
 Let try to run the tests and see coverage statistics to validate that setup was a success.
 
 ```sh
-hatch run cov
+hatch test --cover
 ```
 
 It might take some time when you first run this command,
@@ -98,30 +98,54 @@ hatch will setup the testing environment and install any required dependencies a
 If everything went well, you will see something like:
 
 ```txt
-cmd [1] | coverage run -m pytest tests
 ======================== test session starts =========================
-platform linux -- Python 3.12.7, pytest-8.3.3, pluggy-1.5.0
+platform darwin -- Python 3.13.1, pytest-8.3.4, pluggy-1.5.0
+rootdir: ./ikigai
 configfile: pyproject.toml
-collected 2 items
+collected 9 items
 
-tests/test_ikigai.py ..                                        [100%]
+tests/components/test_app.py ...                               [ 33%]
+tests/components/test_dataset.py ...                           [ 66%]
+tests/test_ikigai.py ...                                       [100%]
 
-========================= 2 passed in 2.26s ==========================
-cmd [2] | - coverage combine
-cmd [3] | coverage report
+========================= 9 passed in 46.26s =========================
+Combined data file
 Name                                Stmts   Miss Branch BrPart  Cover
 ---------------------------------------------------------------------
 src/ikigai/__init__.py                  2      0      0      0   100%
 src/ikigai/client/__init__.py           1      0      0      0   100%
-src/ikigai/client/session.py           25      6      6      1    65%
-src/ikigai/components/__init__.py       2      0      0      0   100%
-src/ikigai/components/app.py           19      0      0      0   100%
-src/ikigai/ikigai.py                   19      0      0      0   100%
+src/ikigai/client/session.py           29      5      6      1    71%
+src/ikigai/components/__init__.py       3      0      0      0   100%
+src/ikigai/components/app.py           81      3      2      1    95%
+src/ikigai/components/dataset.py      142     31     16      5    75%
+src/ikigai/ikigai.py                   23      0      0      0   100%
+src/ikigai/utils/__init__.py            1      0      0      0   100%
+src/ikigai/utils/compatibility.py       6      2      2      1    62%
+src/ikigai/utils/named_mapping.py      20      4      4      1    71%
+src/ikigai/utils/protocols.py           6      0      0      0   100%
 tests/__init__.py                       0      0      0      0   100%
-tests/conftest.py                       4      0      0      0   100%
-tests/test_ikigai.py                    9      0      0      0   100%
+tests/components/__init__.py            0      0      0      0   100%
+tests/components/conftest.py           40      0      4      0   100%
+tests/components/test_app.py           41      0      0      0   100%
+tests/components/test_dataset.py       38      0      0      0   100%
+tests/conftest.py                      27      1      2      1    93%
+tests/test_ikigai.py                   15      0      0      0   100%
 ---------------------------------------------------------------------
-TOTAL                                  81      6      6      1    87%
+TOTAL                                 475     46     36     10    87%
 ```
 
 ## Tips and Tricks
+
+### Profiling tests
+
+We bundle the command `test-prof` to profile the execution of the tests.
+To vizualize the results of profiling we use `graphviz`, install it by
+following the official [graphviz page](https://graphviz.org/download/).
+
+Then run:
+
+```sh
+hatch test --profile --profile-svg
+```
+
+If you don't want to install graphviz then drop the `--profile-svg` flag from the command.

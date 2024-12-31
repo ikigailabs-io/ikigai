@@ -23,8 +23,9 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "pydantic>=2.0",
   "email-validator",
+  "pydantic>=2.0",
+  "pandas>=1.5",
   "requests",
   "tomli; python_version<'3.11'",
 ]
@@ -44,15 +45,34 @@ path = "src/ikigai/__about__.py"
 
 ### Setup hatch for testing package across multiple python versions
 [[tool.hatch.envs.all.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+python = ["3.13"]
 
 ### Setup venv used for development
 [tool.hatch.envs.default]
-dependencies = ["coverage[toml]>=6.5", "pytest", "ipython"]
+dependencies = ["coverage[toml]>=6.5", "pytest", "pytest-profiling", "ipython", "Faker>=33.1.0"]
+
+### Setup venv used for test
+[tool.hatch.envs.hatch-test]
+dependencies = [
+  "coverage-enable-subprocess==1.0",
+  "coverage[toml]~=7.4",
+  "pytest-mock~=3.12",
+  "pytest-randomly~=3.15",
+  "pytest-rerunfailures~=14.0",
+  "pytest-xdist[psutil]~=3.5",
+  "pytest~=8.1",
+  # Custom Deps
+  "pytest-profiling",
+  "Faker>=33.1.0",
+]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 ### Setup scripts for testing and coverage reporting
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
+test-prof = ["pytest --profile --profile-svg {args:tests}", "open prof/combined.svg || xgd-open prof/combined.svg"]
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report", "coverage html"]
 cov = ["test-cov", "cov-report"]
@@ -64,11 +84,60 @@ config-path = "none"
 
 ### Setup venv for type-checking
 [tool.hatch.envs.types]
-dependencies = ["mypy>=1.0.0", "pytest"]
+dependencies = ["mypy>=1.0.0", "pytest", "Faker>=33.1.0"]
 
 ### Setup scripts to run type checking
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/ikigai tests}"
+
+## Setup ruff for formatting
+[tool.ruff.lint]
+select = [
+  # Pyflakes
+  "F",
+  # Pycodestyle,
+  "E",
+  "W",
+  # isort
+  "I",
+  # pep8
+  "N",
+  # pyupgrade
+  "UP",
+  # Flake8
+  "C4",
+  "EM",
+  "FA",
+  "PIE",
+  # "T20", # TODO: Enable in future after establising logging
+  "SIM",
+  "TID",
+  "PTH",
+  # Flake8 - Logging
+  "LOG",
+  "G",
+  # Commented out code not allowed
+  "ERA",
+  # Pandas & numpy best practices
+  "PD",
+  "NPY",
+  # noqa best practices
+  "PGH004",
+  # Pylint
+  "PLC",
+  "PLE",
+  "PLR",
+  "PLW",
+  # flynt
+  "FLY",
+  # Performance
+  "PERF",
+]
+ignore = [
+  "PLR1711",  # It's better to have explicit return even if it may be useless
+  "PLR0913",  # Some functions require many args to effectively use ikigai's api
+]
+
 
 ## Configure coverage
 [tool.coverage.run]
