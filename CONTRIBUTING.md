@@ -136,6 +136,36 @@ TOTAL                                 475     46     36     10    87%
 
 ## Tips and Tricks
 
+### Releasing new version
+
+To release new version first and foremost you need to bump the version. `hatch` makes it quite smooth.
+
+```sh
+$ hatch version micro
+Old: 0.0.2
+New: 0.0.3
+```
+
+After this commit any files hatch changed when updating the version. Create a tag to go along with the commit.
+For consistency use the following template for commit message and tag:
+
+```txt
+$ git commit -m "Bump version to v$(hatch version)"
+[main XXXXXXX] Bump version to v0.0.3
+ 1 file changed, 1 insertions(+), 1 deletions(-)
+
+$ git tag "v$(hatch version)"
+```
+
+Push the commit and tag
+
+```sh
+git push --follow-tags
+```
+
+Then create a new release on
+[github-releases](https://github.com/ikigailabs-io/ikigai/releases/new) using the tag you just created.
+
 ### Profiling tests
 
 We bundle the command `test-prof` to profile the execution of the tests.
