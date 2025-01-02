@@ -24,6 +24,7 @@ classifiers = [
 ]
 dependencies = [
   "email-validator",
+  "eval_type_backport; python_version<'3.11'",
   "pydantic>=2.0",
   "pandas>=1.5",
   "requests",
