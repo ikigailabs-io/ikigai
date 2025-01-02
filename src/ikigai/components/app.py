@@ -158,3 +158,19 @@ class App(BaseModel):
     @property
     def dataset(self) -> components.DatasetBuilder:
         return components.DatasetBuilder(session=self.__session, app_id=self.app_id)
+
+    def flows(self) -> NamedMapping[components.Flow]:
+        resp = self.__session.get(
+            path="/component/get-pipelines-for-project",
+            params={"project_id": self.app_id},
+        ).json()
+
+        flows = {
+            flow.flow_id: flow
+            for flow in (
+                components.Flow.from_dict(data=flow_dict, session=self.__session)
+                for flow_dict in resp["pipelines"]
+            )
+        }
+
+        return NamedMapping(flows)
