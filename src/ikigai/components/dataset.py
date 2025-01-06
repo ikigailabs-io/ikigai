@@ -201,7 +201,7 @@ class DatasetBuilder:
 
     def df(self, data: pd.DataFrame) -> Self:
         buffer = io.BytesIO()
-        data.to_csv(buffer)
+        data.to_csv(buffer, index_label=False, index=False)
         self._data = bytearray(buffer.getvalue())
         return self
 
