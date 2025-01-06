@@ -33,5 +33,8 @@ class NamedMapping(Generic[VT], Mapping[str, VT]):
     def __len__(self) -> int:
         return len(self._mapping)
 
+    def __repr__(self) -> str:
+        return repr(self._mapping)
+
     def get_id(self, id: str) -> VT:
         return self._mapping[id]
