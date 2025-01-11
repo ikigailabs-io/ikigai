@@ -85,7 +85,7 @@ def __multi_part_upload_data(
                 )
                 chunk = data[chunk_start:chunk_end]
                 resp = request.put(url=upload_url, data=chunk)
-                
+
                 # Get etags from response header
                 etags[chunk_idx] = resp.headers.get("ETag")
 
