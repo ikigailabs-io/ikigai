@@ -71,6 +71,7 @@ def __multi_part_upload_data(
         int(chunk_idx): upload_url for chunk_idx, upload_url in resp["urls"].items()
     }
     upload_id = resp["upload_id"]
+    etags: dict[int, str] = {}
 
     try:
         with requests.session() as request:
@@ -79,11 +80,15 @@ def __multi_part_upload_data(
             )
             for chunk_idx, upload_url in upload_urls.items():
                 chunk_start, chunk_end = (
+                    (chunk_idx - 1) * chunk_size,
                     chunk_idx * chunk_size,
-                    (chunk_idx + 1) * chunk_size,
                 )
                 chunk = data[chunk_start:chunk_end]
                 resp = request.put(url=upload_url, data=chunk)
+                
+                # Get etags from response header
+                etags[chunk_idx] = resp.headers.get("ETag")
+
     except Exception:
         session.post(
             path="/component/complete-dataset-multipart-upload",
@@ -110,7 +115,7 @@ def __multi_part_upload_data(
             },
             "abort": False,
             "upload_id": upload_id,
-            "etags": upload_urls,
+            "etags": etags,
         },
     )
 
