@@ -5,14 +5,14 @@
 from __future__ import annotations
 
 import time
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
 
 from ikigai.client.session import Session
-from ikigai.utils.compatibility import Self
+from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalInt
 
 

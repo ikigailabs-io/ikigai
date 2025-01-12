@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Optional
 
 from pydantic import BeforeValidator
 
@@ -15,4 +15,4 @@ def __optional_int(value: Any) -> int | None:
     return int(value)
 
 
-OptionalInt = Annotated[int | None, BeforeValidator(__optional_int)]
+OptionalInt = Annotated[Optional[int], BeforeValidator(__optional_int)]

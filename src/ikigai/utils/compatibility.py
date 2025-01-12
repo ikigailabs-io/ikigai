@@ -29,3 +29,11 @@ else:
         PUT="PUT",
         TRACE="TRACE",
     )
+
+# Multiple python version compatible import for datetime.UTC
+if sys.version_info >= (3, 11):
+    from datetime import UTC  # noqa: F401
+else:
+    from datetime import timezone
+
+    UTC = timezone.utc  # noqa: F401
