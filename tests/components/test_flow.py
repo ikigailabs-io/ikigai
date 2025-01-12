@@ -27,3 +27,25 @@ def test_flow_status(ikigai: Ikigai) -> None:
     assert status_report.status == FlowStatus.IDLE
     assert status_report.progress is None
     assert not status_report.message
+
+
+def test_flow_run_success(ikigai: Ikigai) -> None:
+    # TODO: Update test once we can create pipelines
+    app = ikigai.apps()["PCT (Shared)"]
+    flow = app.flows().get_id("2r5dKDGQ2QVpqbQAsaBlCWOEVgY")
+
+    log = flow.run()
+    assert log.status == FlowStatus.SUCCESS
+    assert log.erroneous_facet_id is None
+    assert not log.data
+
+
+def test_flow_run_fail(ikigai: Ikigai) -> None:
+    # TODO: Update test once we can create pipelines
+    app = ikigai.apps()["PCT (Shared)"]
+    flow = app.flows()["Failing Flow"]
+
+    log = flow.run()
+    assert log.status == FlowStatus.FAILED
+    assert log.erroneous_facet_id is not None
+    assert log.data

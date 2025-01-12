@@ -29,6 +29,7 @@ dependencies = [
   "pandas>=1.5",
   "requests",
   "tomli; python_version<'3.11'",
+  "tqdm",
 ]
 
 [project.urls]
