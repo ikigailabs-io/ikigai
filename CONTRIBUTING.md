@@ -160,7 +160,7 @@ $ git tag "v$(hatch version)"
 Push the commit and tag
 
 ```sh
-git push --follow-tags
+git push && git push --tags
 ```
 
 Then create a new release on
