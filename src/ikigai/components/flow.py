@@ -7,18 +7,83 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
 
 from ikigai.client.session import Session
 from ikigai.utils.compatibility import UTC, Self
-from ikigai.utils.custom_validators import OptionalInt
+from ikigai.utils.custom_validators import OptionalStr
+from ikigai.utils.protocols import Directory
+
+
+class FlowDefinition(BaseModel):
+    facets: list = []
+    arrows: list = []
+    # TODO: Add Flow Definition
+
+    def to_dict(self) -> dict[str, Any]:
+        # TODO: Update implementation when feature is available
+        return {
+            "facets": [],
+            "arrows": [],
+        }
 
 
 class FlowBuilder:
+    _app_id: str
+    _name: str
+    _directory: dict[str, str]
+    _flow_definition: dict[str, Any]
+    __session: Session
+
     def __init__(self, session: Session, app_id: str) -> None:
-        raise NotImplementedError()
+        self.__session = session
+        self._app_id = app_id
+        self._name = ""
+        self._directory = {}
+        self._flow_definition = FlowDefinition().to_dict()
+
+    def new(self, name: str) -> Self:
+        self._name = name
+        return self
+
+    def definition(self, flow_definition: FlowDefinition | dict[str, Any]) -> Self:
+        if isinstance(flow_definition, dict):
+            self._flow_definition = flow_definition
+            return self
+
+        self._flow_definition = flow_definition.to_dict()
+        return self
+
+    def directory(self, directory: Directory) -> Self:
+        self._directory = {
+            "directory_id": directory.directory_id,
+            "type": directory.type,
+        }
+        return self
+
+    def build(self) -> Flow:
+        resp = self.__session.post(
+            path="/component/create-pipeline",
+            json={
+                "pipeline": {
+                    "project_id": self._app_id,
+                    "name": self._name,
+                    "directory": self._directory,
+                    "definition": self._flow_definition,
+                }
+            },
+        ).json()
+        flow_id = resp["pipeline_id"]
+
+        # Populate Flow object
+        resp = self.__session.get(
+            path="/component/get-pipeline", params={"pipeline_id": flow_id}
+        ).json()
+        flow = Flow.from_dict(data=resp["pipeline"], session=self.__session)
+        return flow
 
 
 class FlowStatus(str, Enum):
@@ -48,7 +113,7 @@ class RunLog(BaseModel):
     log_id: str
     status: FlowStatus
     user: EmailStr
-    erroneous_facet_id: OptionalInt
+    erroneous_facet_id: OptionalStr
     data: str = Field(validation_alias="message")
     timestamp: datetime
 
@@ -70,6 +135,36 @@ class Flow(BaseModel):
     def from_dict(cls, data: dict, session: Session) -> Self:
         self = cls.model_validate(data)
         self.__session = session
+        return self
+
+    def to_dict(self) -> dict:
+        return {
+            "flow_id": self.flow_id,
+            "name": self.name,
+            "created_at": self.created_at,
+            "modified_at": self.modified_at,
+        }
+
+    def delete(self) -> None:
+        self.__session.post(
+            path="/component/delete-pipeline",
+            json={"pipeline": {"project_id": self.app_id, "pipeline_id": self.flow_id}},
+        )
+        return None
+
+    def rename(self, name: str) -> Self:
+        _ = self.__session.post(
+            path="/component/edit-pipeline",
+            json={
+                "pipeline": {
+                    "project_id": self.app_id,
+                    "pipeline_id": self.flow_id,
+                    "name": name,
+                }
+            },
+        )
+        # TODO: handle error case, currently it is a raise NotImplemented from Session
+        self.name = name
         return self
 
     def status(self) -> FlowStatusReport:

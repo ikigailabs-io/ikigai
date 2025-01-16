@@ -174,3 +174,7 @@ class App(BaseModel):
         }
 
         return NamedMapping(flows)
+
+    @property
+    def flow(self) -> components.FlowBuilder:
+        return components.FlowBuilder(session=self.__session, app_id=self.app_id)

@@ -9,10 +9,10 @@ from typing import Annotated, Any, Optional
 from pydantic import BeforeValidator
 
 
-def __optional_int(value: Any) -> int | None:
-    if isinstance(value, str) and value == "":
+def __optional_str(value: Any) -> str | None:
+    if not value:
         return None
-    return int(value)
+    return str(value)
 
 
-OptionalInt = Annotated[Optional[int], BeforeValidator(__optional_int)]
+OptionalStr = Annotated[Optional[str], BeforeValidator(__optional_str)]
