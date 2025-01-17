@@ -49,13 +49,35 @@ class FlowBuilder:
         self._name = name
         return self
 
-    def definition(self, flow_definition: FlowDefinition | dict[str, Any]) -> Self:
-        if isinstance(flow_definition, dict):
-            self._flow_definition = flow_definition
+    def definition(self, definition: Flow | FlowDefinition | dict[str, Any]) -> Self:
+        if isinstance(definition, FlowDefinition):
+            self._flow_definition = definition.to_dict()
             return self
 
-        self._flow_definition = flow_definition.to_dict()
-        return self
+        if isinstance(definition, Flow):
+            if definition.app_id != self._app_id:
+                error_msg = (
+                    "Building flow from a diferent app is not supported\n"
+                    "source_app != destination_app "
+                    f"({definition.app_id} != {self._app_id})"
+                )
+                raise ValueError(error_msg)
+            resp = self.__session.get(
+                path="/component/get-pipeline",
+                params={"project_id": self._app_id, "pipeline_id": definition.flow_id},
+            ).json()
+            self._flow_definition = resp["pipeline"]["definition"]
+            return self
+
+        if isinstance(definition, dict):
+            self._flow_definition = definition
+            return self
+
+        error_msg = (
+            f"Definition was of type {type(definition)} but, "
+            "must be a Flow or FlowDefinition or dict"
+        )
+        raise TypeError(error_msg)
 
     def directory(self, directory: Directory) -> Self:
         self._directory = {
