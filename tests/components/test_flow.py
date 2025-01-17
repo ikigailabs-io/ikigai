@@ -24,16 +24,20 @@ def test_flow_creation(
     assert len(flows) == 0
 
     flow = app.flow.new(name=flow_name).build()
-    cleanup.callback(flow.delete)
-
-    with pytest.raises(KeyError):
-        flows.get_id(flow.flow_id)
-
-    flows_after_creation = app.flows()
-    assert len(flows_after_creation) == 1
 
     flow_dict = flow.to_dict()
     assert flow_dict["name"] == flow_name
+
+    flows_after_creation = app.flows()
+    assert len(flows_after_creation) == 1
+    assert flows_after_creation[flow.name]
+
+    flow.delete()
+    flows_after_deletion = app.flows()
+    assert len(flows_after_deletion) == 0
+    with pytest.raises(KeyError):
+        flows_after_deletion[flow.name]
+    assert flow.flow_id not in flows_after_deletion
 
 
 def test_flow_editing(
