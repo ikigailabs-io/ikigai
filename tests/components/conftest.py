@@ -81,3 +81,8 @@ def df2(faker: Faker) -> pd.DataFrame:
 @pytest.fixture
 def dataset_name(random_name: str) -> str:
     return f"dats-{random_name}"
+
+
+@pytest.fixture
+def flow_name(random_name: str) -> str:
+    return f"flow-{random_name}"

@@ -4,5 +4,14 @@
 
 from ikigai.components.app import App, AppBuilder
 from ikigai.components.dataset import Dataset, DatasetBuilder
+from ikigai.components.flow import Flow, FlowBuilder, FlowStatus
 
-__all__ = ["App", "AppBuilder", "Dataset", "DatasetBuilder"]
+__all__ = [
+    "App",
+    "AppBuilder",
+    "Dataset",
+    "DatasetBuilder",
+    "Flow",
+    "FlowBuilder",
+    "FlowStatus",
+]
