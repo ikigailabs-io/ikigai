@@ -226,6 +226,13 @@ class Flow(BaseModel):
 
         return self.__await_run()
 
+    def describe(self) -> dict:
+        response: dict[str, Any] = self.__session.get(
+            path="/component/get-pipeline", params={"pipeline_id": self.flow_id}
+        ).json()
+
+        return response
+
     def __await_run(self) -> RunLog:
         start_time = datetime.now(UTC)
         # TODO: Switch to using websockets once they are available
