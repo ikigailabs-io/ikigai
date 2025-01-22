@@ -19,7 +19,8 @@ from pydantic import BaseModel, Field
 
 from ikigai.client.session import Session
 from ikigai.utils.compatibility import Self
-from ikigai.utils.protocols import Directory
+from ikigai.utils.named_mapping import NamedMapping
+from ikigai.utils.protocols import Directory, DirectoryType
 
 CHUNK_SIZE = int(50e6)  # 50 MB
 
@@ -295,6 +296,22 @@ class Dataset(BaseModel):
         self.name = name
         return self
 
+    def move(self, directory: Directory) -> Self:
+        _ = self.__session.post(
+            path="/component/edit-dataset",
+            json={
+                "dataset": {
+                    "project_id": self.app_id,
+                    "dataset_id": self.dataset_id,
+                    "directory": {
+                        "directory_id": directory.directory_id,
+                        "type": directory.type,
+                    },
+                }
+            },
+        )
+        return self
+
     def df(self, **parser_options) -> pd.DataFrame:
         resp = self.__session.get(
             path="/component/get-dataset-download-url",
@@ -325,3 +342,38 @@ class Dataset(BaseModel):
         ).json()
 
         return response
+
+
+class DatasetDirectory(BaseModel):
+    directory_id: str
+    app_id: str
+    name: str
+    created_at: datetime
+    modified_at: datetime
+    __session: Session
+
+    @property
+    def type(self) -> str:
+        return DirectoryType.DATASET.value
+
+    @classmethod
+    def from_dict(cls, data: dict, session: Session) -> Self:
+        self = cls.model_validate(data)
+        self.__session = session
+        return self
+
+    def datasets(self) -> NamedMapping[Dataset]:
+        resp = self.__session.get(
+            path="/component/get-datasets-for-project",
+            params={"project_id": self.app_id, "directory_id": self.directory_id},
+        ).json()
+
+        datasets = {
+            dataset.dataset_id: dataset
+            for dataset in (
+                Dataset.from_dict(data=dataset_dict, session=self.__session)
+                for dataset_dict in resp["datasets"]
+            )
+        }
+
+        return NamedMapping(datasets)

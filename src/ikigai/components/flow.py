@@ -15,7 +15,8 @@ from tqdm.auto import tqdm
 from ikigai.client.session import Session
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
-from ikigai.utils.protocols import Directory
+from ikigai.utils.named_mapping import NamedMapping
+from ikigai.utils.protocols import Directory, DirectoryType
 
 
 class FlowDefinition(BaseModel):
@@ -189,6 +190,22 @@ class Flow(BaseModel):
         self.name = name
         return self
 
+    def move(self, directory: Directory) -> Self:
+        _ = self.__session.post(
+            path="/component/edit-pipeline",
+            json={
+                "pipeline": {
+                    "project_id": self.app_id,
+                    "pipeline_id": self.flow_id,
+                    "directory": {
+                        "directory_id": directory.directory_id,
+                        "type": directory.type,
+                    },
+                }
+            },
+        )
+        return self
+
     def status(self) -> FlowStatusReport:
         resp = self.__session.get(
             path="/component/is-pipeline-running",
@@ -277,3 +294,38 @@ class Flow(BaseModel):
             progress_bar.update(progress - last_progress)
 
             return run_log
+
+
+class FlowDirectory(BaseModel):
+    directory_id: str
+    app_id: str
+    name: str
+    created_at: datetime
+    modified_at: datetime
+    __session: Session
+
+    @property
+    def type(self) -> str:
+        return DirectoryType.FLOW.value
+
+    @classmethod
+    def from_dict(cls, data: dict, session: Session) -> Self:
+        self = cls.model_validate(data)
+        self.__session = session
+        return self
+
+    def flows(self) -> NamedMapping[Flow]:
+        resp = self.__session.get(
+            path="/component/get-pipelines-for-project",
+            params={"project_id": self.app_id, "directory_id": self.directory_id},
+        ).json()
+
+        flows = {
+            flow.flow_id: flow
+            for flow in (
+                Flow.from_dict(data=flow_dict, session=self.__session)
+                for flow_dict in resp["pipelines"]
+            )
+        }
+
+        return NamedMapping(flows)
