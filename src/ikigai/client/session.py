@@ -57,6 +57,7 @@ class Session:
                 {
                     "method": method,
                     "path": path,
+                    "params": params,
                     "request": resp.request.body,
                     "headers": resp.headers,
                     "response": resp.text,
@@ -76,6 +77,7 @@ class Session:
                 {
                     "method": method,
                     "path": path,
+                    "params": params,
                     "request": resp.request.body,
                     "headers": resp.headers,
                     "response": resp.text,
