@@ -111,7 +111,7 @@ select = [
   "EM",
   "FA",
   "PIE",
-  # "T20", # TODO: Enable in future after establising logging
+  "T20",
   "SIM",
   "TID",
   "PTH",
