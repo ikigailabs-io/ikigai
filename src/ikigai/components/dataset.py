@@ -362,6 +362,21 @@ class DatasetDirectory(BaseModel):
         self.__session = session
         return self
 
+    def directories(self) -> NamedMapping[Self]:
+        resp = self.__session.get(
+            path="/component/get-dataset-directories-for-project",
+            params={"project_id": self.app_id, "directory_id": self.directory_id},
+        ).json()
+        directories = {
+            directory.directory_id: directory
+            for directory in (
+                self.from_dict(data=directory_dict, session=self.__session)
+                for directory_dict in resp["directories"]
+            )
+        }
+
+        return NamedMapping(directories)
+
     def datasets(self) -> NamedMapping[Dataset]:
         resp = self.__session.get(
             path="/component/get-datasets-for-project",
