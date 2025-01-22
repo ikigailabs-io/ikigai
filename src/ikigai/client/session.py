@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-import sys
+import logging
 from http import HTTPStatus
 from typing import Any
 
@@ -14,6 +14,8 @@ from pydantic.dataclasses import dataclass
 from requests import Response
 
 from ikigai.utils.compatibility import HTTPMethod
+
+logger = logging.getLogger("ikigai.client")
 
 
 @dataclass
@@ -30,6 +32,10 @@ class Session:
         params: dict[str, str] | None = None,
         json: dict | None = None,
     ) -> Response:
+        logger.debug(
+            "[%(method)s}] %(path)s %(params)s\n" "json: %(json)s",
+            {"method": method, "path": path, "params": params, "json": json},
+        )
         url = f"{self.base_url}{path}"
         resp = self.session.request(
             method=method,
@@ -41,23 +47,41 @@ class Session:
             return resp
         elif resp.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
             # A 4XX error happened
-            print(
-                f"""{method} {path}\n"""
-                f"""{resp.request.body!r}\n\n"""
-                f"""{resp.raw.headers}\n"""
-                f"""{resp.text}""",
-                file=sys.stderr,
+            logger.error(
+                "Request"
+                "[%(method)s}] %(path)s %(params)s\n"
+                "%(request)s\n\n"
+                "Response"
+                "headers: %(response_headers)s\n"
+                "%(response)s\n\n",
+                {
+                    "method": method,
+                    "path": path,
+                    "params": params,
+                    "request": resp.request.body,
+                    "headers": resp.headers,
+                    "response": resp.text,
+                },
             )
             todo = "TODO: Add error reporting"
             raise NotImplementedError(todo)
         else:
             # A 5XX error happened
-            print(
-                f"""{method} {path}\n"""
-                f"""{resp.request.body!r}\n\n"""
-                f"""{resp.raw.headers}\n"""
-                f"""{resp.text}""",
-                file=sys.stderr,
+            logger.error(
+                "Request"
+                "[%(method)s}] %(path)s %(params)s\n"
+                "%(request)s\n\n"
+                "Response"
+                "headers: %(response_headers)s\n"
+                "%(response)s\n\n",
+                {
+                    "method": method,
+                    "path": path,
+                    "params": params,
+                    "request": resp.request.body,
+                    "headers": resp.headers,
+                    "response": resp.text,
+                },
             )
             todo = "TODO: Add error reporting"
             raise NotImplementedError(todo)

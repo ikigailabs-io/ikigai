@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 from contextlib import ExitStack
+from logging import Logger
 
 import pandas as pd
 import pytest
@@ -68,6 +69,7 @@ def test_dataset_download(
     dataset_name: str,
     df1: pd.DataFrame,
     cleanup: ExitStack,
+    logger: Logger,
 ) -> None:
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
@@ -79,8 +81,12 @@ def test_dataset_download(
     assert df1.columns.equals(round_trip_df1.columns)
 
     # v. helpful debug message when the test fails
-    print(
-        df1.dtypes, df1.head(), round_trip_df1.dtypes, round_trip_df1.head(), sep="\n"
+    logger.critical(
+        "df1.dtypes:\n%r\n" "%r\n\n" "round_trip_df1.dtypes:\n%r\n" "%r\n\n",
+        df1.dtypes,
+        df1.head(),
+        round_trip_df1.dtypes,
+        round_trip_df1.head(),
     )
 
     pd.testing.assert_frame_equal(

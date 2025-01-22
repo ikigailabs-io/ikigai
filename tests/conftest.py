@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import logging
 import random
 import sys
 from collections.abc import Generator
@@ -27,6 +28,11 @@ def read_credentials(env_file: Path) -> dict[str, Any]:
 @pytest.fixture(**read_credentials(Path("./test-env.toml")))
 def cred(request) -> dict[str, str]:
     return request.param
+
+
+@pytest.fixture
+def logger() -> logging.Logger:
+    return logging.getLogger("test")
 
 
 ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789-"
