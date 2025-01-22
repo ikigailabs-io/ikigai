@@ -174,6 +174,23 @@ class App(BaseModel):
     def dataset(self) -> components.DatasetBuilder:
         return components.DatasetBuilder(session=self.__session, app_id=self.app_id)
 
+    def dataset_directories(self) -> NamedMapping[components.DatasetDirectory]:
+        resp = self.__session.get(
+            path="/component/get-dataset-directories-for-project",
+            params={"project_id": self.app_id},
+        ).json()
+        directories = {
+            directory.directory_id: directory
+            for directory in (
+                components.DatasetDirectory.from_dict(
+                    data=directory_dict, session=self.__session
+                )
+                for directory_dict in resp["directories"]
+            )
+        }
+
+        return NamedMapping(directories)
+
     def flows(self) -> NamedMapping[components.Flow]:
         resp = self.__session.get(
             path="/component/get-pipelines-for-project",
@@ -194,6 +211,23 @@ class App(BaseModel):
     def flow(self) -> components.FlowBuilder:
         return components.FlowBuilder(session=self.__session, app_id=self.app_id)
 
+    def flow_directories(self) -> NamedMapping[components.FlowDirectory]:
+        resp = self.__session.get(
+            path="/component/get-flow-directories-for-project",
+            params={"project_id": self.app_id},
+        ).json()
+        directories = {
+            directory.directory_id: directory
+            for directory in (
+                components.FlowDirectory.from_dict(
+                    data=directory_dict, session=self.__session
+                )
+                for directory_dict in resp["directories"]
+            )
+        }
+
+        return NamedMapping(directories)
+
 
 class AppDirectory(BaseModel):
     directory_id: str
@@ -211,6 +245,21 @@ class AppDirectory(BaseModel):
         self = cls.model_validate(data)
         self.__session = session
         return self
+
+    def directories(self) -> NamedMapping[Self]:
+        resp = self.__session.get(
+            path="/component/get-project-directories-for-user",
+            params={"directory_id": self.directory_id},
+        ).json()
+        directories = {
+            directory.directory_id: directory
+            for directory in (
+                self.from_dict(data=directory_dict, session=self.__session)
+                for directory_dict in resp["directories"]
+            )
+        }
+
+        return NamedMapping(directories)
 
     def apps(self) -> NamedMapping[App]:
         resp = self.__session.get(
