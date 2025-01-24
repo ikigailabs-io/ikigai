@@ -296,9 +296,52 @@ class Flow(BaseModel):
             return run_log
 
 
+class FlowDirectoryBuilder:
+    _app_id: str
+    _name: str
+    _parent_id: str
+    __session: Session
+
+    def __init__(self, session: Session, app_id: str) -> None:
+        self.__session = session
+        self._app_id = app_id
+        self._name = ""
+        self._parent_id = ""
+
+    def new(self, name: str) -> Self:
+        self._name = name
+        return self
+
+    def parent(self, parent: FlowDirectory) -> Self:
+        self._parent_id = parent.directory_id
+        return self
+
+    def build(self) -> FlowDirectory:
+        resp = self.__session.post(
+            path="/component/create-pipeline-directory",
+            json={
+                "directory": {
+                    "name": self._name,
+                    "project_id": self._app_id,
+                    "parent_id": self._parent_id,
+                }
+            },
+        ).json()
+        directory_id = resp["directory_id"]
+        resp = self.__session.get(
+            path="/component/get-pipeline-directory",
+            params={"project_id": self._app_id, "directory_id": directory_id},
+        ).json()
+
+        directory = FlowDirectory.from_dict(
+            data=resp["directory"], session=self.__session
+        )
+        return directory
+
+
 class FlowDirectory(BaseModel):
+    app_id: str = Field(validation_alias="project_id")
     directory_id: str
-    app_id: str
     name: str
     created_at: datetime
     modified_at: datetime

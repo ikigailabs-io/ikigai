@@ -3,8 +3,19 @@
 # SPDX-License-Identifier: MIT
 
 from ikigai.components.app import App, AppBuilder, AppDirectory
-from ikigai.components.dataset import Dataset, DatasetBuilder, DatasetDirectory
-from ikigai.components.flow import Flow, FlowBuilder, FlowDirectory, FlowStatus
+from ikigai.components.dataset import (
+    Dataset,
+    DatasetBuilder,
+    DatasetDirectory,
+    DatasetDirectoryBuilder,
+)
+from ikigai.components.flow import (
+    Flow,
+    FlowBuilder,
+    FlowDirectory,
+    FlowDirectoryBuilder,
+    FlowStatus,
+)
 
 __all__ = [
     "App",
@@ -13,8 +24,10 @@ __all__ = [
     "Dataset",
     "DatasetBuilder",
     "DatasetDirectory",
+    "DatasetDirectoryBuilder",
     "Flow",
     "FlowBuilder",
+    "FlowDirectoryBuilder",
     "FlowStatus",
     "FlowDirectory",
 ]

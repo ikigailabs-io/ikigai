@@ -191,6 +191,12 @@ class App(BaseModel):
 
         return NamedMapping(directories)
 
+    @property
+    def dataset_directory(self) -> components.DatasetDirectoryBuilder:
+        return components.DatasetDirectoryBuilder(
+            session=self.__session, app_id=self.app_id
+        )
+
     def flows(self) -> NamedMapping[components.Flow]:
         resp = self.__session.get(
             path="/component/get-pipelines-for-project",
@@ -227,6 +233,12 @@ class App(BaseModel):
         }
 
         return NamedMapping(directories)
+
+    @property
+    def flow_directory(self) -> components.FlowDirectoryBuilder:
+        return components.FlowDirectoryBuilder(
+            session=self.__session, app_id=self.app_id
+        )
 
 
 class AppDirectory(BaseModel):
