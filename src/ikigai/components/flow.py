@@ -312,7 +312,7 @@ class FlowDirectoryBuilder:
         self._name = name
         return self
 
-    def parent(self, parent: FlowDirectory) -> Self:
+    def parent(self, parent: Directory) -> Self:
         self._parent_id = parent.directory_id
         return self
 
@@ -343,8 +343,6 @@ class FlowDirectory(BaseModel):
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
-    created_at: datetime
-    modified_at: datetime
     __session: Session
 
     @property

@@ -19,5 +19,8 @@ class DirectoryType(str, Enum):
 
 
 class Directory(Protocol):
-    directory_id: str
-    type: str
+    @property
+    def directory_id(self) -> str: ...
+
+    @property
+    def type(self) -> str: ...

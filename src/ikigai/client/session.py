@@ -33,7 +33,7 @@ class Session:
         json: dict | None = None,
     ) -> Response:
         logger.debug(
-            "[%(method)s}] %(path)s %(params)s\n" "json: %(json)s",
+            "[%(method)s] %(path)s %(params)s\n" "json: %(json)s",
             {"method": method, "path": path, "params": params, "json": json},
         )
         url = f"{self.base_url}{path}"
@@ -49,7 +49,7 @@ class Session:
             # A 4XX error happened
             logger.error(
                 "Request"
-                "[%(method)s}] %(path)s %(params)s\n"
+                "[%(method)s] %(path)s %(params)s\n"
                 "%(request)s\n\n"
                 "Response"
                 "headers: %(response_headers)s\n"
@@ -69,7 +69,7 @@ class Session:
             # A 5XX error happened
             logger.error(
                 "Request"
-                "[%(method)s}] %(path)s %(params)s\n"
+                "[%(method)s] %(path)s %(params)s\n"
                 "%(request)s\n\n"
                 "Response"
                 "headers: %(response_headers)s\n"
