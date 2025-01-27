@@ -219,7 +219,7 @@ class App(BaseModel):
 
     def flow_directories(self) -> NamedMapping[components.FlowDirectory]:
         resp = self.__session.get(
-            path="/component/get-flow-directories-for-project",
+            path="/component/get-pipeline-directories-for-project",
             params={"project_id": self.app_id},
         ).json()
         directories = {
