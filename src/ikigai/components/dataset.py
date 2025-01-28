@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import io
+import logging
 import math
 import time
 from datetime import datetime
@@ -23,6 +24,8 @@ from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.protocols import Directory, DirectoryType
 
 CHUNK_SIZE = int(50e6)  # 50 MB
+
+logger = logging.getLogger("ikigai.components")
 
 
 def __upload_data(
@@ -258,6 +261,7 @@ class Dataset(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict, session: Session) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
         return self
@@ -399,6 +403,7 @@ class DatasetDirectory(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict, session: Session) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
         return self

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime
 from enum import Enum
@@ -17,6 +18,8 @@ from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.protocols import Directory, DirectoryType
+
+logger = logging.getLogger("ikigai.components")
 
 
 class FlowDefinition(BaseModel):
@@ -156,6 +159,7 @@ class Flow(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict, session: Session) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
         return self
@@ -351,6 +355,7 @@ class FlowDirectory(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict, session: Session) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
         return self
