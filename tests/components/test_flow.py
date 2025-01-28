@@ -335,3 +335,44 @@ def test_flow_run_fail(
     assert log.status == FlowStatus.FAILED
     assert log.erroneous_facet_id == "failing"
     assert log.data
+
+
+def test_flow_directories_creation(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_directory_name_1: str,
+    flow_directory_name_2: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("App to test flow directory creation")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    assert len(app.flow_directories()) == 0
+
+    flow_directory = app.flow_directory.new(name=flow_directory_name_1).build()
+    assert len(app.flow_directories()) == 1
+    assert len(flow_directory.directories()) == 0
+
+    nested_flow_directory = (
+        app.flow_directory.new(name=flow_directory_name_2)
+        .parent(flow_directory)
+        .build()
+    )
+    assert len(flow_directory.directories()) == 1
+    assert len(nested_flow_directory.flows()) == 0
+
+    flow_directories = app.flow_directories()
+    assert flow_directories[flow_directory_name_1]
+    assert flow_directories[flow_directory_name_2]
+
+    flow = (
+        app.flow.new(name=flow_name).directory(directory=nested_flow_directory).build()
+    )
+    cleanup.callback(flow.delete)
+    assert len(nested_flow_directory.flows()) == 1
+    assert len(flow_directory.flows()) == 0
