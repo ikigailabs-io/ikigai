@@ -81,7 +81,7 @@ def test_dataset_download(
     assert df1.columns.equals(round_trip_df1.columns)
 
     # v. helpful debug message when the test fails
-    logger.critical(
+    logger.info(
         "df1.dtypes:\n%r\n" "%r\n\n" "round_trip_df1.dtypes:\n%r\n" "%r\n\n",
         df1.dtypes,
         df1.head(),
@@ -113,3 +113,48 @@ def test_dataset_describe(
     assert description["dataset"]["project_id"] == app.app_id
     assert description["dataset"]["directory"] is not None
     assert description["dataset"]["directory"]["type"] == "DATASET"
+
+
+def test_dataset_directories_creation(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_directory_name_1: str,
+    dataset_directory_name_2: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
+) -> None:
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("App to test dataset directory creation")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    assert len(app.dataset_directories()) == 0
+
+    dataset_directory = app.dataset_directory.new(name=dataset_directory_name_1).build()
+    assert len(app.dataset_directories()) == 1
+    assert len(dataset_directory.directories()) == 0
+
+    nested_dataset_directory = (
+        app.dataset_directory.new(name=dataset_directory_name_2)
+        .parent(dataset_directory)
+        .build()
+    )
+    assert len(dataset_directory.directories()) == 1
+    assert len(nested_dataset_directory.datasets()) == 0
+
+    dataset_directories = app.dataset_directories()
+    assert dataset_directories[dataset_directory_name_1]
+    assert dataset_directories[dataset_directory_name_2]
+
+    flow = (
+        app.dataset.new(name=dataset_name)
+        .directory(directory=nested_dataset_directory)
+        .df(df1)
+        .build()
+    )
+    cleanup.callback(flow.delete)
+    assert len(nested_dataset_directory.datasets()) == 1
+    assert len(dataset_directory.datasets()) == 0

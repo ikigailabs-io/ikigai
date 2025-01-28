@@ -84,5 +84,25 @@ def dataset_name(random_name: str) -> str:
 
 
 @pytest.fixture
+def dataset_directory_name_1(random_name: str) -> str:
+    return f"dats-dir-1-{random_name}"
+
+
+@pytest.fixture
+def dataset_directory_name_2(random_name: str) -> str:
+    return f"dats-dir-2-{random_name}"
+
+
+@pytest.fixture
 def flow_name(random_name: str) -> str:
     return f"flow-{random_name}"
+
+
+@pytest.fixture
+def flow_directory_name_1(random_name: str) -> str:
+    return f"flow-dir-1-{random_name}"
+
+
+@pytest.fixture
+def flow_directory_name_2(random_name: str) -> str:
+    return f"flow-dir-2-{random_name}"
