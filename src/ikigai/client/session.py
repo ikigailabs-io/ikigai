@@ -59,7 +59,7 @@ class Session:
                     "path": path,
                     "params": params,
                     "request": resp.request.body,
-                    "headers": resp.headers,
+                    "response_headers": resp.headers,
                     "response": resp.text,
                 },
             )
@@ -79,7 +79,7 @@ class Session:
                     "path": path,
                     "params": params,
                     "request": resp.request.body,
-                    "headers": resp.headers,
+                    "response_headers": resp.headers,
                     "response": resp.text,
                 },
             )
