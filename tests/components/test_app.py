@@ -56,3 +56,10 @@ def test_app_describe_1(ikigai: Ikigai, app_name: str, cleanup: ExitStack) -> No
     assert "pipelines" in components and components["pipelines"] == []
     assert "models" in components and components["models"] == []
     assert "external_resources" in components and components["external_resources"] == []
+
+
+def test_app_directory(ikigai: Ikigai) -> None:
+    app_directories = ikigai.directories()
+
+    # TODO: Update test when creating app directories is available
+    assert len(app_directories) == 0
