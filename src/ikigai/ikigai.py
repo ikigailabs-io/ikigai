@@ -24,7 +24,9 @@ class Ikigai:
         self.__session = Session(base_url=str(self.base_url), session=session)
 
     def apps(self) -> NamedMapping[components.App]:
-        resp = self.__session.get("/component/get-projects-for-user").json()
+        resp = self.__session.get(
+            path="/component/get-projects-for-user", params={"fetch_all": True}
+        ).json()
         apps = {
             app.app_id: app
             for app in (
