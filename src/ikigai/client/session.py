@@ -51,7 +51,7 @@ class Session:
                 "Request"
                 "[%(method)s] %(path)s %(params)s\n"
                 "%(request)s\n\n"
-                "Response"
+                "Response [%(status)s]"
                 "headers: %(response_headers)s\n"
                 "%(response)s\n\n",
                 {
@@ -59,6 +59,7 @@ class Session:
                     "path": path,
                     "params": params,
                     "request": resp.request.body,
+                    "status": resp.status_code,
                     "response_headers": resp.headers,
                     "response": resp.text,
                 },
@@ -71,7 +72,7 @@ class Session:
                 "Request"
                 "[%(method)s] %(path)s %(params)s\n"
                 "%(request)s\n\n"
-                "Response"
+                "Response [%(status)s]"
                 "headers: %(response_headers)s\n"
                 "%(response)s\n\n",
                 {
@@ -79,6 +80,7 @@ class Session:
                     "path": path,
                     "params": params,
                     "request": resp.request.body,
+                    "status": resp.status_code,
                     "response_headers": resp.headers,
                     "response": resp.text,
                 },
