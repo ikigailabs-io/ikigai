@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime
 from enum import Enum
@@ -15,7 +16,10 @@ from tqdm.auto import tqdm
 from ikigai.client.session import Session
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
-from ikigai.utils.protocols import Directory
+from ikigai.utils.named_mapping import NamedMapping
+from ikigai.utils.protocols import Directory, DirectoryType
+
+logger = logging.getLogger("ikigai.components")
 
 
 class FlowDefinition(BaseModel):
@@ -155,6 +159,7 @@ class Flow(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict, session: Session) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
         return self
@@ -187,6 +192,22 @@ class Flow(BaseModel):
         )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
+        return self
+
+    def move(self, directory: Directory) -> Self:
+        _ = self.__session.post(
+            path="/component/edit-pipeline",
+            json={
+                "pipeline": {
+                    "project_id": self.app_id,
+                    "pipeline_id": self.flow_id,
+                    "directory": {
+                        "directory_id": directory.directory_id,
+                        "type": directory.type,
+                    },
+                }
+            },
+        )
         return self
 
     def status(self) -> FlowStatusReport:
@@ -277,3 +298,95 @@ class Flow(BaseModel):
             progress_bar.update(progress - last_progress)
 
             return run_log
+
+
+class FlowDirectoryBuilder:
+    _app_id: str
+    _name: str
+    _parent_id: str
+    __session: Session
+
+    def __init__(self, session: Session, app_id: str) -> None:
+        self.__session = session
+        self._app_id = app_id
+        self._name = ""
+        self._parent_id = ""
+
+    def new(self, name: str) -> Self:
+        self._name = name
+        return self
+
+    def parent(self, parent: Directory) -> Self:
+        self._parent_id = parent.directory_id
+        return self
+
+    def build(self) -> FlowDirectory:
+        resp = self.__session.post(
+            path="/component/create-pipeline-directory",
+            json={
+                "directory": {
+                    "name": self._name,
+                    "project_id": self._app_id,
+                    "parent_id": self._parent_id,
+                }
+            },
+        ).json()
+        directory_id = resp["directory_id"]
+        resp = self.__session.get(
+            path="/component/get-pipeline-directory",
+            params={"project_id": self._app_id, "directory_id": directory_id},
+        ).json()
+
+        directory = FlowDirectory.from_dict(
+            data=resp["directory"], session=self.__session
+        )
+        return directory
+
+
+class FlowDirectory(BaseModel):
+    app_id: str = Field(validation_alias="project_id")
+    directory_id: str
+    name: str
+    __session: Session
+
+    @property
+    def type(self) -> str:
+        return DirectoryType.FLOW.value
+
+    @classmethod
+    def from_dict(cls, data: dict, session: Session) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
+        self = cls.model_validate(data)
+        self.__session = session
+        return self
+
+    def directories(self) -> NamedMapping[Self]:
+        resp = self.__session.get(
+            path="/component/get-pipeline-directories-for-project",
+            params={"project_id": self.app_id, "directory_id": self.directory_id},
+        ).json()
+        directories = {
+            directory.directory_id: directory
+            for directory in (
+                self.from_dict(data=directory_dict, session=self.__session)
+                for directory_dict in resp["directories"]
+            )
+        }
+
+        return NamedMapping(directories)
+
+    def flows(self) -> NamedMapping[Flow]:
+        resp = self.__session.get(
+            path="/component/get-pipelines-for-project",
+            params={"project_id": self.app_id, "directory_id": self.directory_id},
+        ).json()
+
+        flows = {
+            flow.flow_id: flow
+            for flow in (
+                Flow.from_dict(data=flow_dict, session=self.__session)
+                for flow_dict in resp["pipelines"]
+            )
+        }
+
+        return NamedMapping(flows)
