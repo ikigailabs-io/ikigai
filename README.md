@@ -6,10 +6,29 @@
 
 -----
 
-**Table of Contents**
+## Table of Contents
 
+- [Ikigai Platform Overview](#ikigai-platform-overview)
+- [Getting an API Key](#getting-an-api-key)
+- [Requirements](#requirements)
 - [Installation](#installation)
-- [License](#license)
+- [Creating an Ikigai Client](#creating-an-ikigai-client)
+- [Examples](#examples)
+- [Apps](#apps)
+- [Listing All Apps](#listing-all-apps)
+- [Showing Details of an App](#showing-details-of-an-app)
+- [Datasets](#datasets)
+- [Finding a Dataset from an App](#finding-a-dataset-from-an-app)
+- [Showing Details of a Dataset](#showing-details-of-a-dataset)
+- [Downloading Your Existing Dataset](#downloading-your-existing-dataset)
+- [Creating a New Dataset](#creating-a-new-dataset)
+- [Updating a Dataset](#updating-a-dataset)
+- [Flows](#flows)
+- [Finding a Flow from an App](#finding-a-flow-from-an-app)
+- [Running a Flow](#running-a-flow)
+- [Getting the Status of a Flow](#getting-the-status-of-a-flow)
+
+## Ikigai Platform Overview
 
 The Ikigai Python library provides access to [Ikigai's Platform API](https://docs.ikigailabs.io/api/platform-api) from applications written in the Python language.
 
