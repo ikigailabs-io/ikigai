@@ -2,4 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-__all__: list[str] = []
+from ikigai.client.client import Client
+
+__all__ = ["Client"]
