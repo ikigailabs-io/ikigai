@@ -149,12 +149,60 @@ def test_dataset_directories_creation(
     assert dataset_directories[dataset_directory_name_1]
     assert dataset_directories[dataset_directory_name_2]
 
-    flow = (
+    dataset = (
         app.dataset.new(name=dataset_name)
         .directory(directory=nested_dataset_directory)
         .df(df1)
         .build()
     )
-    cleanup.callback(flow.delete)
+    cleanup.callback(dataset.delete)
     assert len(nested_dataset_directory.datasets()) == 1
     assert len(dataset_directory.datasets()) == 0
+
+
+"""
+Regression Testing
+
+- Each regression test should be of the format:
+    f"test_{ticket_number}_{short_desc}"
+"""
+
+
+def test_iplt_7641_datasets(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_directory_name_1: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
+) -> None:
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("An app to test that app.flows gets all flows")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    dataset_1 = app.dataset.new(name=dataset_name).df(df1).build()
+    cleanup.callback(dataset_1.delete)
+
+    dataset_directory = app.dataset_directory.new(name=dataset_directory_name_1).build()
+    dataset_2 = (
+        app.dataset.new(name=f"cloned-{dataset_name}")
+        .directory(dataset_directory)
+        .df(df1)
+        .build()
+    )
+    cleanup.callback(dataset_2.delete)
+
+    datasets = app.datasets()
+    directory_datasets = dataset_directory.datasets()
+    assert datasets
+    assert directory_datasets
+    assert len(directory_datasets) == 1
+    assert len(datasets) >= len(directory_datasets)
+    assert datasets[dataset_1.name]
+    assert datasets[dataset_2.name]
+    with pytest.raises(KeyError):
+        directory_datasets[dataset_1.name]
+    assert directory_datasets[dataset_2.name]

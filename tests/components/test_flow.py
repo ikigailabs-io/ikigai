@@ -376,3 +376,50 @@ def test_flow_directories_creation(
     cleanup.callback(flow.delete)
     assert len(nested_flow_directory.flows()) == 1
     assert len(flow_directory.flows()) == 0
+
+
+"""
+Regression Testing
+
+- Each regression test should be of the format:
+    f"test_{ticket_number}_{short_desc}"
+"""
+
+
+def test_iplt_7641_flows(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_directory_name_1: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("An app to test that app.flows gets all flows")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    flow = app.flow.new(name=flow_name).build()
+    cleanup.callback(flow.delete)
+
+    flow_directory = app.flow_directory.new(name=flow_directory_name_1).build()
+    cloned_flow = (
+        app.flow.new(name=f"cloned-{flow_name}")
+        .directory(flow_directory)
+        .definition(flow)
+        .build()
+    )
+    cleanup.callback(cloned_flow.delete)
+
+    flows = app.flows()
+    directory_flows = flow_directory.flows()
+    assert flows
+    assert directory_flows
+    assert len(directory_flows) == 1
+    assert len(flows) >= len(directory_flows)
+    assert flows[flow.name]
+    assert flows[cloned_flow.name]
+    with pytest.raises(KeyError):
+        directory_flows[flow.name]
+    assert directory_flows[cloned_flow.name]
