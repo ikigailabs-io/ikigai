@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import requests
 from pydantic import AnyUrl, EmailStr, Field
 from pydantic.dataclasses import dataclass
 
@@ -19,19 +18,17 @@ class Ikigai:
     __client: Client = Field(init=False)
 
     def __post_init__(self) -> None:
-        session = requests.Session()
-        session.headers.update({"user": self.user_email, "api-key": self.api_key})
-        self.__client = Client(base_url=str(self.base_url), session=session)
+        self.__client = Client(
+            user_email=self.user_email, api_key=self.api_key, base_url=self.base_url
+        )
 
     def apps(self) -> NamedMapping[components.App]:
-        resp = self.__client.get(
-            path="/component/get-projects-for-user", params={"fetch_all": True}
-        ).json()
+        app_dicts = self.__client.component.get_projects_for_user()
         apps = {
             app.app_id: app
             for app in (
                 components.App.from_dict(data=app_dict, client=self.__client)
-                for app_dict in resp["projects"]
+                for app_dict in app_dicts
             )
         }
 

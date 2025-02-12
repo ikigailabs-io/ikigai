@@ -236,9 +236,7 @@ class App(BaseModel):
 
     @property
     def flow_directory(self) -> components.FlowDirectoryBuilder:
-        return components.FlowDirectoryBuilder(
-            client=self.__client, app_id=self.app_id
-        )
+        return components.FlowDirectoryBuilder(client=self.__client, app_id=self.app_id)
 
 
 class AppDirectory(BaseModel):
@@ -274,16 +272,15 @@ class AppDirectory(BaseModel):
         return NamedMapping(directories)
 
     def apps(self) -> NamedMapping[App]:
-        resp = self.__client.get(
-            path="/component/get-projects-for-user",
-            params={"directory_id": self.directory_id, "fetch_all": False},
-        ).json()
+        app_dicts = self.__client.component.get_projects_for_user(
+            directory_id=self.directory_id
+        )
 
         apps = {
             app.app_id: app
             for app in (
                 App.from_dict(data=app_dict, client=self.__client)
-                for app_dict in resp["projects"]
+                for app_dict in app_dicts
             )
         }
 
