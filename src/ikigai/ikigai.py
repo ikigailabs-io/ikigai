@@ -7,7 +7,7 @@ from pydantic import AnyUrl, EmailStr, Field
 from pydantic.dataclasses import dataclass
 
 from ikigai import components
-from ikigai.client.session import Session
+from ikigai.client.session import Client
 from ikigai.utils.named_mapping import NamedMapping
 
 
@@ -16,12 +16,12 @@ class Ikigai:
     user_email: EmailStr
     api_key: str = Field(repr=False)
     base_url: AnyUrl = Field(default=AnyUrl("https://api.ikigailabs.io"))
-    __session: Session = Field(init=False)
+    __session: Client = Field(init=False)
 
     def __post_init__(self) -> None:
         session = requests.Session()
         session.headers.update({"user": self.user_email, "api-key": self.api_key})
-        self.__session = Session(base_url=str(self.base_url), session=session)
+        self.__session = Client(base_url=str(self.base_url), session=session)
 
     def apps(self) -> NamedMapping[components.App]:
         resp = self.__session.get(

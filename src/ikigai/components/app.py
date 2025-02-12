@@ -10,7 +10,7 @@ from typing import Any
 from pydantic import BaseModel, EmailStr, Field
 
 from ikigai import components
-from ikigai.client.session import Session
+from ikigai.client.session import Client
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.protocols import Directory, DirectoryType
@@ -22,9 +22,9 @@ class AppBuilder:
     _directory: dict[str, str]
     _icon: str
     _images: list[str]
-    __session: Session
+    __session: Client
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Client) -> None:
         self.__session = session
         self._name = ""
         self._description = ""
@@ -74,10 +74,10 @@ class App(BaseModel):
     created_at: datetime
     modified_at: datetime
     last_used_at: datetime
-    __session: Session
+    __session: Client
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: dict, session: Client) -> Self:
         self = cls.model_validate(data)
         self.__session = session
         return self
@@ -246,14 +246,14 @@ class AppDirectory(BaseModel):
     name: str
     created_at: datetime
     modified_at: datetime
-    __session: Session
+    __session: Client
 
     @property
     def type(self) -> str:
         return DirectoryType.APP.value
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: dict, session: Client) -> Self:
         self = cls.model_validate(data)
         self.__session = session
         return self

@@ -19,7 +19,7 @@ logger = logging.getLogger("ikigai.client")
 
 
 @dataclass
-class Session:
+class Client:
     base_url: str
     session: requests.Session
 

@@ -13,7 +13,7 @@ from typing import Any
 from pydantic import BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
 
-from ikigai.client.session import Session
+from ikigai.client.session import Client
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
@@ -40,9 +40,9 @@ class FlowBuilder:
     _name: str
     _directory: dict[str, str]
     _flow_definition: dict[str, Any]
-    __session: Session
+    __session: Client
 
-    def __init__(self, session: Session, app_id: str) -> None:
+    def __init__(self, session: Client, app_id: str) -> None:
         self.__session = session
         self._app_id = app_id
         self._name = ""
@@ -155,10 +155,10 @@ class Flow(BaseModel):
     name: str
     created_at: datetime
     modified_at: datetime
-    __session: Session
+    __session: Client
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: dict, session: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
@@ -304,9 +304,9 @@ class FlowDirectoryBuilder:
     _app_id: str
     _name: str
     _parent_id: str
-    __session: Session
+    __session: Client
 
-    def __init__(self, session: Session, app_id: str) -> None:
+    def __init__(self, session: Client, app_id: str) -> None:
         self.__session = session
         self._app_id = app_id
         self._name = ""
@@ -347,14 +347,14 @@ class FlowDirectory(BaseModel):
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
-    __session: Session
+    __session: Client
 
     @property
     def type(self) -> str:
         return DirectoryType.FLOW.value
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: dict, session: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session

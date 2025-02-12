@@ -18,7 +18,7 @@ import pandas as pd
 import requests
 from pydantic import BaseModel, Field
 
-from ikigai.client.session import Session
+from ikigai.client.session import Client
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.protocols import Directory, DirectoryType
@@ -29,7 +29,7 @@ logger = logging.getLogger("ikigai.components")
 
 
 def __upload_data(
-    session: Session,
+    session: Client,
     app_id: str,
     dataset_id: str,
     data: bytes,
@@ -104,7 +104,7 @@ def __upload_data(
 
 
 def _upload_data(
-    session: Session, app_id: str, dataset_id: str, name: str, data: bytes
+    session: Client, app_id: str, dataset_id: str, name: str, data: bytes
 ) -> None:
     assert data is not None
     filename = f"{name}.csv"
@@ -159,9 +159,9 @@ class DatasetBuilder:
     _name: str
     _data: bytes | None
     _directory: dict[str, str]
-    __session: Session
+    __session: Client
 
-    def __init__(self, session: Session, app_id: str) -> None:
+    def __init__(self, session: Client, app_id: str) -> None:
         self.__session = session
         self._app_id = app_id
         self._name = ""
@@ -257,10 +257,10 @@ class Dataset(BaseModel):
     size: int
     created_at: datetime
     modified_at: datetime
-    __session: Session
+    __session: Client
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: dict, session: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
@@ -352,9 +352,9 @@ class DatasetDirectoryBuilder:
     _app_id: str
     _name: str
     _parent_id: str
-    __session: Session
+    __session: Client
 
-    def __init__(self, session: Session, app_id: str) -> None:
+    def __init__(self, session: Client, app_id: str) -> None:
         self.__session = session
         self._app_id = app_id
         self._name = ""
@@ -395,14 +395,14 @@ class DatasetDirectory(BaseModel):
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
-    __session: Session
+    __session: Client
 
     @property
     def type(self) -> str:
         return DirectoryType.DATASET.value
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: dict, session: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__session = session
