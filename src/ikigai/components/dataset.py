@@ -38,21 +38,17 @@ def __upload_data(
 ) -> None:
     num_parts = math.ceil(len(data) / chunk_size)
 
-    resp = client.get(
-        path="/component/get-dataset-multipart-upload-urls",
-        params={
-            "dataset_id": dataset_id,
-            "project_id": app_id,
-            "filename": filename,
-            "number_of_parts": num_parts,
-        },
-    ).json()
+    multipart_upload_metadata = client.component.get_dataset_multipart_upload_urls(
+        dataset_id=dataset_id,
+        app_id=app_id,
+        filename=filename,
+        num_parts=num_parts,
+    )
 
-    content_type = resp["content_type"]
-    upload_urls: dict[int, str] = {
-        int(chunk_idx): upload_url for chunk_idx, upload_url in resp["urls"].items()
-    }
-    upload_id = resp["upload_id"]
+    content_type = multipart_upload_metadata["content_type"]
+    upload_urls = multipart_upload_metadata["urls"]
+    upload_id = multipart_upload_metadata["upload_id"]
+
     etags: dict[int, str] = {}
 
     try:
@@ -70,7 +66,7 @@ def __upload_data(
                 assert resp.status_code == HTTPStatus.OK
 
                 # Get etags from response header
-                etags[chunk_idx] = resp.headers.get("ETag")
+                etags[chunk_idx] = resp.headers["ETag"]
 
     except Exception:
         client.post(
