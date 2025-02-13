@@ -1,4 +1,4 @@
-# Ikigai
+# ikigai
 
 [![PyPI - Version](https://img.shields.io/pypi/v/ikigai.svg)](https://pypi.org/project/ikigai)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ikigai.svg)](https://pypi.org/project/ikigai)
@@ -27,6 +27,7 @@
 - [Finding a Flow from an App](#finding-a-flow-from-an-app)
 - [Running a Flow](#running-a-flow)
 - [Getting the Status of a Flow](#getting-the-status-of-a-flow)
+- [License](#license)
 
 ## Ikigai Platform Overview
 
@@ -152,7 +153,7 @@ The output resembles the following example:
 
 ### Datasets
 
-Datasets are any data files stored in the Ikigai platform. You can upload your files to Ikigai to creat a dataset. Ikigai supports various file types such as CSV, XLS, XLSX, PDF, and more.
+Datasets are any data files stored in the Ikigai platform. You can upload your files to Ikigai to creat a dataset. Ikigai supports various file types such as CSV, and Pandas DataFrame.
 
 #### Finding a Dataset from an App
 
@@ -169,7 +170,34 @@ print(dataset)
 The output resembles the following example:
 
 ```py
-Dataset(app_id='12345678abcdef', dataset_id='4444444bbbbbbb', name='Dataset: New Dataset', filename='example.csv', file_extension='csv', data_types={'Channel/Location': ColumnDataType(data_type=<DataType.CATEGORICAL: 'CATEGORICAL'>, data_formats={}), 'Product (name/description)': ColumnDataType(data_type=<DataType.TEXT: 'TEXT'>, data_formats={}), 'Quantity': ColumnDataType(data_type=<DataType.NUMERIC: 'NUMERIC'>, data_formats={}), 'SKU/Unique Item ID': ColumnDataType(data_type=<DataType.TEXT: 'TEXT'>, data_formats={})}, size=311, created_at=datetime.datetime(2024, 01, 01, 20, 0, 55, tzinfo=TzInfo(UTC)), modified_at=datetime.datetime(2024, 01, 01, 22, 0, 55, tzinfo=TzInfo(UTC)))
+Dataset(
+    app_id='12345678abcdef',
+    dataset_id='4444444bbbbbbb',
+    name='Dataset: New Dataset',
+    filename='example.csv',
+    file_extension='csv',
+    data_types={
+        'Channel/Location': ColumnDataType(
+            data_type=<DataType.CATEGORICAL: 'CATEGORICAL'>,
+            data_formats={}
+        ),
+        'Product (name/description)': ColumnDataType(
+            data_type=<DataType.TEXT: 'TEXT'>,
+            data_formats={}
+        ),
+        'Quantity': ColumnDataType(
+            data_type=<DataType.NUMERIC: 'NUMERIC'>,
+            data_formats={}
+        ),
+        'SKU/Unique Item ID': ColumnDataType(
+            data_type=<DataType.TEXT: 'TEXT'>,
+            data_formats={}
+        )
+    },
+    size=311,
+    created_at=datetime.datetime(2024, 1, 1, 20, 0, 55, tzinfo=TzInfo(UTC)),
+    modified_at=datetime.datetime(2024, 1, 1, 22, 0, 55, tzinfo=TzInfo(UTC))
+)
 ```
 
 #### Showing Details of a Dataset
@@ -185,21 +213,40 @@ dataset.describe()
 The output resembles the following example:
 
 ```py
-{'dataset': {'dataset_id': '4444444bbbbbbb',
-  'name': 'tart Here (Tutorial)',
-  'project_id': 'abcdefg123456',
-  'filename': 'example.csv',
-  'data_types': {'Channel/Location': {'data_type': 'CATEGORICAL',
-    'data_formats': {}},
-   'Product (name/description)': {'data_type': 'TEXT', 'data_formats': {}},
-   'Quantity': {'data_type': 'NUMERIC', 'data_formats': {}},
-   'SKU/Unique Item ID': {'data_type': 'TEXT', 'data_formats': {}}},
-  'directory': {'directory_id': '33333333iiiiiiii',
-   'name': '',
-   'type': 'DATASET',
-   'project_id': '',
-...
-    'upload_id': ''}
+{
+    'dataset': {
+        'dataset_id': '4444444bbbbbbb',
+        'name': 'Start Here (Tutorial)',
+        'project_id': 'abcdefg123456',
+        'filename': 'example.csv',
+        'data_types': {
+            'Channel/Location': {
+                'data_type': 'CATEGORICAL',
+                'data_formats': {}
+            },
+            'Product (name/description)': {
+                'data_type': 'TEXT',
+                'data_formats': {}
+            },
+            'Quantity': {
+                'data_type': 'NUMERIC',
+                'data_formats': {}
+            },
+            'SKU/Unique Item ID': {
+                'data_type': 'TEXT',
+                'data_formats': {}
+            }
+        },
+        'directory': {
+            'directory_id': '33333333iiiiiiii',
+            'name': '',
+            'type': 'DATASET',
+            'project_id': ''
+        },
+        'upload_id': ''
+    }
+}
+
 ```
 
 #### Downloading Your Existing Dataset
@@ -216,14 +263,13 @@ df.head()
 
 The output resembles the following example:
 
-```py
-Product (name/description)	SKU/Unique Item ID	Channel/Location	Quantity
-0	Chocolate Chip Cookie	Chocolate_C123_Am	Amazon	166
-1	Snickerdoodle Cookie	Snickerdoodle_C123_Am	Amazon	428
-2	Ginger Cookie	Ginger_C123_Am	Amazon	271
-3	Sugar Cookie	Sugar_C123_Am	Amazon	421
-4	Double Chocolate Cookie	Double_C123_Am	Amazon	342
-```
+| Product (name/description) | SKU/Unique Item ID     | Channel/Location | Quantity |
+|---------------------------|----------------------|----------------|----------|
+| Chocolate Chip Cookie     | Chocolate_C123_Am   | Amazon         | 166      |
+| Snickerdoodle Cookie      | Snickerdoodle_C123_Am | Amazon         | 428      |
+| Ginger Cookie            | Ginger_C123_Am      | Amazon         | 271      |
+| Sugar Cookie             | Sugar_C123_Am       | Amazon         | 421      |
+| Double Chocolate Cookie  | Double_C123_Am      | Amazon         | 342      |
     
 #### Creating a New Dataset
 
@@ -240,7 +286,35 @@ The output resembles the following example:
 
 ```py
 
-Dataset(app_id='12345678abcdef', dataset_id='3232323yyyyyyy', name='New Dataset', filename='new-example.csv', file_extension='csv', data_types={'Channel/Location': ColumnDataType(data_type=<DataType.CATEGORICAL: 'CATEGORICAL'>, data_formats={}), 'Product (name/description)': ColumnDataType(data_type=<DataType.TEXT: 'TEXT'>, data_formats={}), 'Quantity': ColumnDataType(data_type=<DataType.NUMERIC: 'NUMERIC'>, data_formats={'numeric_format': 'INTEGER'}), 'SKU/Unique Item ID': ColumnDataType(data_type=<DataType.TEXT: 'TEXT'>, data_formats={})}, size=305, created_at=datetime.datetime(2025, 1, 23, 18, 22, 2, tzinfo=TzInfo(UTC)), modified_at=datetime.datetime(2025, 1, 23, 18, 22, 9, tzinfo=TzInfo(UTC)))
+Dataset(
+    app_id='12345678abcdef',
+    dataset_id='3232323yyyyyyy',
+    name='New Dataset',
+    filename='new-example.csv',
+    file_extension='csv',
+    data_types={
+        'Channel/Location': ColumnDataType(
+            data_type=<DataType.CATEGORICAL: 'CATEGORICAL'>,
+            data_formats={}
+        ),
+        'Product (name/description)': ColumnDataType(
+            data_type=<DataType.TEXT: 'TEXT'>,
+            data_formats={}
+        ),
+        'Quantity': ColumnDataType(
+            data_type=<DataType.NUMERIC: 'NUMERIC'>,
+            data_formats={'numeric_format': 'INTEGER'}
+        ),
+        'SKU/Unique Item ID': ColumnDataType(
+            data_type=<DataType.TEXT: 'TEXT'>,
+            data_formats={}
+        )
+    },
+    size=305,
+    created_at=datetime.datetime(2025, 1, 23, 18, 22, 2, tzinfo=TzInfo(UTC)),
+    modified_at=datetime.datetime(2025, 1, 23, 18, 22, 9, tzinfo=TzInfo(UTC))
+)
+
 ```
 
 #### Updating a Dataset
@@ -259,14 +333,13 @@ new_dataset.df().head()
 
 The output resembles the following example:
 
-```py
-Product (name/description)	SKU/Unique Item ID	Channel/Location
-0	Chocolate Chip Cookie	Chocolate_C123_Am	Amazon
-1	Snickerdoodle Cookie	Snickerdoodle_C123_Am	Amazon
-2	Ginger Cookie	Ginger_C123_Am	Amazon
-3	Sugar Cookie	Sugar_C123_Am	Amazon
-4	Double Chocolate Cookie	Double_C123_Am	Amazon
-```
+| Product (name/description)  | SKU/Unique Item ID      | Channel/Location |
+|----------------------------|------------------------|------------------|
+| Chocolate Chip Cookie      | Chocolate_C123_Am      | Amazon           |
+| Snickerdoodle Cookie       | Snickerdoodle_C123_Am  | Amazon           |
+| Ginger Cookie              | Ginger_C123_Am         | Amazon           |
+| Sugar Cookie               | Sugar_C123_Am          | Amazon           |
+| Double Chocolate Cookie    | Double_C123_Am         | Amazon           |
 
 ### Flows
 
@@ -287,7 +360,13 @@ flow
 The output resembles the following example:
 
 ```py
-Flow(app_id='12345678abcdef', flow_id='6666666hhhhhhh', name='new flow', created_at=datetime.datetime(2025, 1, 1, 10, 00, 30, tzinfo=TzInfo(UTC)), modified_at=datetime.datetime(2025, 1, 1, 11, 00, 30, tzinfo=TzInfo(UTC)))
+Flow(
+    app_id='12345678abcdef',
+    flow_id='6666666hhhhhhh',
+    name='new flow',
+    created_at=datetime.datetime(2025, 1, 1, 10, 0, 30, tzinfo=TzInfo(UTC)),
+    modified_at=datetime.datetime(2025, 1, 1, 11, 0, 30, tzinfo=TzInfo(UTC))
+)
 ```
 
 #### Running a Flow
@@ -303,7 +382,14 @@ flow.run()           # Run the flow
 When the run is successful, the output resembles the following example:
 
 ```py
-RunLog(log_id='4545454lllllll', status=SUCCESS, user='bob@example.com', erroneous_facet_id=None, data='', timestamp=datetime.datetime(2025, 1, 1, 11, 00, 5, tzinfo=TzInfo(UTC)))
+RunLog(
+    log_id='4545454lllllll',
+    status=SUCCESS,
+    user='bob@example.com',
+    erroneous_facet_id=None,
+    data='',
+    timestamp=datetime.datetime(2025, 1, 1, 11, 0, 5, tzinfo=TzInfo(UTC))
+)
 ```
 
 #### Getting the Status of a Flow
@@ -320,7 +406,15 @@ flow.status()               # Get the status of the flow (IDLE: currently the fl
 When the flow is NOT running, you should see a similar output:
 
 ```py
-FlowStatusReport(status=IDLE, progress=None, message='')
+FlowStatusReport(
+    status=IDLE,
+    progress=None,
+    message=''
+)
 ```
+
+## License
+
+- `ikigai` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
 
 
