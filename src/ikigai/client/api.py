@@ -25,10 +25,22 @@ class ComponentAPI:
     def __post_init__(self, session: Session) -> None:
         self.__session = session
 
+    def get_project_directories_for_user(
+        self, directory_id: str = _UNSET
+    ) -> list[dict]:
+        if directory_id == _UNSET:
+            directory_id = ""
+
+        return self.__session.get(
+            path="/component/get-project-directories-for-user",
+            params={"directory_id": directory_id},
+        ).json()["directories"]
+
     def get_projects_for_user(self, directory_id: str = _UNSET) -> list[dict]:
         fetch_all = directory_id == _UNSET
         if directory_id == _UNSET:
             directory_id = ""
+
         return self.__session.get(
             path="/component/get-projects-for-user",
             params={"fetch_all": fetch_all, "directory_id": directory_id},

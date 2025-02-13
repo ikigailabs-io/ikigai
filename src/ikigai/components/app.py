@@ -257,15 +257,14 @@ class AppDirectory(BaseModel):
         return self
 
     def directories(self) -> NamedMapping[Self]:
-        resp = self.__client.get(
-            path="/component/get-project-directories-for-user",
-            params={"directory_id": self.directory_id},
-        ).json()
+        directory_dicts = self.__client.component.get_project_directories_for_user(
+            directory_id=self.directory_id,
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
                 self.from_dict(data=directory_dict, client=self.__client)
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 

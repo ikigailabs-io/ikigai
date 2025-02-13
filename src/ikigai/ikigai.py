@@ -39,14 +39,14 @@ class Ikigai:
         return components.AppBuilder(client=self.__client)
 
     def directories(self) -> NamedMapping[components.AppDirectory]:
-        resp = self.__client.get("/component/get-project-directories-for-user").json()
+        directory_dicts = self.__client.component.get_project_directories_for_user()
         directories = {
             directory.directory_id: directory
             for directory in (
                 components.AppDirectory.from_dict(
                     data=directory_dict, client=self.__client
                 )
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 
