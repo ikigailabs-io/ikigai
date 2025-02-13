@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from ikigai.client import Client
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.utils.protocols import Directory, DirectoryType
+from ikigai.typing.protocol import Directory, DirectoryType
 
 CHUNK_SIZE = int(50e6)  # 50 MB
 

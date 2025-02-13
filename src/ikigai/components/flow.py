@@ -17,7 +17,7 @@ from ikigai.client import Client
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.utils.protocols import Directory, DirectoryType
+from ikigai.typing.protocol import Directory, DirectoryType
 
 logger = logging.getLogger("ikigai.components")
 

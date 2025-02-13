@@ -13,7 +13,7 @@ from ikigai import components
 from ikigai.client import Client
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.utils.protocols import Directory, DirectoryType
+from ikigai.typing.protocol import Directory, DirectoryType
 
 
 class AppBuilder:

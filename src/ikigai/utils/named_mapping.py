@@ -6,7 +6,7 @@ from collections import abc
 from collections.abc import Mapping
 from typing import Generic, TypeVar
 
-from ikigai.utils.protocols import Named
+from ikigai.typing.protocol import Named
 
 VT = TypeVar("VT", bound=Named)
 
