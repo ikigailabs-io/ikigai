@@ -153,7 +153,7 @@ The output resembles the following example:
 
 ### Datasets
 
-Datasets are any data files stored in the Ikigai platform. You can upload your files to Ikigai to creat a dataset. Ikigai supports various file types such as CSV, and Pandas DataFrame.
+Datasets are any data files stored in the Ikigai platform. You can upload your files to Ikigai to create a dataset. Ikigai supports various file types such as CSV, and Pandas DataFrame.
 
 #### Finding a Dataset from an App
 
@@ -205,8 +205,8 @@ Dataset(
 The example snippet shows you how to display details related to a dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT] Amazon` dataset in the `datasaet` variable. Next, use the `describe()` method to view a dictionary containing all the dataset's details.
 
 ```py
-datasets = app.datasets()         # Get all datasets in Start Here (Tutorial) app```py
-dataset = datasets["[INPUT] Amazon"]  # Get dataset named "[INPUT] Amazon"```py
+datasets = app.datasets()             # Get all datasets in the app
+dataset = datasets["[INPUT] Amazon"]  # Get dataset named "[INPUT] Amazon"
 dataset.describe()
 ```
 
@@ -254,7 +254,7 @@ The output resembles the following example:
 The example snippet shows you how to download an existing dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT] Amazon` dataset in the `datasaet` variable. Then, download the dataset to a Pandas DataFrame. You can pass an argument to the `.head()` method to designate how many rows of the dataset to display (i.e. `df.head(10)`). By default, the method displays the first 5 rows of the dataset.
 
 ```py
-datasets = app.datasets()         # Get all datasets in Start Here (Tutorial) app
+datasets = app.datasets()             # Get all datasets in the app
 dataset = datasets["[INPUT] Amazon"]  # Get dataset named "[INPUT] Amazon"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 
@@ -322,7 +322,7 @@ Dataset(
 The example snippet shows you how to update an existing dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT] Amazon` dataset in the `datasaet` variable. Then, download the dataset as a Pandas DataFrame. The code stores the DataFrame in the `df` variable. Now, you can update the DataFrame using the `.columns()` method. The example uses the `.columns()` method to drop the last column in the DataFrame. It stores the updated DataFrame in a new variable named `new_dataset`. Finally, update the dataset with the new data using the `.edit_data()` method. To complete this pass in the DateFrame `df_updated` as an argument of the `.edit_data()` method. Display the data in the new dataset using the `.head()` method.
 
 ```py
-datasets = app.datasets()             # Get all datasets in Start Here (Tutorial) app
+datasets = app.datasets()             # Get all datasets in Start the app
 dataset = datasets["[INPUT] Amazon"]  # Get dataset named "[INPUT] Amazon"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 df_updated = df[df.columns[:-1]]      # New dataframe (by dropping last column)
@@ -350,9 +350,9 @@ Flows are data automations that you can build by connecting elements known as fa
 The example snippet below shows you how to find a specific flow from an existing app. First, access the app. The example gets the `Start Here (Tutorial)` app and stores it in a variable named `app`. Next, get all the flows that belong to the app. The example uses the `flows()` method to get all the app's flows and stores it in the `flows` variable. Now, retrieve the specific flow. The example gets the flow named `new flow` and stores it in the `flow` variable. Calling the `flow` variable prints out details about the flow.
 
 ```py
-app = apps["Start Here (Tutorial)"]              # Get the app named "Start Here (Tutorial)"
-flows = app.flows()         # Get all flows in the app
-flow = flows["new flow"]  # Get flow named "new flow"
+app = apps["Start Here (Tutorial)"]     # Get the app named "Start Here (Tutorial)"
+flows = app.flows()                     # Get all flows in the app
+flow = flows["new flow"]                # Get flow named "new flow"
 
 flow
 ```
@@ -374,10 +374,10 @@ Flow(
 The example snippet shows you how to run a flow that is used by your app. First, get all the flows that belong to the app. The example uses the `flows()` method to retrieve all the flows that are stored in the `app` variable and stores them in a variable named `flows`. The example uses the `flows()` method to get all the flows stored in the `app` variable and stores them in a variable named `flows`. Now, retrieve the specific flow. The example gets the flow named `new flow` and stores it in the `flow` variable. Finally, run the flow by calling the `.run()` method.
 
 ```py
-flows = app.flows()         # Get all flows in the app
-flow = flows["new flow"]  # Get flow named "new flow"
+flows = app.flows()        # Get all flows in the app
+flow = flows["new flow"]   # Get flow named "new flow"
 
-flow.run()           # Run the flow
+flow.run()                 # Run the flow
 ```
 When the run is successful, the output resembles the following example:
 
@@ -398,9 +398,9 @@ The example snippet shows you how to view the status of an existing flow. First,
 
 ```py
 flows = app.flows()         # Get all flows in the app
-flow = flows["new flow"]  # Get flow named "new flow"
+flow = flows["new flow"]    # Get flow named "new flow"
 
-flow.status()               # Get the status of the flow (IDLE: currently the flow is not running)           # Run the flow
+flow.status()               # Get the status of the flow (IDLE: currently the flow is not running)          
 ```
 
 When the flow is NOT running, you should see a similar output:
