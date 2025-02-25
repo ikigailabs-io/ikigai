@@ -206,7 +206,7 @@ The example snippet shows you how to display details related to a dataset. First
 
 ```py
 datasets = app.datasets()             # Get all datasets in the app
-dataset = datasets["[INPUT]"]  # Get dataset named "[INPUT]"
+dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 dataset.describe()
 ```
 
@@ -255,7 +255,7 @@ The example snippet shows you how to download an existing dataset. First, get al
 
 ```py
 datasets = app.datasets()             # Get all datasets in the app
-dataset = datasets["[INPUT]"]  # Get dataset named "[INPUT]"
+dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 
 df.head()
@@ -264,12 +264,12 @@ df.head()
 The output resembles the following example:
 
 | Product (name/description) | SKU/Unique Item ID     | Channel/Location | Quantity |
-|---------------------------|----------------------|----------------|----------|
-| Chocolate Chip Cookie     | Chocolate_C123_Am   | Amazon         | 166      |
-| Snickerdoodle Cookie      | Snickerdoodle_C123_Am | Amazon         | 428      |
-| Ginger Cookie            | Ginger_C123_Am      | Amazon         | 271      |
-| Sugar Cookie             | Sugar_C123_Am       | Amazon         | 421      |
-| Double Chocolate Cookie  | Double_C123_Am      | Amazon         | 342      |
+|----------------------------|------------------------|------------------|----------|
+| Chocolate Chip Cookie      | Chocolate_C123_Am      | Amazon           | 166      |
+| Snickerdoodle Cookie       | Snickerdoodle_C123_Am  | Amazon           | 428      |
+| Ginger Cookie              | Ginger_C123_Am         | Amazon           | 271      |
+| Sugar Cookie               | Sugar_C123_Am          | Amazon           | 421      |
+| Double Chocolate Cookie    | Double_C123_Am         | Amazon           | 342      |
     
 #### Creating a New Dataset
 
@@ -323,7 +323,7 @@ The example snippet shows you how to update an existing dataset. First, get all 
 
 ```py
 datasets = app.datasets()             # Get all datasets in Start the app
-dataset = datasets["[INPUT]"]  # Get dataset named "[INPUT]"
+dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 df_updated = df[df.columns[:-1]]      # New dataframe (by dropping last column)
 new_dataset.edit_data(df_updated)     # Update the dataset
@@ -333,7 +333,7 @@ new_dataset.df().head()
 
 The output resembles the following example:
 
-| Product (name/description)  | SKU/Unique Item ID      | Channel/Location |
+| Product (name/description) | SKU/Unique Item ID     | Channel/Location |
 |----------------------------|------------------------|------------------|
 | Chocolate Chip Cookie      | Chocolate_C123_Am      | Amazon           |
 | Snickerdoodle Cookie       | Snickerdoodle_C123_Am  | Amazon           |
