@@ -12,7 +12,7 @@ from pydantic.dataclasses import dataclass
 
 from ikigai.client.session import Session
 from ikigai.typing.api import GetDatasetMultipartUploadUrlsResponse
-from ikigai.typing.protocol import Directory
+from ikigai.typing.protocol import Directory, FlowDefinitionDict
 
 _UNSET: Any = object()
 
@@ -61,6 +61,27 @@ class ComponentAPI:
             },
         ).json()
         return resp["dataset_id"]
+
+    def create_flow(
+        self,
+        app_id: str,
+        name: str,
+        directory: Directory | None,
+        flow_definition: FlowDefinitionDict,
+    ) -> str:
+        directory_dict = dict(directory.to_dict()) if directory is not None else {}
+        resp = self.__session.post(
+            path="/component/create-pipeline",
+            json={
+                "pipeline": {
+                    "project_id": app_id,
+                    "name": name,
+                    "directory": directory_dict,
+                    "definition": flow_definition,
+                },
+            },
+        ).json()
+        return resp["pipeline_id"]
 
     def get_dataset_multipart_upload_urls(
         self, dataset_id: str, app_id: str, filename: str, num_parts: int

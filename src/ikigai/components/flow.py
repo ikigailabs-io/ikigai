@@ -17,6 +17,7 @@ from ikigai.client import Client
 from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
+    FlowDefinitionDict,
     NamedDirectoryDict,
 )
 from ikigai.utils.compatibility import UTC, Self
@@ -27,37 +28,44 @@ logger = logging.getLogger("ikigai.components")
 
 
 class FlowDefinition(BaseModel):
-    facets: list = []
-    arrows: list = []
-    # TODO: Add Flow Definition
+    _facets: list = []
+    _arrows: list = []
+    _arguments: dict = {}
+    _variables: dict = {}
+    _model_variables: dict = {}
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> FlowDefinitionDict:
         # TODO: Update implementation when feature is available
         return {
-            "facets": [],
-            "arrows": [],
+            "facets": self._facets,
+            "arrows": self._arrows,
+            "arguments": self._arguments,
+            "variables": self._variables,
+            "model_variables": self._model_variables,
         }
 
 
 class FlowBuilder:
     _app_id: str
     _name: str
-    _directory: dict[str, str]
-    _flow_definition: dict[str, Any]
+    _directory: Directory | None
+    _flow_definition: FlowDefinitionDict
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
         self.__client = client
         self._app_id = app_id
         self._name = ""
-        self._directory = {}
+        self._directory = None
         self._flow_definition = FlowDefinition().to_dict()
 
     def new(self, name: str) -> Self:
         self._name = name
         return self
 
-    def definition(self, definition: Flow | FlowDefinition | dict[str, Any]) -> Self:
+    def definition(
+        self, definition: Flow | FlowDefinition | FlowDefinitionDict
+    ) -> Self:
         if isinstance(definition, FlowDefinition):
             self._flow_definition = definition.to_dict()
             return self
@@ -83,30 +91,21 @@ class FlowBuilder:
 
         error_msg = (
             f"Definition was of type {type(definition)} but, "
-            "must be a Flow or FlowDefinition or dict"
+            "must be a Flow or FlowDefinition or FlowDefinitionDict"
         )
         raise TypeError(error_msg)
 
     def directory(self, directory: Directory) -> Self:
-        self._directory = {
-            "directory_id": directory.directory_id,
-            "type": directory.type,
-        }
+        self._directory = directory
         return self
 
     def build(self) -> Flow:
-        resp = self.__client.post(
-            path="/component/create-pipeline",
-            json={
-                "pipeline": {
-                    "project_id": self._app_id,
-                    "name": self._name,
-                    "directory": self._directory,
-                    "definition": self._flow_definition,
-                }
-            },
-        ).json()
-        flow_id = resp["pipeline_id"]
+        flow_id = self.__client.component.create_flow(
+            app_id=self._app_id,
+            name=self._name,
+            directory=self._directory,
+            flow_definition=self._flow_definition,
+        )
 
         # Populate Flow object
         resp = self.__client.get(
