@@ -14,10 +14,14 @@ from pydantic import BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
 
 from ikigai.client import Client
+from ikigai.typing.protocol import (
+    Directory,
+    DirectoryType,
+    NamedDirectoryDict,
+)
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.typing.protocol import Directory, DirectoryType
 
 logger = logging.getLogger("ikigai.components")
 
@@ -350,8 +354,8 @@ class FlowDirectory(BaseModel):
     __client: Client
 
     @property
-    def type(self) -> str:
-        return DirectoryType.FLOW.value
+    def type(self) -> DirectoryType:
+        return DirectoryType.FLOW
 
     @classmethod
     def from_dict(cls, data: dict, client: Client) -> Self:
@@ -359,6 +363,9 @@ class FlowDirectory(BaseModel):
         self = cls.model_validate(data)
         self.__client = client
         return self
+
+    def to_dict(self) -> NamedDirectoryDict:
+        return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
 
     def directories(self) -> NamedMapping[Self]:
         resp = self.__client.get(

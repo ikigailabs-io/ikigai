@@ -19,9 +19,13 @@ import requests
 from pydantic import BaseModel, Field
 
 from ikigai.client import Client
+from ikigai.typing.protocol import (
+    Directory,
+    DirectoryType,
+    NamedDirectoryDict,
+)
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.typing.protocol import Directory, DirectoryType
 
 CHUNK_SIZE = int(50e6)  # 50 MB
 
@@ -154,7 +158,7 @@ class DatasetBuilder:
     _app_id: str
     _name: str
     _data: bytes | None
-    _directory: dict[str, str]
+    _directory: Directory | None
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
@@ -162,7 +166,7 @@ class DatasetBuilder:
         self._app_id = app_id
         self._name = ""
         self._data = None
-        self._directory = {}
+        self._directory = None
 
     def new(self, name: str) -> Self:
         self._name = name
@@ -182,10 +186,7 @@ class DatasetBuilder:
         return self
 
     def directory(self, directory: Directory) -> Self:
-        self._directory = {
-            "directory_id": directory.directory_id,
-            "type": directory.type,
-        }
+        self._directory = directory
         return self
 
     def build(self) -> Dataset:
@@ -193,17 +194,9 @@ class DatasetBuilder:
             error_msg = "Dataset is empty"
             raise ValueError(error_msg)
 
-        resp = self.__client.post(
-            path="/component/create-dataset",
-            json={
-                "dataset": {
-                    "project_id": self._app_id,
-                    "name": self._name,
-                    "directory": self._directory,
-                },
-            },
-        ).json()
-        dataset_id = resp["dataset_id"]
+        dataset_id = self.__client.component.create_dataset(
+            app_id=self._app_id, name=self._name, directory=self._directory
+        )
 
         try:
             _upload_data(
@@ -394,8 +387,8 @@ class DatasetDirectory(BaseModel):
     __client: Client
 
     @property
-    def type(self) -> str:
-        return DirectoryType.DATASET.value
+    def type(self) -> DirectoryType:
+        return DirectoryType.DATASET
 
     @classmethod
     def from_dict(cls, data: dict, client: Client) -> Self:
@@ -403,6 +396,9 @@ class DatasetDirectory(BaseModel):
         self = cls.model_validate(data)
         self.__client = client
         return self
+
+    def to_dict(self) -> NamedDirectoryDict:
+        return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
 
     def directories(self) -> NamedMapping[Self]:
         resp = self.__client.get(

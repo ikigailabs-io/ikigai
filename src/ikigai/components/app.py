@@ -11,15 +11,15 @@ from pydantic import BaseModel, EmailStr, Field
 
 from ikigai import components
 from ikigai.client import Client
+from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.typing.protocol import Directory, DirectoryType
 
 
 class AppBuilder:
     _name: str
     _description: str
-    _directory: dict[str, str]
+    _directory: Directory | None
     _icon: str
     _images: list[str]
     __client: Client
@@ -28,7 +28,7 @@ class AppBuilder:
         self.__client = client
         self._name = ""
         self._description = ""
-        self._directory = {}
+        self._directory = None
         self._icon = ""
         self._images = []
 
@@ -41,24 +41,15 @@ class AppBuilder:
         return self
 
     def directory(self, directory: Directory) -> Self:
-        self._directory = {
-            "directory_id": directory.directory_id,
-            "type": directory.type,
-        }
+        self._directory = directory
         return self
 
     def build(self) -> App:
-        resp = self.__client.post(
-            path="/component/create-project",
-            json={
-                "project": {
-                    "name": self._name,
-                    "description": self._description,
-                    "directory": self._directory,
-                },
-            },
-        ).json()
-        app_id = resp["project_id"]
+        app_id = self.__client.component.create_app(
+            name=self._name,
+            description=self._description,
+            directory=self._directory,
+        )
         resp = self.__client.get(
             path="/component/get-project", params={"project_id": app_id}
         ).json()
@@ -119,10 +110,7 @@ class App(BaseModel):
             json={
                 "project": {
                     "project_id": self.app_id,
-                    "directory": {
-                        "directory_id": directory.directory_id,
-                        "type": directory.type,
-                    },
+                    "directory": directory.to_dict(),
                 }
             },
         )
@@ -247,14 +235,17 @@ class AppDirectory(BaseModel):
     __client: Client
 
     @property
-    def type(self) -> str:
-        return DirectoryType.APP.value
+    def type(self) -> DirectoryType:
+        return DirectoryType.APP
 
     @classmethod
     def from_dict(cls, data: dict, client: Client) -> Self:
         self = cls.model_validate(data)
         self.__client = client
         return self
+
+    def to_dict(self) -> NamedDirectoryDict:
+        return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
 
     def directories(self) -> NamedMapping[Self]:
         directory_dicts = self.__client.component.get_project_directories_for_user(
