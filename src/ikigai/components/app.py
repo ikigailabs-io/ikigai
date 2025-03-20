@@ -248,7 +248,7 @@ class AppDirectory(BaseModel):
         return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
 
     def directories(self) -> NamedMapping[Self]:
-        directory_dicts = self.__client.component.get_project_directories_for_user(
+        directory_dicts = self.__client.component.get_app_directories_for_user(
             directory_id=self.directory_id,
         )
         directories = {
@@ -262,7 +262,7 @@ class AppDirectory(BaseModel):
         return NamedMapping(directories)
 
     def apps(self) -> NamedMapping[App]:
-        app_dicts = self.__client.component.get_projects_for_user(
+        app_dicts = self.__client.component.get_apps_for_user(
             directory_id=self.directory_id
         )
 

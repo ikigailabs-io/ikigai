@@ -27,6 +27,10 @@ class ComponentAPI:
     def __post_init__(self, session: Session) -> None:
         self.__session = session
 
+    """
+    App APIs
+    """
+
     def create_app(
         self,
         name: str,
@@ -46,6 +50,31 @@ class ComponentAPI:
         ).json()
         return resp["project_id"]
 
+    def get_app_directories_for_user(
+        self, directory_id: str = _UNSET
+    ) -> list[dict]:
+        if directory_id == _UNSET:
+            directory_id = ""
+
+        return self.__session.get(
+            path="/component/get-project-directories-for-user",
+            params={"directory_id": directory_id},
+        ).json()["directories"]
+
+    def get_apps_for_user(self, directory_id: str = _UNSET) -> list[dict]:
+        fetch_all = directory_id == _UNSET
+        if directory_id == _UNSET:
+            directory_id = ""
+
+        return self.__session.get(
+            path="/component/get-projects-for-user",
+            params={"fetch_all": fetch_all, "directory_id": directory_id},
+        ).json()["projects"]
+
+    """
+    Dataset APIs
+    """
+
     def create_dataset(
         self, app_id: str, name: str, directory: Directory | None
     ) -> str:
@@ -61,27 +90,6 @@ class ComponentAPI:
             },
         ).json()
         return resp["dataset_id"]
-
-    def create_flow(
-        self,
-        app_id: str,
-        name: str,
-        directory: Directory | None,
-        flow_definition: FlowDefinitionDict,
-    ) -> str:
-        directory_dict = dict(directory.to_dict()) if directory is not None else {}
-        resp = self.__session.post(
-            path="/component/create-pipeline",
-            json={
-                "pipeline": {
-                    "project_id": app_id,
-                    "name": name,
-                    "directory": directory_dict,
-                    "definition": flow_definition,
-                },
-            },
-        ).json()
-        return resp["pipeline_id"]
 
     def get_dataset_multipart_upload_urls(
         self, dataset_id: str, app_id: str, filename: str, num_parts: int
@@ -105,23 +113,27 @@ class ComponentAPI:
             },
         )
 
-    def get_project_directories_for_user(
-        self, directory_id: str = _UNSET
-    ) -> list[dict]:
-        if directory_id == _UNSET:
-            directory_id = ""
+    """
+    Flow APIs
+    """
 
-        return self.__session.get(
-            path="/component/get-project-directories-for-user",
-            params={"directory_id": directory_id},
-        ).json()["directories"]
-
-    def get_projects_for_user(self, directory_id: str = _UNSET) -> list[dict]:
-        fetch_all = directory_id == _UNSET
-        if directory_id == _UNSET:
-            directory_id = ""
-
-        return self.__session.get(
-            path="/component/get-projects-for-user",
-            params={"fetch_all": fetch_all, "directory_id": directory_id},
-        ).json()["projects"]
+    def create_flow(
+        self,
+        app_id: str,
+        name: str,
+        directory: Directory | None,
+        flow_definition: FlowDefinitionDict,
+    ) -> str:
+        directory_dict = dict(directory.to_dict()) if directory is not None else {}
+        resp = self.__session.post(
+            path="/component/create-pipeline",
+            json={
+                "pipeline": {
+                    "project_id": app_id,
+                    "name": name,
+                    "directory": directory_dict,
+                    "definition": flow_definition,
+                },
+            },
+        ).json()
+        return resp["pipeline_id"]

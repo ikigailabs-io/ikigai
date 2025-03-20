@@ -23,7 +23,7 @@ class Ikigai:
         )
 
     def apps(self) -> NamedMapping[components.App]:
-        app_dicts = self.__client.component.get_projects_for_user()
+        app_dicts = self.__client.component.get_apps_for_user()
         apps = {
             app.app_id: app
             for app in (
@@ -39,7 +39,7 @@ class Ikigai:
         return components.AppBuilder(client=self.__client)
 
     def directories(self) -> NamedMapping[components.AppDirectory]:
-        directory_dicts = self.__client.component.get_project_directories_for_user()
+        directory_dicts = self.__client.component.get_app_directories_for_user()
         directories = {
             directory.directory_id: directory
             for directory in (
