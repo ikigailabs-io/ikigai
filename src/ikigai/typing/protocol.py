@@ -72,3 +72,9 @@ class FlowModelVariableDict(TypedDict):
     model_version: NotRequired[str]
     model_argument_type: str
     model_arguments: list[dict]
+
+
+class FlowStatusReportDict(TypedDict):
+    status: str
+    progress: NotRequired[int]
+    message: str

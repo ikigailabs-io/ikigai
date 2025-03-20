@@ -18,6 +18,7 @@ from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
     FlowDefinitionDict,
+    FlowStatusReportDict,
     NamedDirectoryDict,
 )
 from ikigai.utils.compatibility import UTC, Self
@@ -133,7 +134,7 @@ class FlowStatusReport(BaseModel):
     message: str
 
     @classmethod
-    def from_dict(cls, data: dict) -> Self:
+    def from_dict(cls, data: FlowStatusReportDict) -> Self:
         self = cls.model_validate(data)
         return self
 
@@ -176,53 +177,28 @@ class Flow(BaseModel):
         }
 
     def delete(self) -> None:
-        self.__client.post(
-            path="/component/delete-pipeline",
-            json={"pipeline": {"project_id": self.app_id, "pipeline_id": self.flow_id}},
-        )
+        self.__client.component.delete_flow(app_id=self.app_id, flow_id=self.flow_id)
         return None
 
     def rename(self, name: str) -> Self:
-        _ = self.__client.post(
-            path="/component/edit-pipeline",
-            json={
-                "pipeline": {
-                    "project_id": self.app_id,
-                    "pipeline_id": self.flow_id,
-                    "name": name,
-                }
-            },
+        self.__client.component.edit_flow(
+            app_id=self.app_id, flow_id=self.flow_id, name=name
         )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
         return self
 
     def move(self, directory: Directory) -> Self:
-        _ = self.__client.post(
-            path="/component/edit-pipeline",
-            json={
-                "pipeline": {
-                    "project_id": self.app_id,
-                    "pipeline_id": self.flow_id,
-                    "directory": {
-                        "directory_id": directory.directory_id,
-                        "type": directory.type,
-                    },
-                }
-            },
+        self.__client.component.edit_flow(
+            app_id=self.app_id, flow_id=self.flow_id, directory=directory
         )
         return self
 
     def status(self) -> FlowStatusReport:
-        resp = self.__client.get(
-            path="/component/is-pipeline-running",
-            params={"project_id": self.app_id, "pipeline_id": self.flow_id},
-        ).json()
-
-        if not resp["status"]:
-            return FlowStatusReport(status=FlowStatus.IDLE, message="")
-
-        return FlowStatusReport.from_dict(resp["progress"])
+        resp = self.__client.component.is_flow_runing(
+            app_id=self.app_id, flow_id=self.flow_id
+        )
+        return FlowStatusReport.from_dict(resp)
 
     def run_logs(
         self, max_count: int = 1, since: datetime | None = None
@@ -243,10 +219,7 @@ class Flow(BaseModel):
 
     def run(self) -> RunLog:
         # Start running pipeline
-        self.__client.post(
-            path="/component/run-pipeline",
-            json={"pipeline": {"project_id": self.app_id, "pipeline_id": self.flow_id}},
-        )
+        self.__client.component.run_flow(app_id=self.app_id, flow_id=self.flow_id)
 
         return self.__await_run()
 
@@ -280,8 +253,9 @@ class Flow(BaseModel):
                 status_report = self.status()
                 progress = status_report.progress if status_report.progress else 100
                 progress_bar.desc = status_report.status
-                progress_bar.update(progress - last_progress)
-                last_progress = progress
+                new_progress = last_progress + max(progress - last_progress, 0)
+                progress_bar.update(new_progress - last_progress)
+                last_progress = new_progress
             # Flow run completed
 
             # Get status from logs and update progress bar

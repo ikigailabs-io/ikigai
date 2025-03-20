@@ -12,7 +12,7 @@ from pydantic.dataclasses import dataclass
 
 from ikigai.client.session import Session
 from ikigai.typing.api import GetDatasetMultipartUploadUrlsResponse
-from ikigai.typing.protocol import Directory, FlowDefinitionDict
+from ikigai.typing.protocol import Directory, FlowDefinitionDict, FlowStatusReportDict
 
 _UNSET: Any = object()
 
@@ -50,9 +50,7 @@ class ComponentAPI:
         ).json()
         return resp["project_id"]
 
-    def get_app_directories_for_user(
-        self, directory_id: str = _UNSET
-    ) -> list[dict]:
+    def get_app_directories_for_user(self, directory_id: str = _UNSET) -> list[dict]:
         if directory_id == _UNSET:
             directory_id = ""
 
@@ -137,3 +135,51 @@ class ComponentAPI:
             },
         ).json()
         return resp["pipeline_id"]
+
+    def edit_flow(
+        self,
+        app_id: str,
+        flow_id: str,
+        name: str | None = None,
+        directory: Directory | None = None,
+        flow_definition: FlowDefinitionDict | None = None,
+    ) -> str:
+        pipeline: dict[str, Any] = {
+            "project_id": app_id,
+            "pipeline_id": flow_id,
+        }
+
+        if name is not None:
+            pipeline["name"] = name
+        if directory is not None:
+            pipeline["directory"] = directory.to_dict()
+        if flow_definition is not None:
+            pipeline["definition"] = flow_definition
+
+        resp = self.__session.post(
+            path="/component/edit-pipeline", json={"pipeline": pipeline}
+        ).json()
+        return resp["pipeline_id"]
+
+    def delete_flow(self, app_id: str, flow_id: str) -> str:
+        resp = self.__session.post(
+            path="/component/delete-pipeline",
+            json={"pipeline": {"project_id": app_id, "pipeline_id": flow_id}},
+        ).json()
+
+        return resp["pipeline_id"]
+
+    def run_flow(self, app_id: str, flow_id: str) -> str:
+        resp = self.__session.post(
+            path="/component/run-pipeline",
+            json={"pipeline": {"project_id": app_id, "pipeline_id": flow_id}},
+        ).json()
+
+        return resp["pipeline_id"]
+
+    def is_flow_runing(self, app_id: str, flow_id: str) -> FlowStatusReportDict:
+        resp = self.__session.get(
+            path="/component/is-pipeline-running",
+            params={"project_id": app_id, "pipeline_id": flow_id},
+        ).json()
+        return resp["progress"]
