@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -18,7 +19,6 @@ from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
     FlowDefinitionDict,
-    FlowStatusReportDict,
     NamedDirectoryDict,
 )
 from ikigai.utils.compatibility import UTC, Self
@@ -134,7 +134,7 @@ class FlowStatusReport(BaseModel):
     message: str
 
     @classmethod
-    def from_dict(cls, data: FlowStatusReportDict) -> Self:
+    def from_dict(cls, data: Mapping[str, Any]) -> Self:
         self = cls.model_validate(data)
         return self
 
@@ -148,7 +148,7 @@ class RunLog(BaseModel):
     timestamp: datetime
 
     @classmethod
-    def from_dict(cls, data: dict) -> Self:
+    def from_dict(cls, data: Mapping[str, Any]) -> Self:
         self = cls.model_validate(data)
         return self
 
@@ -162,7 +162,7 @@ class Flow(BaseModel):
     __client: Client
 
     @classmethod
-    def from_dict(cls, data: dict, client: Client) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__client = client
@@ -331,7 +331,7 @@ class FlowDirectory(BaseModel):
         return DirectoryType.FLOW
 
     @classmethod
-    def from_dict(cls, data: dict, client: Client) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__client = client

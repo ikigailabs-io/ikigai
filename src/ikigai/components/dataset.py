@@ -8,6 +8,7 @@ import io
 import logging
 import math
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
 from http import HTTPStatus
@@ -249,7 +250,7 @@ class Dataset(BaseModel):
     __client: Client
 
     @classmethod
-    def from_dict(cls, data: dict, client: Client) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__client = client
@@ -391,7 +392,7 @@ class DatasetDirectory(BaseModel):
         return DirectoryType.DATASET
 
     @classmethod
-    def from_dict(cls, data: dict, client: Client) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__client = client

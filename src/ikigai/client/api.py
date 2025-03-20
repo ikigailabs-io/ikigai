@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import InitVar
-from typing import Any
+from typing import Any, cast
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -37,7 +37,9 @@ class ComponentAPI:
         description: str,
         directory: Directory | None,
     ) -> str:
-        directory_dict = dict(directory.to_dict()) if directory is not None else {}
+        directory_dict = (
+            cast(dict, directory.to_dict()) if directory is not None else {}
+        )
         resp = self.__session.post(
             path="/component/create-project",
             json={
@@ -76,7 +78,9 @@ class ComponentAPI:
     def create_dataset(
         self, app_id: str, name: str, directory: Directory | None
     ) -> str:
-        directory_dict = dict(directory.to_dict()) if directory is not None else {}
+        directory_dict = (
+            cast(dict, directory.to_dict()) if directory is not None else {}
+        )
         resp = self.__session.post(
             path="/component/create-dataset",
             json={
@@ -122,7 +126,9 @@ class ComponentAPI:
         directory: Directory | None,
         flow_definition: FlowDefinitionDict,
     ) -> str:
-        directory_dict = dict(directory.to_dict()) if directory is not None else {}
+        directory_dict = (
+            cast(dict, directory.to_dict()) if directory is not None else {}
+        )
         resp = self.__session.post(
             path="/component/create-pipeline",
             json={

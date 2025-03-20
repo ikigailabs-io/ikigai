@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
@@ -68,7 +69,7 @@ class App(BaseModel):
     __client: Client
 
     @classmethod
-    def from_dict(cls, data: dict, client: Client) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         self = cls.model_validate(data)
         self.__client = client
         return self
@@ -239,7 +240,7 @@ class AppDirectory(BaseModel):
         return DirectoryType.APP
 
     @classmethod
-    def from_dict(cls, data: dict, client: Client) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         self = cls.model_validate(data)
         self.__client = client
         return self
