@@ -182,16 +182,13 @@ class App(BaseModel):
         )
 
     def flows(self) -> NamedMapping[components.Flow]:
-        resp = self.__client.get(
-            path="/component/get-pipelines-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        flow_dicts = self.__client.component.get_flows_for_app(app_id=self.app_id)
 
         flows = {
             flow.flow_id: flow
             for flow in (
                 components.Flow.from_dict(data=flow_dict, client=self.__client)
-                for flow_dict in resp["pipelines"]
+                for flow_dict in flow_dicts
             )
         }
 

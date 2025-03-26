@@ -7,6 +7,15 @@ from __future__ import annotations
 from typing import Any, NotRequired, TypedDict
 
 
+class FlowDict(TypedDict):
+    app_id: str
+    flow_id: str
+    name: str
+    definition: FlowDefinitionDict
+    created_at: str
+    modified_at: str
+
+
 class FlowDefinitionDict(TypedDict):
     facets: list[FacetDict]
     arrows: list[ArrowDict]

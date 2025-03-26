@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
 
 from ikigai.client import Client
@@ -154,8 +154,8 @@ class RunLog(BaseModel):
 
 
 class Flow(BaseModel):
-    app_id: str = Field(validation_alias="project_id")
-    flow_id: str = Field(validation_alias="pipeline_id")
+    app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
+    flow_id: str = Field(validation_alias=AliasChoices("flow_id", "pipeline_id"))
     name: str
     created_at: datetime
     modified_at: datetime

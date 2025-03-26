@@ -22,6 +22,7 @@ from ikigai.typing.protocol import (
     FlowStatusReportDict,
 )
 from ikigai.typing.protocol.app import AppDict
+from ikigai.typing.protocol.flow import FlowDict
 
 _UNSET: Any = object()
 
@@ -196,6 +197,24 @@ class ComponentAPI:
             },
         ).json()
         return resp["pipeline_id"]
+
+    def get_flows_for_app(self, app_id: str) -> list[FlowDict]:
+        flows = self.__session.get(
+            path="/component/get-pipelines-for-project",
+            params={"project_id": app_id},
+        ).json()["pipelines"]
+
+        return [
+            FlowDict(
+                app_id=flow["project_id"],
+                flow_id=flow["pipeline_id"],
+                name=flow["name"],
+                definition=flow["definition"],
+                created_at=flow["created_at"],
+                modified_at=flow["modified_at"],
+            )
+            for flow in flows
+        ]
 
     def edit_flow(
         self,
