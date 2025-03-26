@@ -11,7 +11,10 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from ikigai.client.session import Session
-from ikigai.typing.api import GetDatasetMultipartUploadUrlsResponse
+from ikigai.typing.api import (
+    GetComponentsForProjectResponse,
+    GetDatasetMultipartUploadUrlsResponse,
+)
 from ikigai.typing.protocol import (
     Directory,
     DirectoryDict,
@@ -114,6 +117,14 @@ class ComponentAPI:
             )
             for app_dict in app_dicts
         ]
+
+    def get_components_for_app(self, app_id: str) -> GetComponentsForProjectResponse:
+        resp = self.__session.get(
+            path="/component/get-components-for-project",
+            params={"project_id": app_id},
+        ).json()["project_components"][app_id]
+
+        return cast(GetComponentsForProjectResponse, resp)
 
     """
     Dataset APIs

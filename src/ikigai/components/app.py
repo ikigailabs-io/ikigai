@@ -124,16 +124,13 @@ class App(BaseModel):
         self.description = description
         return self
 
-    def describe(self) -> dict:
-        response: dict[str, Any] = self.__client.get(
-            path="/component/get-components-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+    def describe(self) -> dict[str, Any]:
+        components = self.__client.component.get_components_for_app(app_id=self.app_id)
 
         # Combine components information with app info
         return_value = {
             "app": self.to_dict(),
-            "components": response["project_components"][self.app_id],
+            "components": components,
         }
 
         return return_value
