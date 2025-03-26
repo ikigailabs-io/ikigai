@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 
 from ikigai import components
 from ikigai.client import Client
@@ -51,15 +51,13 @@ class AppBuilder:
             description=self._description,
             directory=self._directory,
         )
-        resp = self.__client.get(
-            path="/component/get-project", params={"project_id": app_id}
-        ).json()
-        app = App.from_dict(data=resp["project"], client=self.__client)
+        app_dict = self.__client.component.get_app(app_id=app_id)
+        app = App.from_dict(data=app_dict, client=self.__client)
         return app
 
 
 class App(BaseModel):
-    app_id: str = Field(validation_alias="project_id")
+    app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
     name: str
     owner: EmailStr
     description: str

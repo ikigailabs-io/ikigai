@@ -12,7 +12,13 @@ from pydantic.dataclasses import dataclass
 
 from ikigai.client.session import Session
 from ikigai.typing.api import GetDatasetMultipartUploadUrlsResponse
-from ikigai.typing.protocol import Directory, FlowDefinitionDict, FlowStatusReportDict
+from ikigai.typing.protocol import (
+    Directory,
+    DirectoryDict,
+    FlowDefinitionDict,
+    FlowStatusReportDict,
+)
+from ikigai.typing.protocol.app import AppDict
 
 _UNSET: Any = object()
 
@@ -52,24 +58,62 @@ class ComponentAPI:
         ).json()
         return resp["project_id"]
 
-    def get_app_directories_for_user(self, directory_id: str = _UNSET) -> list[dict]:
+    def get_app(self, app_id: str) -> AppDict:
+        resp = self.__session.get(
+            path="/component/get-project", params={"project_id": app_id}
+        ).json()["project"]
+
+        return AppDict(
+            app_id=resp["project_id"],
+            name=resp["name"],
+            owner=resp["owner"],
+            description=resp["description"],
+            icon=resp["icon"],
+            images=resp["images"],
+            directory=cast(DirectoryDict, resp["directory"]),
+            created_at=resp["created_at"],
+            modified_at=resp["modified_at"],
+            last_used_at=resp["last_used_at"],
+        )
+
+    def get_app_directories_for_user(
+        self, directory_id: str = _UNSET
+    ) -> list[DirectoryDict]:
         if directory_id == _UNSET:
             directory_id = ""
 
-        return self.__session.get(
+        directory_dicts = self.__session.get(
             path="/component/get-project-directories-for-user",
             params={"directory_id": directory_id},
         ).json()["directories"]
 
-    def get_apps_for_user(self, directory_id: str = _UNSET) -> list[dict]:
+        return cast(list[DirectoryDict], directory_dicts)
+
+    def get_apps_for_user(self, directory_id: str = _UNSET) -> list[AppDict]:
         fetch_all = directory_id == _UNSET
         if directory_id == _UNSET:
             directory_id = ""
 
-        return self.__session.get(
+        app_dicts = self.__session.get(
             path="/component/get-projects-for-user",
             params={"fetch_all": fetch_all, "directory_id": directory_id},
         ).json()["projects"]
+
+        return [
+            AppDict(
+                app_id=app_dict["project_id"],
+                name=app_dict["name"],
+                owner=app_dict["owner"],
+                description=app_dict["description"],
+                icon=app_dict["icon"],
+                images=app_dict["images"],
+                directory=cast(DirectoryDict, app_dict["directory"]),
+                created_at=app_dict["created_at"],
+                modified_at=app_dict["modified_at"],
+                last_used_at=app_dict["last_used_at"],
+            )
+            for app_dict in app_dicts
+        ]
 
     """
     Dataset APIs
