@@ -4,37 +4,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, NotRequired, Protocol, TypedDict
-
-
-class Named(Protocol):
-    name: str
-
-
-class DirectoryType(str, Enum):
-    APP = "PROJECT"
-    DATASET = "DATASET"
-    FLOW = "PIPELINE"
-
-
-class DirectoryDict(TypedDict):
-    directory_id: str
-    type: DirectoryType
-
-
-class NamedDirectoryDict(DirectoryDict, TypedDict):
-    name: str
-
-
-class Directory(Protocol):
-    @property
-    def directory_id(self) -> str: ...
-
-    @property
-    def type(self) -> DirectoryType: ...
-
-    def to_dict(self) -> DirectoryDict: ...
+from typing import Any, NotRequired, TypedDict
 
 
 class FlowDefinitionDict(TypedDict):
