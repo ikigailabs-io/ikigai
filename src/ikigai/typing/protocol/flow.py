@@ -4,9 +4,10 @@
 
 from __future__ import annotations
 
-from typing import Any, NotRequired, TypedDict
+from typing import Any, TypedDict
 
 from ikigai.typing.protocol.directory import DirectoryDict
+from ikigai.utils.compatibility import NotRequired
 
 
 class FlowDict(TypedDict):
