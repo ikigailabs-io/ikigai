@@ -92,31 +92,19 @@ class App(BaseModel):
         return None
 
     def rename(self, name: str) -> Self:
-        _ = self.__client.post(
-            path="/component/edit-project",
-            json={"project": {"project_id": self.app_id, "name": name}},
-        )
+        _ = self.__client.component.edit_app(app_id=self.app_id, name=name)
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
         return self
 
     def move(self, directory: Directory) -> Self:
-        _ = self.__client.post(
-            path="/component/edit-project",
-            json={
-                "project": {
-                    "project_id": self.app_id,
-                    "directory": directory.to_dict(),
-                }
-            },
-        )
+        _ = self.__client.component.edit_app(app_id=self.app_id, directory=directory)
         return self
 
     def update_description(self, description: str) -> Self:
-        _ = self.__client.post(
-            path="/component/edit-project",
-            json={"project": {"project_id": self.app_id, "description": description}},
-        ).json()
+        _ = self.__client.component.edit_app(
+            app_id=self.app_id, description=description
+        )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.description = description
         return self

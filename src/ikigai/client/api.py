@@ -102,6 +102,29 @@ class ComponentAPI:
 
         return cast(GetComponentsForProjectResponse, resp)
 
+    def edit_app(
+        self,
+        app_id: str,
+        name: str = _UNSET,
+        directory: Directory = _UNSET,
+        description: str = _UNSET,
+    ) -> str:
+        app: dict[str, Any] = {"project_id": app_id}
+
+        if name != _UNSET:
+            app["name"] = name
+        if directory != _UNSET:
+            app["directory"] = directory.to_dict()
+        if description != _UNSET:
+            app["description"] = description
+
+        resp = self.__session.post(
+            path="/component/edit-project",
+            json={"project": app},
+        ).json()
+
+        return resp["project_id"]
+
     def delete_app(self, app_id: str) -> str:
         resp = self.__session.post(
             path="/component/delete-project",
