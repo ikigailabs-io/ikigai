@@ -65,3 +65,12 @@ class FlowStatusReportDict(TypedDict):
     status: str
     progress: NotRequired[int]
     message: str
+
+
+class FlowLogDict(TypedDict):
+    log_id: str
+    status: str
+    user: str
+    erroneous_facet_id: NotRequired[str]
+    message: str
+    timestamp: str

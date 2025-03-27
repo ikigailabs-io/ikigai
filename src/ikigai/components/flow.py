@@ -199,16 +199,11 @@ class Flow(BaseModel):
     def run_logs(
         self, max_count: int = 1, since: datetime | None = None
     ) -> list[RunLog]:
-        resp = self.__client.get(
-            path="/component/get-pipeline-log",
-            params={
-                "pipeline_id": self.flow_id,
-                "project_id": self.app_id,
-                "limit": max_count,
-            },
-        ).json()
+        log_dicts = self.__client.component.get_flow_log(
+            app_id=self.app_id, flow_id=self.flow_id, max_count=max_count
+        )
 
-        run_logs = [RunLog.from_dict(data=log) for log in resp["pipeline_log"]]
+        run_logs = [RunLog.from_dict(data=log) for log in log_dicts]
         if since is not None:
             run_logs = [log for log in run_logs if log.timestamp > since]
         return run_logs

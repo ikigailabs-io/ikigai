@@ -16,13 +16,14 @@ from ikigai.typing.api import (
     GetDatasetMultipartUploadUrlsResponse,
 )
 from ikigai.typing.protocol import (
+    AppDict,
     Directory,
     DirectoryDict,
     FlowDefinitionDict,
+    FlowDict,
+    FlowLogDict,
     FlowStatusReportDict,
 )
-from ikigai.typing.protocol.app import AppDict
-from ikigai.typing.protocol.flow import FlowDict
 
 _UNSET: Any = object()
 
@@ -259,6 +260,20 @@ class ComponentAPI:
         ).json()["pipelines"]
 
         return cast(list[FlowDict], flows)
+
+    def get_flow_log(
+        self, app_id: str, flow_id: str, max_count: int
+    ) -> list[FlowLogDict]:
+        log_dicts = self.__session.get(
+            path="/component/get-pipeline-log",
+            params={
+                "pipeline_id": flow_id,
+                "project_id": app_id,
+                "limit": max_count,
+            },
+        ).json()["pipeline_log"]
+
+        return log_dicts
 
     def edit_flow(
         self,
