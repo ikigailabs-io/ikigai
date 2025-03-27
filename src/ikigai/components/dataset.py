@@ -209,11 +209,8 @@ class DatasetBuilder:
             )
         except Exception:
             # Delete created record and re-raise
-            self.__client.post(
-                path="/component/delete-dataset",
-                json={
-                    "dataset": {"project_id": self._app_id, "dataset_id": dataset_id}
-                },
+            self.__client.component.delete_dataset(
+                app_id=self._app_id, dataset_id=dataset_id
             )
             raise
 
@@ -269,40 +266,24 @@ class Dataset(BaseModel):
         }
 
     def delete(self) -> None:
-        self.__client.post(
-            path="/component/delete-dataset",
-            json={"dataset": {"dataset_id": self.dataset_id}},
+        self.__client.component.delete_dataset(
+            app_id=self.app_id, dataset_id=self.dataset_id
         )
         return None
 
     def rename(self, name: str) -> Self:
-        _ = self.__client.post(
-            path="/component/edit-dataset",
-            json={
-                "dataset": {
-                    "project_id": self.app_id,
-                    "dataset_id": self.dataset_id,
-                    "name": name,
-                }
-            },
+        _ = self.__client.component.edit_dataset(
+            app_id=self.app_id, dataset_id=self.dataset_id, name=name
         )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
         return self
 
     def move(self, directory: Directory) -> Self:
-        _ = self.__client.post(
-            path="/component/edit-dataset",
-            json={
-                "dataset": {
-                    "project_id": self.app_id,
-                    "dataset_id": self.dataset_id,
-                    "directory": {
-                        "directory_id": directory.directory_id,
-                        "type": directory.type,
-                    },
-                }
-            },
+        _ = self.__client.component.edit_dataset(
+            app_id=self.app_id,
+            dataset_id=self.dataset_id,
+            directory=directory,
         )
         return self
 

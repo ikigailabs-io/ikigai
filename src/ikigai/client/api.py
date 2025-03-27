@@ -177,6 +177,40 @@ class ComponentAPI:
             },
         )
 
+    def edit_dataset(
+        self,
+        app_id: str,
+        dataset_id: str,
+        name: str = _UNSET,
+        directory: Directory = _UNSET,
+    ) -> str:
+        dataset: dict[str, Any] = {
+            "project_id": app_id,
+            "dataset_id": dataset_id,
+        }
+
+        if name != _UNSET:
+            dataset["name"] = name
+        if directory != _UNSET:
+            dataset["directory"] = directory.to_dict()
+
+        resp = self.__session.post(
+            path="/component/edit-dataset",
+            json={
+                "dataset": dataset,
+            },
+        ).json()
+
+        return resp["dataset_id"]
+
+    def delete_dataset(self, app_id: str, dataset_id: str) -> str:
+        resp = self.__session.post(
+            path="/component/delete-dataset",
+            json={"dataset": {"project_id": app_id, "dataset_id": dataset_id}},
+        ).json()
+
+        return resp["dataset_id"]
+
     """
     Flow APIs
     """
