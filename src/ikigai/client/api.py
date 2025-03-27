@@ -189,11 +189,11 @@ class ComponentAPI:
         return cast(FlowDict, flow)
 
     def get_flows_for_app(
-        self, app_id: str, directory_id: str | None = None
+        self, app_id: str, directory_id: str = _UNSET
     ) -> list[FlowDict]:
         params = {"project_id": app_id}
 
-        if directory_id is not None:
+        if directory_id != _UNSET:
             params["directory_id"] = directory_id
 
         flows = self.__session.get(
