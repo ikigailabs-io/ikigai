@@ -6,12 +6,20 @@ from __future__ import annotations
 
 from typing import Any, NotRequired, TypedDict
 
+from ikigai.typing.protocol.directory import DirectoryDict
+
 
 class FlowDict(TypedDict):
-    app_id: str
-    flow_id: str
+    project_id: str
+    pipeline_id: str
     name: str
+    directory: DirectoryDict
     definition: FlowDefinitionDict
+    trigger_downstream_pipelines: bool
+    high_volume_preference: bool
+    schedule: dict
+    last_run: NotRequired[dict]
+    next_run: NotRequired[dict]
     created_at: str
     modified_at: str
 

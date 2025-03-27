@@ -10,7 +10,7 @@ from ikigai.typing.protocol.directory import DirectoryDict
 
 
 class AppDict(TypedDict):
-    app_id: str
+    project_id: str
     name: str
     owner: str
     description: str

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field
 
 from ikigai import components
 from ikigai.client import Client
@@ -57,7 +57,7 @@ class AppBuilder:
 
 
 class App(BaseModel):
-    app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
+    app_id: str = Field(validation_alias="project_id")
     name: str
     owner: EmailStr
     description: str

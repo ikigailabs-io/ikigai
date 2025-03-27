@@ -63,22 +63,11 @@ class ComponentAPI:
         return resp["project_id"]
 
     def get_app(self, app_id: str) -> AppDict:
-        resp = self.__session.get(
+        app_dict = self.__session.get(
             path="/component/get-project", params={"project_id": app_id}
         ).json()["project"]
 
-        return AppDict(
-            app_id=resp["project_id"],
-            name=resp["name"],
-            owner=resp["owner"],
-            description=resp["description"],
-            icon=resp["icon"],
-            images=resp["images"],
-            directory=cast(DirectoryDict, resp["directory"]),
-            created_at=resp["created_at"],
-            modified_at=resp["modified_at"],
-            last_used_at=resp["last_used_at"],
-        )
+        return cast(AppDict, app_dict)
 
     def get_app_directories_for_user(
         self, directory_id: str = _UNSET
@@ -103,21 +92,7 @@ class ComponentAPI:
             params={"fetch_all": fetch_all, "directory_id": directory_id},
         ).json()["projects"]
 
-        return [
-            AppDict(
-                app_id=app_dict["project_id"],
-                name=app_dict["name"],
-                owner=app_dict["owner"],
-                description=app_dict["description"],
-                icon=app_dict["icon"],
-                images=app_dict["images"],
-                directory=cast(DirectoryDict, app_dict["directory"]),
-                created_at=app_dict["created_at"],
-                modified_at=app_dict["modified_at"],
-                last_used_at=app_dict["last_used_at"],
-            )
-            for app_dict in app_dicts
-        ]
+        return cast(list[AppDict], app_dicts)
 
     def get_components_for_app(self, app_id: str) -> GetComponentsForProjectResponse:
         resp = self.__session.get(
@@ -198,23 +173,27 @@ class ComponentAPI:
         ).json()
         return resp["pipeline_id"]
 
-    def get_flows_for_app(self, app_id: str) -> list[FlowDict]:
+    def get_flow(self, flow_id: str) -> FlowDict:
+        flow = self.__session.get(
+            path="/component/get-pipeline", params={"pipeline_id": flow_id}
+        ).json()["pipeline"]
+
+        return cast(FlowDict, flow)
+
+    def get_flows_for_app(
+        self, app_id: str, directory_id: str | None = None
+    ) -> list[FlowDict]:
+        params = {"project_id": app_id}
+
+        if directory_id is not None:
+            params["directory_id"] = directory_id
+
         flows = self.__session.get(
             path="/component/get-pipelines-for-project",
-            params={"project_id": app_id},
+            params=params,
         ).json()["pipelines"]
 
-        return [
-            FlowDict(
-                app_id=flow["project_id"],
-                flow_id=flow["pipeline_id"],
-                name=flow["name"],
-                definition=flow["definition"],
-                created_at=flow["created_at"],
-                modified_at=flow["modified_at"],
-            )
-            for flow in flows
-        ]
+        return cast(list[FlowDict], flows)
 
     def edit_flow(
         self,

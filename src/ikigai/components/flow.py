@@ -21,6 +21,7 @@ from ikigai.typing.protocol import (
     FlowDefinitionDict,
     NamedDirectoryDict,
 )
+from ikigai.typing.protocol.flow import FlowDict
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
@@ -79,11 +80,8 @@ class FlowBuilder:
                     f"({definition.app_id} != {self._app_id})"
                 )
                 raise ValueError(error_msg)
-            resp = self.__client.get(
-                path="/component/get-pipeline",
-                params={"project_id": self._app_id, "pipeline_id": definition.flow_id},
-            ).json()
-            self._flow_definition = resp["pipeline"]["definition"]
+            flow_dict = self.__client.component.get_flow(flow_id=definition.flow_id)
+            self._flow_definition = flow_dict["definition"]
             return self
 
         if isinstance(definition, dict):
@@ -109,10 +107,8 @@ class FlowBuilder:
         )
 
         # Populate Flow object
-        resp = self.__client.get(
-            path="/component/get-pipeline", params={"pipeline_id": flow_id}
-        ).json()
-        flow = Flow.from_dict(data=resp["pipeline"], client=self.__client)
+        flow_dict = self.__client.component.get_flow(flow_id=flow_id)
+        flow = Flow.from_dict(data=flow_dict, client=self.__client)
         return flow
 
 
@@ -223,12 +219,9 @@ class Flow(BaseModel):
 
         return self.__await_run()
 
-    def describe(self) -> dict:
-        response: dict[str, Any] = self.__client.get(
-            path="/component/get-pipeline", params={"pipeline_id": self.flow_id}
-        ).json()
-
-        return response
+    def describe(self) -> FlowDict:
+        flow = self.__client.component.get_flow(flow_id=self.flow_id)
+        return flow
 
     def __await_run(self) -> RunLog:
         start_time = datetime.now(UTC)
@@ -356,16 +349,15 @@ class FlowDirectory(BaseModel):
         return NamedMapping(directories)
 
     def flows(self) -> NamedMapping[Flow]:
-        resp = self.__client.get(
-            path="/component/get-pipelines-for-project",
-            params={"project_id": self.app_id, "directory_id": self.directory_id},
-        ).json()
+        flow_dicts = self.__client.component.get_flows_for_app(
+            app_id=self.app_id, directory_id=self.directory_id
+        )
 
         flows = {
             flow.flow_id: flow
             for flow in (
                 Flow.from_dict(data=flow_dict, client=self.__client)
-                for flow_dict in resp["pipelines"]
+                for flow_dict in flow_dicts
             )
         }
 
