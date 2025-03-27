@@ -88,10 +88,7 @@ class App(BaseModel):
         }
 
     def delete(self) -> None:
-        self.__client.post(
-            path="/component/delete-project",
-            json={"project": {"project_id": self.app_id}},
-        )
+        self.__client.component.delete_app(app_id=self.app_id)
         return None
 
     def rename(self, name: str) -> Self:

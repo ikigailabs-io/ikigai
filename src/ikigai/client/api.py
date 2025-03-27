@@ -102,6 +102,14 @@ class ComponentAPI:
 
         return cast(GetComponentsForProjectResponse, resp)
 
+    def delete_app(self, app_id: str) -> str:
+        resp = self.__session.post(
+            path="/component/delete-project",
+            json={"project": {"project_id": app_id}},
+        ).json()
+
+        return resp["project_id"]
+
     """
     Dataset APIs
     """
