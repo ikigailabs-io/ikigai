@@ -17,6 +17,8 @@ from ikigai.typing.api import (
 )
 from ikigai.typing.protocol import (
     AppDict,
+    DatasetDict,
+    DatasetLogDict,
     Directory,
     DirectoryDict,
     FlowDefinitionDict,
@@ -156,6 +158,40 @@ class ComponentAPI:
         ).json()
         return resp["dataset_id"]
 
+    def get_dataset_download_url(self, app_id: str, dataset_id: str) -> str:
+        resp = self.__session.get(
+            path="/component/get-dataset-download-url",
+            params={
+                "project_id": app_id,
+                "dataset_id": dataset_id,
+            },
+        ).json()
+        return resp["url"]
+
+    def get_dataset(self, app_id: str, dataset_id: str) -> DatasetDict:
+        resp = self.__session.get(
+            path="/component/get-dataset",
+            params={"project_id": app_id, "dataset_id": dataset_id},
+        ).json()
+        dataset = resp["dataset"]
+
+        return cast(DatasetDict, dataset)
+
+    def get_datasets_for_app(
+        self, app_id: str, directory_id: str = _UNSET
+    ) -> list[DatasetDict]:
+        params = {"project_id": app_id}
+        if directory_id != _UNSET:
+            params["directory_id"] = directory_id
+
+        resp = self.__session.get(
+            path="/component/get-datasets-for-project",
+            params=params,
+        ).json()
+        datasets = resp["datasets"]
+
+        return cast(list[DatasetDict], datasets)
+
     def get_dataset_multipart_upload_urls(
         self, dataset_id: str, app_id: str, filename: str, num_parts: int
     ) -> GetDatasetMultipartUploadUrlsResponse:
@@ -177,6 +213,16 @@ class ComponentAPI:
                 for chunk_idx, upload_url in resp["urls"].items()
             },
         )
+
+    def get_dataset_log(
+        self, app_id: str, dataset_id: str, limit: int = 5
+    ) -> list[DatasetLogDict]:
+        dataset_log = self.__session.get(
+            path="/component/get-dataset-log",
+            params={"dataset_id": dataset_id, "project_id": app_id, "limit": limit},
+        ).json()["dataset_log"]
+
+        return dataset_log
 
     def edit_dataset(
         self,
@@ -203,6 +249,66 @@ class ComponentAPI:
         ).json()
 
         return resp["dataset_id"]
+
+    def verify_dataset_upload(
+        self, app_id: str, dataset_id: str, filename: str
+    ) -> None:
+        self.__session.get(
+            path="/component/verify-dataset-upload",
+            params={
+                "project_id": app_id,
+                "dataset_id": dataset_id,
+                "filename": filename,
+            },
+        )
+        return None
+
+    def confirm_dataset_upload(self, app_id: str, dataset_id: str) -> str:
+        resp = self.__session.get(
+            path="/component/confirm-dataset-upload",
+            params={"project_id": app_id, "dataset_id": dataset_id},
+        ).json()
+        return resp["status"]
+
+    def abort_datset_multipart_upload(
+        self, app_id: str, dataset_id: str, filename: str, upload_id: str
+    ) -> None:
+        self.__session.post(
+            path="/component/complete-dataset-multipart-upload",
+            json={
+                "abort": True,
+                "dataset": {
+                    "dataset_id": dataset_id,
+                    "project_id": app_id,
+                    "filename": filename,
+                },
+                "upload_id": upload_id,
+            },
+        )
+        return None
+
+    def complete_datset_multipart_upload(
+        self,
+        app_id: str,
+        dataset_id: str,
+        filename: str,
+        upload_id: str,
+        etags: dict[int, str],
+    ) -> None:
+        self.__session.post(
+            path="/component/complete-dataset-multipart-upload",
+            json={
+                "abort": False,
+                "dataset": {
+                    "dataset_id": dataset_id,
+                    "project_id": app_id,
+                    "filename": filename,
+                },
+                "upload_id": upload_id,
+                "etags": etags,
+            },
+        )
+        return None
 
     def delete_dataset(self, app_id: str, dataset_id: str) -> str:
         resp = self.__session.post(
@@ -322,3 +428,89 @@ class ComponentAPI:
             params={"project_id": app_id, "pipeline_id": flow_id},
         ).json()
         return resp["progress"]
+
+    """
+    Directory APIs
+    """
+
+    def create_dataset_directory(
+        self, app_id: str, name: str, parent: Directory | None = None
+    ) -> str:
+        parent_id = parent.directory_id if parent else ""
+
+        resp = self.__session.post(
+            path="/component/create-dataset-directory",
+            json={
+                "directory": {
+                    "name": name,
+                    "project_id": app_id,
+                    "parent_id": parent_id,
+                }
+            },
+        ).json()
+
+        return resp["directory_id"]
+
+    def get_dataset_directory(self, app_id: str, directory_id: str) -> DirectoryDict:
+        directory = self.__session.get(
+            path="/component/get-dataset-directory",
+            params={"project_id": app_id, "directory_id": directory_id},
+        ).json()["directory"]
+
+        return cast(DirectoryDict, directory)
+
+    def get_dataset_directories_for_app(
+        self, app_id: str, parent: Directory = _UNSET
+    ) -> list[DirectoryDict]:
+        params = {"project_id": app_id}
+        if parent != _UNSET:
+            params["directory_id"] = parent.directory_id
+
+        resp = self.__session.get(
+            path="/component/get-dataset-directories-for-project",
+            params=params,
+        ).json()
+        directories = resp["directories"]
+
+        return cast(list[DirectoryDict], directories)
+
+    def create_flow_directory(
+        self, app_id: str, name: str, parent: Directory | None = None
+    ) -> str:
+        parent_id = parent.directory_id if parent else ""
+
+        resp = self.__session.post(
+            path="/component/create-pipeline-directory",
+            json={
+                "directory": {
+                    "name": name,
+                    "project_id": app_id,
+                    "parent_id": parent_id,
+                }
+            },
+        ).json()
+
+        return resp["directory_id"]
+
+    def get_flow_directory(self, app_id: str, directory_id: str) -> DirectoryDict:
+        directory = self.__session.get(
+            path="/component/get-pipeline-directory",
+            params={"project_id": app_id, "directory_id": directory_id},
+        ).json()["directory"]
+
+        return cast(DirectoryDict, directory)
+
+    def get_flow_directories_for_app(
+        self, app_id: str, parent: Directory = _UNSET
+    ) -> list[DirectoryDict]:
+        params = {"project_id": app_id}
+        if parent != _UNSET:
+            params["directory_id"] = parent.directory_id
+
+        resp = self.__session.get(
+            path="/component/get-pipeline-directories-for-project",
+            params=params,
+        ).json()
+
+        directories = resp["directories"]
+        return cast(list[DirectoryDict], directories)

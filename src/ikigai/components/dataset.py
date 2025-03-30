@@ -72,35 +72,22 @@ def __upload_data(
 
                 # Get etags from response header
                 etags[chunk_idx] = resp.headers["ETag"]
-
     except Exception:
-        client.post(
-            path="/component/complete-dataset-multipart-upload",
-            json={
-                "dataset": {
-                    "dataset_id": dataset_id,
-                    "project_id": app_id,
-                    "filename": filename,
-                },
-                "abort": True,
-                "upload_id": upload_id,
-            },
+        client.component.abort_datset_multipart_upload(
+            app_id=app_id,
+            dataset_id=dataset_id,
+            filename=filename,
+            upload_id=upload_id,
         )
         raise
 
     # Complete Dataset upload
-    client.post(
-        path="/component/complete-dataset-multipart-upload",
-        json={
-            "dataset": {
-                "dataset_id": dataset_id,
-                "project_id": app_id,
-                "filename": filename,
-            },
-            "abort": False,
-            "upload_id": upload_id,
-            "etags": etags,
-        },
+    client.component.complete_datset_multipart_upload(
+        app_id=app_id,
+        dataset_id=dataset_id,
+        filename=filename,
+        upload_id=upload_id,
+        etags=etags,
     )
 
 
@@ -120,28 +107,25 @@ def _upload_data(
     )
 
     upload_completion_time = time.time()
-    client.get(
-        path="/component/verify-dataset-upload",
-        params={"dataset_id": dataset_id, "filename": filename},
+    client.component.verify_dataset_upload(
+        app_id=app_id, dataset_id=dataset_id, filename=filename
     )
 
     dataset_status: str = "RUNNING"
     while dataset_status == "RUNNING":
         # Block thread while dataset is still being processed
         time.sleep(0.25)
-        dataset_status = client.get(
-            path="/component/confirm-dataset-upload",
-            params={"dataset_id": dataset_id, "project_id": app_id},
-        ).json()["status"]
+        dataset_status = client.component.confirm_dataset_upload(
+            app_id=app_id, dataset_id=dataset_id
+        )
 
     if dataset_status != "SUCCESS":
         error_msg = f"Dataset upload failed, upload ended with status {dataset_status}"
         raise RuntimeError(error_msg)
 
-    dataset_logs = client.get(
-        path="/component/get-dataset-log",
-        params={"dataset_id": dataset_id, "project_id": app_id, "limit": 5},
-    ).json()["dataset_log"]
+    dataset_logs = client.component.get_dataset_log(
+        app_id=app_id, dataset_id=dataset_id, limit=5
+    )
     dataset_verified = [
         log
         for log in dataset_logs
@@ -215,10 +199,10 @@ class DatasetBuilder:
             raise
 
         # Populate Dataset object
-        resp = self.__client.get(
-            path="/component/get-dataset", params={"dataset_id": dataset_id}
-        ).json()
-        dataset = Dataset.from_dict(data=resp["dataset"], client=self.__client)
+        dataset_dict = self.__client.component.get_dataset(
+            app_id=self._app_id, dataset_id=dataset_id
+        )
+        dataset = Dataset.from_dict(data=dataset_dict, client=self.__client)
         return dataset
 
 
@@ -288,15 +272,11 @@ class Dataset(BaseModel):
         return self
 
     def df(self, **parser_options) -> pd.DataFrame:
-        resp = self.__client.get(
-            path="/component/get-dataset-download-url",
-            params={
-                "dataset_id": self.dataset_id,
-                "project_id": self.app_id,
-            },
-        ).json()
-        dataset_url = resp["url"]
-        return pd.read_csv(dataset_url, **parser_options)
+        download_url = self.__client.component.get_dataset_download_url(
+            app_id=self.app_id,
+            dataset_id=self.dataset_id,
+        )
+        return pd.read_csv(download_url, **parser_options)
 
     def edit_data(self, data: pd.DataFrame) -> None:
         buffer = io.BytesIO()
@@ -310,54 +290,43 @@ class Dataset(BaseModel):
             data=bytearray(buffer.getvalue()),
         )
 
-    def describe(self) -> dict:
-        response: dict[str, Any] = self.__client.get(
-            path="/component/get-dataset",
-            params={"dataset_id": self.dataset_id},
-        ).json()
-
-        return response
+    def describe(self) -> Mapping[str, Any]:
+        dataset = self.__client.component.get_dataset(
+            app_id=self.app_id, dataset_id=self.dataset_id
+        )
+        return dataset
 
 
 class DatasetDirectoryBuilder:
     _app_id: str
     _name: str
-    _parent_id: str
+    _parent: Directory | None
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
         self.__client = client
         self._app_id = app_id
         self._name = ""
-        self._parent_id = ""
+        self._parent = None
 
     def new(self, name: str) -> Self:
         self._name = name
         return self
 
     def parent(self, parent: Directory) -> Self:
-        self._parent_id = parent.directory_id
+        self._parent = parent
         return self
 
     def build(self) -> DatasetDirectory:
-        resp = self.__client.post(
-            path="/component/create-dataset-directory",
-            json={
-                "directory": {
-                    "name": self._name,
-                    "project_id": self._app_id,
-                    "parent_id": self._parent_id,
-                }
-            },
-        ).json()
-        directory_id = resp["directory_id"]
-        resp = self.__client.get(
-            path="/component/get-dataset-directory",
-            params={"project_id": self._app_id, "directory_id": directory_id},
-        ).json()
+        directory_id = self.__client.component.create_dataset_directory(
+            app_id=self._app_id, name=self._name, parent=self._parent
+        )
+        directory_dict = self.__client.component.get_dataset_directory(
+            app_id=self._app_id, directory_id=directory_id
+        )
 
         directory = DatasetDirectory.from_dict(
-            data=resp["directory"], client=self.__client
+            data=directory_dict, client=self.__client
         )
         return directory
 
@@ -383,31 +352,28 @@ class DatasetDirectory(BaseModel):
         return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
 
     def directories(self) -> NamedMapping[Self]:
-        resp = self.__client.get(
-            path="/component/get-dataset-directories-for-project",
-            params={"project_id": self.app_id, "directory_id": self.directory_id},
-        ).json()
+        directory_dicts = self.__client.component.get_dataset_directories_for_app(
+            app_id=self.app_id, parent=self
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
                 self.from_dict(data=directory_dict, client=self.__client)
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 
         return NamedMapping(directories)
 
     def datasets(self) -> NamedMapping[Dataset]:
-        resp = self.__client.get(
-            path="/component/get-datasets-for-project",
-            params={"project_id": self.app_id, "directory_id": self.directory_id},
-        ).json()
-
+        dataset_dicts = self.__client.component.get_datasets_for_app(
+            app_id=self.app_id,
+        )
         datasets = {
             dataset.dataset_id: dataset
             for dataset in (
                 Dataset.from_dict(data=dataset_dict, client=self.__client)
-                for dataset_dict in resp["datasets"]
+                for dataset_dict in dataset_dicts
             )
         }
 

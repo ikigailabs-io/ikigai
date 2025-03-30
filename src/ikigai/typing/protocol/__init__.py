@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 from ikigai.typing.protocol.app import AppDict
+from ikigai.typing.protocol.dataset import DatasetDict, DatasetLogDict
 from ikigai.typing.protocol.directory import (
     Directory,
     DirectoryDict,
@@ -24,6 +25,9 @@ from ikigai.typing.protocol.generic import Named
 __all__ = [
     # App Protocol
     "AppDict",
+    # Dataset Protocol
+    "DatasetDict",
+    "DatasetLogDict",
     # Directory Protocol
     "Directory",
     "DirectoryDict",

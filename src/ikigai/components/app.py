@@ -125,15 +125,12 @@ class App(BaseModel):
     """
 
     def datasets(self) -> NamedMapping[components.Dataset]:
-        resp = self.__client.get(
-            path="/component/get-datasets-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        dataset_dicts = self.__client.component.get_datasets_for_app(app_id=self.app_id)
         datasets = {
             dataset.dataset_id: dataset
             for dataset in (
                 components.Dataset.from_dict(data=dataset_dict, client=self.__client)
-                for dataset_dict in resp["datasets"]
+                for dataset_dict in dataset_dicts
             )
         }
 
@@ -144,17 +141,16 @@ class App(BaseModel):
         return components.DatasetBuilder(client=self.__client, app_id=self.app_id)
 
     def dataset_directories(self) -> NamedMapping[components.DatasetDirectory]:
-        resp = self.__client.get(
-            path="/component/get-dataset-directories-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        directory_dicts = self.__client.component.get_dataset_directories_for_app(
+            app_id=self.app_id
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
                 components.DatasetDirectory.from_dict(
                     data=directory_dict, client=self.__client
                 )
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 
@@ -184,17 +180,16 @@ class App(BaseModel):
         return components.FlowBuilder(client=self.__client, app_id=self.app_id)
 
     def flow_directories(self) -> NamedMapping[components.FlowDirectory]:
-        resp = self.__client.get(
-            path="/component/get-pipeline-directories-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        directory_dicts = self.__client.component.get_flow_directories_for_app(
+            app_id=self.app_id
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
                 components.FlowDirectory.from_dict(
                     data=directory_dict, client=self.__client
                 )
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 

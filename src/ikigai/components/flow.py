@@ -19,9 +19,9 @@ from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
     FlowDefinitionDict,
+    FlowDict,
     NamedDirectoryDict,
 )
-from ikigai.typing.protocol.flow import FlowDict
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
@@ -268,43 +268,32 @@ class Flow(BaseModel):
 class FlowDirectoryBuilder:
     _app_id: str
     _name: str
-    _parent_id: str
+    _parent: Directory | None
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
         self.__client = client
         self._app_id = app_id
         self._name = ""
-        self._parent_id = ""
+        self._parent = None
 
     def new(self, name: str) -> Self:
         self._name = name
         return self
 
     def parent(self, parent: Directory) -> Self:
-        self._parent_id = parent.directory_id
+        self._parent = parent
         return self
 
     def build(self) -> FlowDirectory:
-        resp = self.__client.post(
-            path="/component/create-pipeline-directory",
-            json={
-                "directory": {
-                    "name": self._name,
-                    "project_id": self._app_id,
-                    "parent_id": self._parent_id,
-                }
-            },
-        ).json()
-        directory_id = resp["directory_id"]
-        resp = self.__client.get(
-            path="/component/get-pipeline-directory",
-            params={"project_id": self._app_id, "directory_id": directory_id},
-        ).json()
-
-        directory = FlowDirectory.from_dict(
-            data=resp["directory"], client=self.__client
+        directory_id = self.__client.component.create_flow_directory(
+            app_id=self._app_id, name=self._name, parent=self._parent
         )
+        directory_dict = self.__client.component.get_flow_directory(
+            app_id=self._app_id, directory_id=directory_id
+        )
+
+        directory = FlowDirectory.from_dict(data=directory_dict, client=self.__client)
         return directory
 
 
@@ -329,15 +318,14 @@ class FlowDirectory(BaseModel):
         return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
 
     def directories(self) -> NamedMapping[Self]:
-        resp = self.__client.get(
-            path="/component/get-pipeline-directories-for-project",
-            params={"project_id": self.app_id, "directory_id": self.directory_id},
-        ).json()
+        directory_dicts = self.__client.component.get_flow_directories_for_app(
+            app_id=self.app_id, parent=self
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
                 self.from_dict(data=directory_dict, client=self.__client)
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 
