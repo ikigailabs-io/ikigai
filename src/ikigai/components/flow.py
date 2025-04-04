@@ -118,6 +118,7 @@ class FlowStatus(str, Enum):
     STOPPED = "STOPPED"
     FAILED = "FAILED"
     IDLE = "IDLE"
+    UNKNOWN = "UNKNOWN"
     SUCCESS = "SUCCESS"  # Not available via /component/is-pipeline-running
 
     def __repr__(self) -> str:
@@ -236,7 +237,7 @@ class Flow(BaseModel):
             progress_bar.update(last_progress)
 
             # Wait while pipeline is running
-            while status_report.status == FlowStatus.RUNNING:
+            while status_report.status in (FlowStatus.RUNNING, FlowStatus.UNKNOWN):
                 time.sleep(1)
                 status_report = self.status()
                 progress = status_report.progress if status_report.progress else 100

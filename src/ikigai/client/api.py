@@ -427,7 +427,17 @@ class ComponentAPI:
             path="/component/is-pipeline-running",
             params={"project_id": app_id, "pipeline_id": flow_id},
         ).json()
-        return resp["progress"]
+
+        # BE is a bit inconsistent with the response so clean it up
+        status = resp["progress"]["status"] if resp["status"] else "IDLE"
+        progress = resp["progress"].get("progress")
+        message = resp["progress"].get("message")
+
+        return FlowStatusReportDict(
+            status=status,
+            progress=progress,
+            message=message,
+        )
 
     """
     Directory APIs
