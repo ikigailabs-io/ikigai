@@ -368,6 +368,7 @@ class DatasetDirectory(BaseModel):
     def datasets(self) -> NamedMapping[Dataset]:
         dataset_dicts = self.__client.component.get_datasets_for_app(
             app_id=self.app_id,
+            directory_id=self.directory_id,
         )
         datasets = {
             dataset.dataset_id: dataset
