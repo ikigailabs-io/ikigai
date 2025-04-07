@@ -25,6 +25,7 @@ from ikigai.typing.protocol import (
     FlowDict,
     FlowLogDict,
     FlowStatusReportDict,
+    ModelDict,
 )
 
 _UNSET: Any = object()
@@ -440,6 +441,18 @@ class ComponentAPI:
         )
 
     """
+    Model APIs
+    """
+
+    def get_model(self, app_id: str, model_id: str) -> ModelDict:
+        return cast(ModelDict, ...)
+
+    def get_models_for_app(
+        self, app_id: str, directory_id: str = _UNSET
+    ) -> list[ModelDict]:
+        return cast(list[ModelDict], ...)
+
+    """
     Directory APIs
     """
 
@@ -519,6 +532,47 @@ class ComponentAPI:
 
         resp = self.__session.get(
             path="/component/get-pipeline-directories-for-project",
+            params=params,
+        ).json()
+
+        directories = resp["directories"]
+        return cast(list[DirectoryDict], directories)
+
+    def create_model_directory(
+        self, app_id: str, name: str, parent: Directory | None = None
+    ) -> str:
+        parent_id = parent.directory_id if parent else ""
+
+        resp = self.__session.post(
+            path="/component/create-model-directory",
+            json={
+                "directory": {
+                    "name": name,
+                    "project_id": app_id,
+                    "parent_id": parent_id,
+                }
+            },
+        ).json()
+
+        return resp["directory_id"]
+
+    def get_model_directory(self, app_id: str, directory_id: str) -> DirectoryDict:
+        directory = self.__session.get(
+            path="/component/get-model-directory",
+            params={"project_id": app_id, "directory_id": directory_id},
+        ).json()["directory"]
+
+        return cast(DirectoryDict, directory)
+
+    def get_model_directories_for_app(
+        self, app_id: str, parent: Directory = _UNSET
+    ) -> list[DirectoryDict]:
+        params = {"project_id": app_id}
+        if parent != _UNSET:
+            params["directory_id"] = parent.directory_id
+
+        resp = self.__session.get(
+            path="/component/get-model-directories-for-project",
             params=params,
         ).json()
 

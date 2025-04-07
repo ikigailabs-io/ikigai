@@ -12,6 +12,7 @@ class DirectoryType(str, Enum):
     APP = "PROJECT"
     DATASET = "DATASET"
     FLOW = "PIPELINE"
+    MODEL = "MODEL"
 
 
 class DirectoryDict(TypedDict):

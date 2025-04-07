@@ -16,6 +16,12 @@ from ikigai.components.flow import (
     FlowDirectoryBuilder,
     FlowStatus,
 )
+from ikigai.components.model import (
+    Model,
+    ModelBuilder,
+    ModelDirectory,
+    ModelDirectoryBuilder,
+)
 
 __all__ = [
     "App",
@@ -30,4 +36,8 @@ __all__ = [
     "FlowDirectoryBuilder",
     "FlowStatus",
     "FlowDirectory",
+    "Model",
+    "ModelBuilder",
+    "ModelDirectory",
+    "ModelDirectoryBuilder",
 ]
