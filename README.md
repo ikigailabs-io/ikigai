@@ -202,11 +202,11 @@ Dataset(
 
 #### Showing Details of a Dataset
 
-The example snippet shows you how to display details related to a dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT] Amazon` dataset in the `datasaet` variable. Next, use the `describe()` method to view a dictionary containing all the dataset's details.
+The example snippet shows you how to display details related to a dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT]` dataset in the `datasaet` variable. Next, use the `describe()` method to view a dictionary containing all the dataset's details.
 
 ```py
 datasets = app.datasets()             # Get all datasets in the app
-dataset = datasets["[INPUT] Amazon"]  # Get dataset named "[INPUT] Amazon"
+dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 dataset.describe()
 ```
 
@@ -248,11 +248,11 @@ The output resembles the following example:
 
 #### Downloading Your Existing Dataset
 
-The example snippet shows you how to download an existing dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT] Amazon` dataset in the `datasaet` variable. Then, download the dataset to a Pandas DataFrame. You can pass an argument to the `.head()` method to designate how many rows of the dataset to display (i.e. `df.head(10)`). By default, the method displays the first 5 rows of the dataset.
+The example snippet shows you how to download an existing dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT]` dataset in the `datasaet` variable. Then, download the dataset to a Pandas DataFrame. You can pass an argument to the `.head()` method to designate how many rows of the dataset to display (i.e. `df.head(10)`). By default, the method displays the first 5 rows of the dataset.
 
 ```py
 datasets = app.datasets()             # Get all datasets in the app
-dataset = datasets["[INPUT] Amazon"]  # Get dataset named "[INPUT] Amazon"
+dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 
 df.head()
@@ -261,12 +261,12 @@ df.head()
 The output resembles the following example:
 
 | Product (name/description) | SKU/Unique Item ID     | Channel/Location | Quantity |
-|---------------------------|----------------------|----------------|----------|
-| Chocolate Chip Cookie     | Chocolate_C123_Am   | Amazon         | 166      |
-| Snickerdoodle Cookie      | Snickerdoodle_C123_Am | Amazon         | 428      |
-| Ginger Cookie            | Ginger_C123_Am      | Amazon         | 271      |
-| Sugar Cookie             | Sugar_C123_Am       | Amazon         | 421      |
-| Double Chocolate Cookie  | Double_C123_Am      | Amazon         | 342      |
+|----------------------------|------------------------|------------------|----------|
+| Chocolate Chip Cookie      | Chocolate_C123_Am      | Amazon           | 166      |
+| Snickerdoodle Cookie       | Snickerdoodle_C123_Am  | Amazon           | 428      |
+| Ginger Cookie              | Ginger_C123_Am         | Amazon           | 271      |
+| Sugar Cookie               | Sugar_C123_Am          | Amazon           | 421      |
+| Double Chocolate Cookie    | Double_C123_Am         | Amazon           | 342      |
 
 #### Creating a New Dataset
 
@@ -316,11 +316,11 @@ Dataset(
 
 #### Updating a Dataset
 
-The example snippet shows you how to update an existing dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT] Amazon` dataset in the `datasaet` variable. Then, download the dataset as a Pandas DataFrame. The code stores the DataFrame in the `df` variable. Now, you can update the DataFrame using the `.columns()` method. The example uses the `.columns()` method to drop the last column in the DataFrame. It stores the updated DataFrame in a new variable named `new_dataset`. Finally, update the dataset with the new data using the `.edit_data()` method. To complete this pass in the DateFrame `df_updated` as an argument of the `.edit_data()` method. Display the data in the new dataset using the `.head()` method.
+The example snippet shows you how to update an existing dataset. First, get all datasets stored in a particular app. The example stores all datasets in the `datasets` variable. Next, store the dataset in a variable. The example stores the `[INPUT]` dataset in the `datasaet` variable. Then, download the dataset as a Pandas DataFrame. The code stores the DataFrame in the `df` variable. Now, you can update the DataFrame using the `.columns()` method. The example uses the `.columns()` method to drop the last column in the DataFrame. It stores the updated DataFrame in a new variable named `new_dataset`. Finally, update the dataset with the new data using the `.edit_data()` method. To complete this pass in the DateFrame `df_updated` as an argument of the `.edit_data()` method. Display the data in the new dataset using the `.head()` method.
 
 ```py
 datasets = app.datasets()             # Get all datasets in Start the app
-dataset = datasets["[INPUT] Amazon"]  # Get dataset named "[INPUT] Amazon"
+dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 df_updated = df[df.columns[:-1]]      # New dataframe (by dropping last column)
 new_dataset.edit_data(df_updated)     # Update the dataset
@@ -330,7 +330,7 @@ new_dataset.df().head()
 
 The output resembles the following example:
 
-| Product (name/description)  | SKU/Unique Item ID      | Channel/Location |
+| Product (name/description) | SKU/Unique Item ID     | Channel/Location |
 |----------------------------|------------------------|------------------|
 | Chocolate Chip Cookie      | Chocolate_C123_Am      | Amazon           |
 | Snickerdoodle Cookie       | Snickerdoodle_C123_Am  | Amazon           |
