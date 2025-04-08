@@ -72,6 +72,15 @@ Let's get a quick run-down of the structure of the project:
     └── test_ikigai.py
 ```
 
+Now, let's setup the pre-commit hooks to automatically format the code and run linters when you commit changes.
+Install the pre-commit tool by following the [official instructions](https://pre-commit.com/#install).
+After installing pre-commit, run the following command to install the hooks:
+
+```sh
+pre-commit install
+pre-commit run --all-files
+```
+
 Next let's setup your `test-env.toml`.
 Get your api key by logging in on [ikigai](https://app.ikigailabs.io) > Profile > Keys
 Fill in your email id and api key into the following command and run it.

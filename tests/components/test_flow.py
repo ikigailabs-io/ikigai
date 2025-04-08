@@ -109,8 +109,6 @@ def test_flow_clone(
                             "header": True,
                             "use_raw_file": False,
                         },
-                        "children": ["count"],
-                        "parents": [],
                     },
                     {
                         "facet_id": "count",
@@ -121,8 +119,6 @@ def test_flow_clone(
                             "sort": True,
                             "target_columns": df1.columns.to_list()[:-2],
                         },
-                        "children": ["output"],
-                        "parents": ["input"],
                     },
                     {
                         "facet_id": "output",
@@ -134,8 +130,6 @@ def test_flow_clone(
                             "header": True,
                             "user_email": "harsh@ikigailabs.io",
                         },
-                        "children": [],
-                        "parents": ["count"],
                     },
                 ],
                 "arrows": [
@@ -198,8 +192,6 @@ def test_flow_run_success(
                             "header": True,
                             "use_raw_file": False,
                         },
-                        "children": ["count"],
-                        "parents": [],
                     },
                     {
                         "facet_id": "count",
@@ -210,8 +202,6 @@ def test_flow_run_success(
                             "sort": True,
                             "target_columns": df1.columns.to_list()[:-2],
                         },
-                        "children": ["output"],
-                        "parents": ["input"],
                     },
                     {
                         "facet_id": "output",
@@ -223,8 +213,6 @@ def test_flow_run_success(
                             "header": True,
                             "user_email": "harsh@ikigailabs.io",
                         },
-                        "children": [],
-                        "parents": ["count"],
                     },
                 ],
                 "arrows": [
@@ -281,8 +269,6 @@ def test_flow_run_fail(
                             "header": True,
                             "use_raw_file": False,
                         },
-                        "children": ["failing"],
-                        "parents": [],
                     },
                     {
                         "facet_id": "failing",
@@ -296,8 +282,6 @@ def test_flow_run_fail(
                                 "result = df\n"
                             ),
                         },
-                        "children": ["output"],
-                        "parents": ["input"],
                     },
                     {
                         "facet_id": "output",
@@ -309,8 +293,6 @@ def test_flow_run_fail(
                             "header": True,
                             "user_email": "harsh@ikigailabs.io",
                         },
-                        "children": [],
-                        "parents": ["failing"],
                     },
                 ],
                 "arrows": [

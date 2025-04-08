@@ -108,11 +108,10 @@ def test_dataset_describe(
 
     description = dataset.describe()
     assert description is not None
-    assert "dataset" in description
-    assert description["dataset"]["name"] == dataset_name
-    assert description["dataset"]["project_id"] == app.app_id
-    assert description["dataset"]["directory"] is not None
-    assert description["dataset"]["directory"]["type"] == "DATASET"
+    assert description["name"] == dataset_name
+    assert description["project_id"] == app.app_id
+    assert description["directory"] is not None
+    assert description["directory"]["type"] == "DATASET"
 
 
 def test_dataset_directories_creation(

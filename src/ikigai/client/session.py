@@ -5,11 +5,12 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import InitVar
 from http import HTTPStatus
 from typing import Any
 
 import requests
-from pydantic import ConfigDict
+from pydantic import AnyUrl, ConfigDict, EmailStr, Field
 from pydantic.dataclasses import dataclass
 from requests import Response
 
@@ -18,12 +19,18 @@ from ikigai.utils.compatibility import HTTPMethod
 logger = logging.getLogger("ikigai.client")
 
 
-@dataclass
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class Session:
-    base_url: str
-    session: requests.Session
+    # Init only vars
+    user_email: InitVar[EmailStr]
+    api_key: InitVar[str]
 
-    __pydantic_config__ = ConfigDict(arbitrary_types_allowed=True)
+    base_url: AnyUrl
+    __session: requests.Session = Field(init=False)
+
+    def __post_init__(self, user_email: EmailStr, api_key: str) -> None:
+        self.__session = requests.Session()
+        self.__session.headers.update({"user": user_email, "api-key": api_key})
 
     def request(
         self,
@@ -37,7 +44,7 @@ class Session:
             {"method": method, "path": path, "params": params, "json": json},
         )
         url = f"{self.base_url}{path}"
-        resp = self.session.request(
+        resp = self.__session.request(
             method=method,
             url=url,
             params=params,
@@ -96,4 +103,4 @@ class Session:
         return self.request(method=HTTPMethod.POST, path=path, json=json)
 
     def __del__(self) -> None:
-        self.session.close()
+        self.__session.close()

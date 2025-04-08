@@ -37,3 +37,9 @@ else:
     from datetime import timezone
 
     UTC = timezone.utc  # noqa: F401
+
+# Multiple python version compatible import for typing.NotRequired
+if sys.version_info >= (3, 11):
+    from typing import NotRequired  # noqa: F401
+else:
+    from typing_extensions import NotRequired  # noqa: F401

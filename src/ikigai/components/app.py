@@ -4,31 +4,32 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field
 
 from ikigai import components
-from ikigai.client.session import Session
+from ikigai.client import Client
+from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.utils.protocols import Directory, DirectoryType
 
 
 class AppBuilder:
     _name: str
     _description: str
-    _directory: dict[str, str]
+    _directory: Directory | None
     _icon: str
     _images: list[str]
-    __session: Session
+    __client: Client
 
-    def __init__(self, session: Session) -> None:
-        self.__session = session
+    def __init__(self, client: Client) -> None:
+        self.__client = client
         self._name = ""
         self._description = ""
-        self._directory = {}
+        self._directory = None
         self._icon = ""
         self._images = []
 
@@ -41,28 +42,17 @@ class AppBuilder:
         return self
 
     def directory(self, directory: Directory) -> Self:
-        self._directory = {
-            "directory_id": directory.directory_id,
-            "type": directory.type,
-        }
+        self._directory = directory
         return self
 
     def build(self) -> App:
-        resp = self.__session.post(
-            path="/component/create-project",
-            json={
-                "project": {
-                    "name": self._name,
-                    "description": self._description,
-                    "directory": self._directory,
-                },
-            },
-        ).json()
-        app_id = resp["project_id"]
-        resp = self.__session.get(
-            path="/component/get-project", params={"project_id": app_id}
-        ).json()
-        app = App.from_dict(data=resp["project"], session=self.__session)
+        app_id = self.__client.component.create_app(
+            name=self._name,
+            description=self._description,
+            directory=self._directory,
+        )
+        app_dict = self.__client.component.get_app(app_id=app_id)
+        app = App.from_dict(data=app_dict, client=self.__client)
         return app
 
 
@@ -74,12 +64,12 @@ class App(BaseModel):
     created_at: datetime
     modified_at: datetime
     last_used_at: datetime
-    __session: Session
+    __client: Client
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         self = cls.model_validate(data)
-        self.__session = session
+        self.__client = client
         return self
 
     """
@@ -98,55 +88,34 @@ class App(BaseModel):
         }
 
     def delete(self) -> None:
-        self.__session.post(
-            path="/component/delete-project",
-            json={"project": {"project_id": self.app_id}},
-        )
+        self.__client.component.delete_app(app_id=self.app_id)
         return None
 
     def rename(self, name: str) -> Self:
-        _ = self.__session.post(
-            path="/component/edit-project",
-            json={"project": {"project_id": self.app_id, "name": name}},
-        )
+        _ = self.__client.component.edit_app(app_id=self.app_id, name=name)
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
         return self
 
     def move(self, directory: Directory) -> Self:
-        _ = self.__session.post(
-            path="/component/edit-project",
-            json={
-                "project": {
-                    "project_id": self.app_id,
-                    "directory": {
-                        "directory_id": directory.directory_id,
-                        "type": directory.type,
-                    },
-                }
-            },
-        )
+        _ = self.__client.component.edit_app(app_id=self.app_id, directory=directory)
         return self
 
     def update_description(self, description: str) -> Self:
-        _ = self.__session.post(
-            path="/component/edit-project",
-            json={"project": {"project_id": self.app_id, "description": description}},
-        ).json()
+        _ = self.__client.component.edit_app(
+            app_id=self.app_id, description=description
+        )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.description = description
         return self
 
-    def describe(self) -> dict:
-        response: dict[str, Any] = self.__session.get(
-            path="/component/get-components-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+    def describe(self) -> dict[str, Any]:
+        components = self.__client.component.get_components_for_app(app_id=self.app_id)
 
         # Combine components information with app info
         return_value = {
             "app": self.to_dict(),
-            "components": response["project_components"][self.app_id],
+            "components": components,
         }
 
         return return_value
@@ -156,15 +125,12 @@ class App(BaseModel):
     """
 
     def datasets(self) -> NamedMapping[components.Dataset]:
-        resp = self.__session.get(
-            path="/component/get-datasets-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        dataset_dicts = self.__client.component.get_datasets_for_app(app_id=self.app_id)
         datasets = {
             dataset.dataset_id: dataset
             for dataset in (
-                components.Dataset.from_dict(data=dataset_dict, session=self.__session)
-                for dataset_dict in resp["datasets"]
+                components.Dataset.from_dict(data=dataset_dict, client=self.__client)
+                for dataset_dict in dataset_dicts
             )
         }
 
@@ -172,20 +138,19 @@ class App(BaseModel):
 
     @property
     def dataset(self) -> components.DatasetBuilder:
-        return components.DatasetBuilder(session=self.__session, app_id=self.app_id)
+        return components.DatasetBuilder(client=self.__client, app_id=self.app_id)
 
     def dataset_directories(self) -> NamedMapping[components.DatasetDirectory]:
-        resp = self.__session.get(
-            path="/component/get-dataset-directories-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        directory_dicts = self.__client.component.get_dataset_directories_for_app(
+            app_id=self.app_id
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
                 components.DatasetDirectory.from_dict(
-                    data=directory_dict, session=self.__session
+                    data=directory_dict, client=self.__client
                 )
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 
@@ -194,20 +159,17 @@ class App(BaseModel):
     @property
     def dataset_directory(self) -> components.DatasetDirectoryBuilder:
         return components.DatasetDirectoryBuilder(
-            session=self.__session, app_id=self.app_id
+            client=self.__client, app_id=self.app_id
         )
 
     def flows(self) -> NamedMapping[components.Flow]:
-        resp = self.__session.get(
-            path="/component/get-pipelines-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        flow_dicts = self.__client.component.get_flows_for_app(app_id=self.app_id)
 
         flows = {
             flow.flow_id: flow
             for flow in (
-                components.Flow.from_dict(data=flow_dict, session=self.__session)
-                for flow_dict in resp["pipelines"]
+                components.Flow.from_dict(data=flow_dict, client=self.__client)
+                for flow_dict in flow_dicts
             )
         }
 
@@ -215,20 +177,19 @@ class App(BaseModel):
 
     @property
     def flow(self) -> components.FlowBuilder:
-        return components.FlowBuilder(session=self.__session, app_id=self.app_id)
+        return components.FlowBuilder(client=self.__client, app_id=self.app_id)
 
     def flow_directories(self) -> NamedMapping[components.FlowDirectory]:
-        resp = self.__session.get(
-            path="/component/get-pipeline-directories-for-project",
-            params={"project_id": self.app_id},
-        ).json()
+        directory_dicts = self.__client.component.get_flow_directories_for_app(
+            app_id=self.app_id
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
                 components.FlowDirectory.from_dict(
-                    data=directory_dict, session=self.__session
+                    data=directory_dict, client=self.__client
                 )
-                for directory_dict in resp["directories"]
+                for directory_dict in directory_dicts
             )
         }
 
@@ -236,9 +197,7 @@ class App(BaseModel):
 
     @property
     def flow_directory(self) -> components.FlowDirectoryBuilder:
-        return components.FlowDirectoryBuilder(
-            session=self.__session, app_id=self.app_id
-        )
+        return components.FlowDirectoryBuilder(client=self.__client, app_id=self.app_id)
 
 
 class AppDirectory(BaseModel):
@@ -246,44 +205,45 @@ class AppDirectory(BaseModel):
     name: str
     created_at: datetime
     modified_at: datetime
-    __session: Session
+    __client: Client
 
     @property
-    def type(self) -> str:
-        return DirectoryType.APP.value
+    def type(self) -> DirectoryType:
+        return DirectoryType.APP
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         self = cls.model_validate(data)
-        self.__session = session
+        self.__client = client
         return self
 
+    def to_dict(self) -> NamedDirectoryDict:
+        return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
+
     def directories(self) -> NamedMapping[Self]:
-        resp = self.__session.get(
-            path="/component/get-project-directories-for-user",
-            params={"directory_id": self.directory_id},
-        ).json()
+        directory_dicts = self.__client.component.get_app_directories_for_user(
+            directory_id=self.directory_id,
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
-                self.from_dict(data=directory_dict, session=self.__session)
-                for directory_dict in resp["directories"]
+                self.from_dict(data=directory_dict, client=self.__client)
+                for directory_dict in directory_dicts
             )
         }
 
         return NamedMapping(directories)
 
     def apps(self) -> NamedMapping[App]:
-        resp = self.__session.get(
-            path="/component/get-projects-for-user",
-            params={"directory_id": self.directory_id, "fetch_all": False},
-        ).json()
+        app_dicts = self.__client.component.get_apps_for_user(
+            directory_id=self.directory_id
+        )
 
         apps = {
             app.app_id: app
             for app in (
-                App.from_dict(data=app_dict, session=self.__session)
-                for app_dict in resp["projects"]
+                App.from_dict(data=app_dict, client=self.__client)
+                for app_dict in app_dicts
             )
         }
 
