@@ -26,6 +26,7 @@ from ikigai.typing.protocol import (
     FlowLogDict,
     FlowStatusReportDict,
     ModelDict,
+    ModelType,
 )
 
 _UNSET: Any = object()
@@ -443,6 +444,34 @@ class ComponentAPI:
     """
     Model APIs
     """
+
+    def create_model(
+        self,
+        app_id: str,
+        name: str,
+        directory: Directory | None,
+        model_type: ModelType,
+        description: str,
+    ) -> str:
+        directory_dict = (
+            cast(dict, directory.to_dict()) if directory is not None else {}
+        )
+
+        resp = self.__session.post(
+            path="/component/create-model",
+            json={
+                "model": {
+                    "project_id": app_id,
+                    "name": name,
+                    "directory": directory_dict,
+                    "model_type": model_type.model_type,
+                    "sub_model_type": model_type.sub_model_type,
+                    "description": description,
+                }
+            },
+        ).json()
+
+        return resp["model_id"]
 
     def get_model(self, app_id: str, model_id: str) -> ModelDict:
         return cast(ModelDict, ...)

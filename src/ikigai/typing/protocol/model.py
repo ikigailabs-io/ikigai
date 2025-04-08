@@ -4,9 +4,17 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Protocol, TypedDict
 
 from ikigai.typing.protocol.directory import DirectoryDict
+
+
+class ModelType(Protocol):
+    @property
+    def model_type(self) -> str: ...
+
+    @property
+    def sub_model_type(self) -> str: ...
 
 
 class ModelDict(TypedDict):

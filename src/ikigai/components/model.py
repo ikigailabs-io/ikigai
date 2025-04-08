@@ -38,6 +38,41 @@ class ModelBuilder:
         self._directory = None
         self._model_type = None
 
+    def new(self, name: str) -> Self:
+        self._name = name
+        return self
+
+    def directory(self, directory: Directory) -> Self:
+        self._directory = directory
+        return self
+
+    def model_type(self, model_type: ModelType) -> Self:
+        self._model_type = model_type
+        return self
+
+    def description(self, description: str) -> Self:
+        self._description = description
+        return self
+
+    def build(self) -> Model:
+        if self._model_type is None:
+            error_msg = "Model type must be specified"
+            raise ValueError(error_msg)
+
+        model_id = self.__client.component.create_model(
+            app_id=self._app_id,
+            name=self._name,
+            directory=self._directory,
+            model_type=self._model_type,
+            description=self._description,
+        )
+        # Populate the model object
+        model_dict = self.__client.component.get_model(
+            app_id=self._app_id, model_id=model_id
+        )
+        model = Model.from_dict(data=model_dict, client=self.__client)
+        return model
+
 
 class Model(BaseModel):
     app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
