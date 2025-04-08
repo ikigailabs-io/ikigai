@@ -91,6 +91,30 @@ class Model(BaseModel):
         self.__client = client
         return self
 
+    def delete(self) -> None:
+        self.__client.component.delete_model(app_id=self.app_id, model_id=self.model_id)
+        return None
+
+    def rename(self, name: str) -> Self:
+        self.__client.component.edit_model(
+            app_id=self.app_id, model_id=self.model_id, name=name
+        )
+        self.name = name
+        return self
+
+    def move(self, directory: Directory) -> Self:
+        self.__client.component.edit_model(
+            app_id=self.app_id, model_id=self.model_id, directory=directory
+        )
+        return self
+
+    def update_description(self, description: str) -> Self:
+        self.__client.component.edit_model(
+            app_id=self.app_id, model_id=self.model_id, description=description
+        )
+        self.description = description
+        return self
+
 
 class ModelDirectoryBuilder:
     _app_id: str

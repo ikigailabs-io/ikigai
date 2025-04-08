@@ -481,6 +481,41 @@ class ComponentAPI:
     ) -> list[ModelDict]:
         return cast(list[ModelDict], ...)
 
+    def edit_model(
+        self,
+        app_id: str,
+        model_id: str,
+        name: str = _UNSET,
+        directory: Directory = _UNSET,
+        description: str = _UNSET,
+    ) -> str:
+        model: dict[str, Any] = {
+            "project_id": app_id,
+            "model_id": model_id,
+        }
+
+        if name != _UNSET:
+            model["name"] = name
+        if directory != _UNSET:
+            model["directory"] = directory.to_dict()
+        if description != _UNSET:
+            model["description"] = description
+
+        resp = self.__session.post(
+            path="/component/edit-model",
+            json={"model": model},
+        ).json()
+
+        return resp["model_id"]
+
+    def delete_model(self, app_id: str, model_id: str) -> str:
+        resp = self.__session.post(
+            path="/component/delete-model",
+            json={"model": {"project_id": app_id, "model_id": model_id}},
+        ).json()
+
+        return resp["model_id"]
+
     """
     Directory APIs
     """
