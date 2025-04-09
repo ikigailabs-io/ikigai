@@ -8,7 +8,7 @@ import logging
 from collections.abc import Mapping
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, Field, RootModel
+from pydantic import AliasChoices, BaseModel, Field
 
 from ikigai.client.client import Client
 from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
@@ -18,7 +18,7 @@ from ikigai.utils.named_mapping import NamedMapping
 logger = logging.getLogger("ikigai.components")
 
 
-class ModelType(RootModel):
+class ModelType(BaseModel):
     model_type: str
     sub_model_type: str
 
@@ -37,6 +37,7 @@ class ModelBuilder:
         self._name = ""
         self._directory = None
         self._model_type = None
+        self._description = ""
 
     def new(self, name: str) -> Self:
         self._name = name
@@ -73,12 +74,30 @@ class ModelBuilder:
         model = Model.from_dict(data=model_dict, client=self.__client)
         return model
 
+    @property
+    def model_types(self) -> dict[str, dict[str, ModelType]]:
+        model_specs = self.__client.component.get_model_specs()
+
+        model_types = {
+            model_spec["name"]: {
+                sub_model_spec["name"]: ModelType(
+                    model_type=model_spec["name"],
+                    sub_model_type=sub_model_spec["name"],
+                )
+                for sub_model_spec in model_spec["sub_model_types"]
+            }
+            for model_spec in model_specs
+        }
+
+        return model_types
+
 
 class Model(BaseModel):
     app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
     model_id: str
     name: str
-    model_type: ModelType
+    model_type: str
+    sub_model_type: str
     description: str
     created_at: str
     modified_at: str

@@ -9,3 +9,7 @@ from typing import Protocol
 
 class Named(Protocol):
     name: str
+
+
+class Empty(Protocol):
+    pass

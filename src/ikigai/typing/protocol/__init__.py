@@ -21,7 +21,7 @@ from ikigai.typing.protocol.flow import (
     FlowVariableDict,
 )
 from ikigai.typing.protocol.generic import Named
-from ikigai.typing.protocol.model import ModelDict, ModelType
+from ikigai.typing.protocol.model import ModelDict, ModelSpecDict, ModelType
 
 __all__ = [
     # App Protocol
@@ -45,6 +45,7 @@ __all__ = [
     "FlowVariableDict",
     # Model Protocol
     "ModelDict",
+    "ModelSpecDict",
     "ModelType",
     # Generic Protocol
     "Named",

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import InitVar
+from functools import cache
 from typing import Any, cast
 
 from pydantic import Field
@@ -26,6 +27,7 @@ from ikigai.typing.protocol import (
     FlowLogDict,
     FlowStatusReportDict,
     ModelDict,
+    ModelSpecDict,
     ModelType,
 )
 
@@ -41,6 +43,10 @@ class ComponentAPI:
 
     def __post_init__(self, session: Session) -> None:
         self.__session = session
+
+    def __hash__(self) -> int:
+        # Enable the usage of @cache on specs related apis
+        return hash(id(self))
 
     """
     App APIs
@@ -474,12 +480,37 @@ class ComponentAPI:
         return resp["model_id"]
 
     def get_model(self, app_id: str, model_id: str) -> ModelDict:
-        return cast(ModelDict, ...)
+        resp = self.__session.get(
+            path="/component/get-model",
+            params={"project_id": app_id, "model_id": model_id},
+        ).json()
+        model = resp["model"]
+        return cast(ModelDict, model)
 
     def get_models_for_app(
         self, app_id: str, directory_id: str = _UNSET
     ) -> list[ModelDict]:
-        return cast(list[ModelDict], ...)
+        params = {"project_id": app_id}
+        if directory_id != _UNSET:
+            params["directory_id"] = directory_id
+
+        resp = self.__session.get(
+            path="/component/get-models-for-project",
+            params=params,
+        ).json()
+        models = resp["models"]
+
+        return cast(list[ModelDict], models)
+
+    @cache
+    def get_model_specs(self) -> list[ModelSpecDict]:
+        resp = self.__session.get(
+            path="/component/get-model-specs",
+        ).json()
+
+        model_specs = resp.values()
+
+        return cast(list[ModelSpecDict], model_specs)
 
     def edit_model(
         self,
