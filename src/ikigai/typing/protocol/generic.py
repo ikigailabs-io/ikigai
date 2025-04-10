@@ -8,7 +8,8 @@ from typing import Protocol
 
 
 class Named(Protocol):
-    name: str
+    @property
+    def name(self) -> str: ...
 
 
 class Empty(Protocol):

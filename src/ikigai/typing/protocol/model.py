@@ -31,6 +31,16 @@ class ModelDict(TypedDict):
     modified_at: str
 
 
+class ModelVersionDict(TypedDict):
+    version_id: str
+    model_id: str
+    version: str
+    hyperparameters: dict
+    metrics: dict
+    created_at: str
+    modified_at: str
+
+
 # TODO: This needs to be reviewed by someone from the ML team
 # that is familiar with the model spec.
 class ModelSpecDict(TypedDict):

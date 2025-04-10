@@ -104,7 +104,7 @@ class Model(BaseModel):
     __client: Client
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Model:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
         self.__client = client
@@ -134,11 +134,57 @@ class Model(BaseModel):
         self.description = description
         return self
 
+    def versions(self) -> NamedMapping[ModelVersion]:
+        version_dicts = self.__client.component.get_model_versions(
+            app_id=self.app_id, model_id=self.model_id
+        )
+        versions = {
+            version.version_id: version
+            for version in (
+                ModelVersion.from_dict(
+                    app_id=self.app_id, data=version_dict, client=self.__client
+                )
+                for version_dict in version_dicts
+            )
+        }
+
+        return NamedMapping(versions)
+
     def describe(self) -> Mapping[str, Any]:
         model = self.__client.component.get_model(
             app_id=self.app_id, model_id=self.model_id
         )
         return model
+
+
+class ModelVersion(BaseModel):
+    app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
+    model_id: str
+    version_id: str
+    version: str
+    hyperparameters: dict[str, Any]
+    metrics: dict[str, Any]
+    created_at: str
+    modified_at: str
+    __client: Client
+
+    @property
+    def name(self) -> str:
+        # Implement the named protocol
+        return self.version
+
+    @classmethod
+    def from_dict(cls, app_id: str, data: Mapping[str, Any], client: Client) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
+        self = cls.model_validate({"app_id": app_id, **data})
+        self.__client = client
+        return self
+
+    def describe(self) -> Mapping[str, Any]:
+        model_version = self.__client.component.get_model_version(
+            app_id=self.app_id, version_id=self.version_id
+        )
+        return model_version
 
 
 class ModelDirectoryBuilder:

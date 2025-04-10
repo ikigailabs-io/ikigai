@@ -29,6 +29,7 @@ from ikigai.typing.protocol import (
     ModelDict,
     ModelSpecDict,
     ModelType,
+    ModelVersionDict,
 )
 
 _UNSET: Any = object()
@@ -546,6 +547,28 @@ class ComponentAPI:
         ).json()
 
         return resp["model_id"]
+
+    """
+    Model Version APIs
+    """
+
+    def get_model_version(self, app_id: str, version_id: str) -> ModelVersionDict:
+        resp = self.__session.get(
+            path="/component/get-model-version",
+            params={"project_id": app_id, "version_id": version_id},
+        ).json()
+        model_version = resp["model_version"]
+
+        return cast(ModelVersionDict, model_version)
+
+    def get_model_versions(self, app_id: str, model_id: str) -> list[ModelVersionDict]:
+        resp = self.__session.get(
+            path="/component/get-model-versions",
+            params={"project_id": app_id, "model_id": model_id},
+        ).json()
+        model_versions = resp["versions"]
+
+        return cast(list[ModelVersionDict], model_versions)
 
     """
     Directory APIs
