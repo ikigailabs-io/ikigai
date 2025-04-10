@@ -134,6 +134,12 @@ class Model(BaseModel):
         self.description = description
         return self
 
+    def describe(self) -> Mapping[str, Any]:
+        model = self.__client.component.get_model(
+            app_id=self.app_id, model_id=self.model_id
+        )
+        return model
+
 
 class ModelDirectoryBuilder:
     _app_id: str
