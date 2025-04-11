@@ -410,6 +410,20 @@ FlowStatusReport(
 )
 ```
 
+## Troubleshooting
+
+If you receive the following error message related to your authentication token, you may need to restart your Python Kernel:
+
+```py
+{"message":"Missing Authentication Token"}
+```
+
+Press **Ctrl+D** or type **exit** to exit IPython, then run it again:
+
+```bash
+ipython
+```
+
 ## License
 
 - `ikigai` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
