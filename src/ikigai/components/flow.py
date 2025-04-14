@@ -6,54 +6,68 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
 
-from ikigai.client.session import Session
+from ikigai.client import Client
+from ikigai.typing.protocol import (
+    Directory,
+    DirectoryType,
+    FlowDefinitionDict,
+    FlowDict,
+    NamedDirectoryDict,
+)
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.utils.protocols import Directory, DirectoryType
 
 logger = logging.getLogger("ikigai.components")
 
 
 class FlowDefinition(BaseModel):
-    facets: list = []
-    arrows: list = []
-    # TODO: Add Flow Definition
+    _facets: list = []
+    _arrows: list = []
+    _arguments: dict = {}
+    _variables: dict = {}
+    _model_variables: dict = {}
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> FlowDefinitionDict:
         # TODO: Update implementation when feature is available
         return {
-            "facets": [],
-            "arrows": [],
+            "facets": self._facets,
+            "arrows": self._arrows,
+            "arguments": self._arguments,
+            "variables": self._variables,
+            "model_variables": self._model_variables,
         }
 
 
 class FlowBuilder:
     _app_id: str
     _name: str
-    _directory: dict[str, str]
-    _flow_definition: dict[str, Any]
-    __session: Session
+    _directory: Directory | None
+    _flow_definition: FlowDefinitionDict
+    __client: Client
 
-    def __init__(self, session: Session, app_id: str) -> None:
-        self.__session = session
+    def __init__(self, client: Client, app_id: str) -> None:
+        self.__client = client
         self._app_id = app_id
         self._name = ""
-        self._directory = {}
+        self._directory = None
         self._flow_definition = FlowDefinition().to_dict()
 
     def new(self, name: str) -> Self:
         self._name = name
         return self
 
-    def definition(self, definition: Flow | FlowDefinition | dict[str, Any]) -> Self:
+    def definition(
+        self, definition: Flow | FlowDefinition | FlowDefinitionDict
+    ) -> Self:
         if isinstance(definition, FlowDefinition):
             self._flow_definition = definition.to_dict()
             return self
@@ -66,11 +80,8 @@ class FlowBuilder:
                     f"({definition.app_id} != {self._app_id})"
                 )
                 raise ValueError(error_msg)
-            resp = self.__session.get(
-                path="/component/get-pipeline",
-                params={"project_id": self._app_id, "pipeline_id": definition.flow_id},
-            ).json()
-            self._flow_definition = resp["pipeline"]["definition"]
+            flow_dict = self.__client.component.get_flow(flow_id=definition.flow_id)
+            self._flow_definition = flow_dict["definition"]
             return self
 
         if isinstance(definition, dict):
@@ -79,36 +90,25 @@ class FlowBuilder:
 
         error_msg = (
             f"Definition was of type {type(definition)} but, "
-            "must be a Flow or FlowDefinition or dict"
+            "must be a Flow or FlowDefinition or FlowDefinitionDict"
         )
         raise TypeError(error_msg)
 
     def directory(self, directory: Directory) -> Self:
-        self._directory = {
-            "directory_id": directory.directory_id,
-            "type": directory.type,
-        }
+        self._directory = directory
         return self
 
     def build(self) -> Flow:
-        resp = self.__session.post(
-            path="/component/create-pipeline",
-            json={
-                "pipeline": {
-                    "project_id": self._app_id,
-                    "name": self._name,
-                    "directory": self._directory,
-                    "definition": self._flow_definition,
-                }
-            },
-        ).json()
-        flow_id = resp["pipeline_id"]
+        flow_id = self.__client.component.create_flow(
+            app_id=self._app_id,
+            name=self._name,
+            directory=self._directory,
+            flow_definition=self._flow_definition,
+        )
 
         # Populate Flow object
-        resp = self.__session.get(
-            path="/component/get-pipeline", params={"pipeline_id": flow_id}
-        ).json()
-        flow = Flow.from_dict(data=resp["pipeline"], session=self.__session)
+        flow_dict = self.__client.component.get_flow(flow_id=flow_id)
+        flow = Flow.from_dict(data=flow_dict, client=self.__client)
         return flow
 
 
@@ -118,6 +118,7 @@ class FlowStatus(str, Enum):
     STOPPED = "STOPPED"
     FAILED = "FAILED"
     IDLE = "IDLE"
+    UNKNOWN = "UNKNOWN"
     SUCCESS = "SUCCESS"  # Not available via /component/is-pipeline-running
 
     def __repr__(self) -> str:
@@ -130,7 +131,7 @@ class FlowStatusReport(BaseModel):
     message: str
 
     @classmethod
-    def from_dict(cls, data: dict) -> Self:
+    def from_dict(cls, data: Mapping[str, Any]) -> Self:
         self = cls.model_validate(data)
         return self
 
@@ -144,24 +145,24 @@ class RunLog(BaseModel):
     timestamp: datetime
 
     @classmethod
-    def from_dict(cls, data: dict) -> Self:
+    def from_dict(cls, data: Mapping[str, Any]) -> Self:
         self = cls.model_validate(data)
         return self
 
 
 class Flow(BaseModel):
-    app_id: str = Field(validation_alias="project_id")
-    flow_id: str = Field(validation_alias="pipeline_id")
+    app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
+    flow_id: str = Field(validation_alias=AliasChoices("flow_id", "pipeline_id"))
     name: str
     created_at: datetime
     modified_at: datetime
-    __session: Session
+    __client: Client
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
-        self.__session = session
+        self.__client = client
         return self
 
     def to_dict(self) -> dict:
@@ -173,86 +174,50 @@ class Flow(BaseModel):
         }
 
     def delete(self) -> None:
-        self.__session.post(
-            path="/component/delete-pipeline",
-            json={"pipeline": {"project_id": self.app_id, "pipeline_id": self.flow_id}},
-        )
+        self.__client.component.delete_flow(app_id=self.app_id, flow_id=self.flow_id)
         return None
 
     def rename(self, name: str) -> Self:
-        _ = self.__session.post(
-            path="/component/edit-pipeline",
-            json={
-                "pipeline": {
-                    "project_id": self.app_id,
-                    "pipeline_id": self.flow_id,
-                    "name": name,
-                }
-            },
+        self.__client.component.edit_flow(
+            app_id=self.app_id, flow_id=self.flow_id, name=name
         )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
         return self
 
     def move(self, directory: Directory) -> Self:
-        _ = self.__session.post(
-            path="/component/edit-pipeline",
-            json={
-                "pipeline": {
-                    "project_id": self.app_id,
-                    "pipeline_id": self.flow_id,
-                    "directory": {
-                        "directory_id": directory.directory_id,
-                        "type": directory.type,
-                    },
-                }
-            },
+        self.__client.component.edit_flow(
+            app_id=self.app_id, flow_id=self.flow_id, directory=directory
         )
         return self
 
     def status(self) -> FlowStatusReport:
-        resp = self.__session.get(
-            path="/component/is-pipeline-running",
-            params={"project_id": self.app_id, "pipeline_id": self.flow_id},
-        ).json()
-
-        if not resp["status"]:
-            return FlowStatusReport(status=FlowStatus.IDLE, message="")
-
-        return FlowStatusReport.from_dict(resp["progress"])
+        resp = self.__client.component.is_flow_runing(
+            app_id=self.app_id, flow_id=self.flow_id
+        )
+        return FlowStatusReport.from_dict(resp)
 
     def run_logs(
         self, max_count: int = 1, since: datetime | None = None
     ) -> list[RunLog]:
-        resp = self.__session.get(
-            path="/component/get-pipeline-log",
-            params={
-                "pipeline_id": self.flow_id,
-                "project_id": self.app_id,
-                "limit": max_count,
-            },
-        ).json()
+        log_dicts = self.__client.component.get_flow_log(
+            app_id=self.app_id, flow_id=self.flow_id, max_count=max_count
+        )
 
-        run_logs = [RunLog.from_dict(data=log) for log in resp["pipeline_log"]]
+        run_logs = [RunLog.from_dict(data=log) for log in log_dicts]
         if since is not None:
             run_logs = [log for log in run_logs if log.timestamp > since]
         return run_logs
 
     def run(self) -> RunLog:
         # Start running pipeline
-        self.__session.post(
-            path="/component/run-pipeline",
-            json={"pipeline": {"project_id": self.app_id, "pipeline_id": self.flow_id}},
-        )
+        self.__client.component.run_flow(app_id=self.app_id, flow_id=self.flow_id)
 
         return self.__await_run()
 
-    def describe(self) -> dict:
-        response: dict[str, Any] = self.__session.get(
-            path="/component/get-pipeline", params={"pipeline_id": self.flow_id}
-        ).json()
-
-        return response
+    def describe(self) -> FlowDict:
+        flow = self.__client.component.get_flow(flow_id=self.flow_id)
+        return flow
 
     def __await_run(self) -> RunLog:
         start_time = datetime.now(UTC)
@@ -272,13 +237,14 @@ class Flow(BaseModel):
             progress_bar.update(last_progress)
 
             # Wait while pipeline is running
-            while status_report.status == FlowStatus.RUNNING:
+            while status_report.status in (FlowStatus.RUNNING, FlowStatus.UNKNOWN):
                 time.sleep(1)
                 status_report = self.status()
                 progress = status_report.progress if status_report.progress else 100
                 progress_bar.desc = status_report.status
-                progress_bar.update(progress - last_progress)
-                last_progress = progress
+                new_progress = last_progress + max(progress - last_progress, 0)
+                progress_bar.update(new_progress - last_progress)
+                last_progress = new_progress
             # Flow run completed
 
             # Get status from logs and update progress bar
@@ -303,43 +269,32 @@ class Flow(BaseModel):
 class FlowDirectoryBuilder:
     _app_id: str
     _name: str
-    _parent_id: str
-    __session: Session
+    _parent: Directory | None
+    __client: Client
 
-    def __init__(self, session: Session, app_id: str) -> None:
-        self.__session = session
+    def __init__(self, client: Client, app_id: str) -> None:
+        self.__client = client
         self._app_id = app_id
         self._name = ""
-        self._parent_id = ""
+        self._parent = None
 
     def new(self, name: str) -> Self:
         self._name = name
         return self
 
     def parent(self, parent: Directory) -> Self:
-        self._parent_id = parent.directory_id
+        self._parent = parent
         return self
 
     def build(self) -> FlowDirectory:
-        resp = self.__session.post(
-            path="/component/create-pipeline-directory",
-            json={
-                "directory": {
-                    "name": self._name,
-                    "project_id": self._app_id,
-                    "parent_id": self._parent_id,
-                }
-            },
-        ).json()
-        directory_id = resp["directory_id"]
-        resp = self.__session.get(
-            path="/component/get-pipeline-directory",
-            params={"project_id": self._app_id, "directory_id": directory_id},
-        ).json()
-
-        directory = FlowDirectory.from_dict(
-            data=resp["directory"], session=self.__session
+        directory_id = self.__client.component.create_flow_directory(
+            app_id=self._app_id, name=self._name, parent=self._parent
         )
+        directory_dict = self.__client.component.get_flow_directory(
+            app_id=self._app_id, directory_id=directory_id
+        )
+
+        directory = FlowDirectory.from_dict(data=directory_dict, client=self.__client)
         return directory
 
 
@@ -347,45 +302,46 @@ class FlowDirectory(BaseModel):
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
-    __session: Session
+    __client: Client
 
     @property
-    def type(self) -> str:
-        return DirectoryType.FLOW.value
+    def type(self) -> DirectoryType:
+        return DirectoryType.FLOW
 
     @classmethod
-    def from_dict(cls, data: dict, session: Session) -> Self:
+    def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)
-        self.__session = session
+        self.__client = client
         return self
 
+    def to_dict(self) -> NamedDirectoryDict:
+        return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
+
     def directories(self) -> NamedMapping[Self]:
-        resp = self.__session.get(
-            path="/component/get-pipeline-directories-for-project",
-            params={"project_id": self.app_id, "directory_id": self.directory_id},
-        ).json()
+        directory_dicts = self.__client.component.get_flow_directories_for_app(
+            app_id=self.app_id, parent=self
+        )
         directories = {
             directory.directory_id: directory
             for directory in (
-                self.from_dict(data=directory_dict, session=self.__session)
-                for directory_dict in resp["directories"]
+                self.from_dict(data=directory_dict, client=self.__client)
+                for directory_dict in directory_dicts
             )
         }
 
         return NamedMapping(directories)
 
     def flows(self) -> NamedMapping[Flow]:
-        resp = self.__session.get(
-            path="/component/get-pipelines-for-project",
-            params={"project_id": self.app_id, "directory_id": self.directory_id},
-        ).json()
+        flow_dicts = self.__client.component.get_flows_for_app(
+            app_id=self.app_id, directory_id=self.directory_id
+        )
 
         flows = {
             flow.flow_id: flow
             for flow in (
-                Flow.from_dict(data=flow_dict, session=self.__session)
-                for flow_dict in resp["pipelines"]
+                Flow.from_dict(data=flow_dict, client=self.__client)
+                for flow_dict in flow_dicts
             )
         }
 

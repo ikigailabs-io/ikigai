@@ -2,6 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.client.client import Client
+from ikigai.typing import api, protocol
 
-__all__ = ["Client"]
+__all__ = ["api", "protocol"]

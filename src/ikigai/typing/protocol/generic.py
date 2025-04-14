@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.client.client import Client
+from __future__ import annotations
 
-__all__ = ["Client"]
+from typing import Protocol
+
+
+class Named(Protocol):
+    name: str

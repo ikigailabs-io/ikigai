@@ -33,16 +33,16 @@
 
 The Ikigai Python library provides access to [Ikigai's Platform API](https://docs.ikigailabs.io/api/platform-api) from applications written in the Python language.
 
-Ikigai enables you to build artificial intelligence apps, or AI apps, that support business intelligence, machine learning and operational actions. 
+Ikigai enables you to build artificial intelligence apps, or AI apps, that support business intelligence, machine learning and operational actions.
 
-Apps are the basic organizational units in Ikigai. Apps are much like folders and they contain all the components that work together to produce your desired output. An app includes Connectors, Datasets, Flows, Dashboards, and Models. You begin by creating an app, and then connecting to data. The data can exist in a variety of forms, such as records in a database, information in a spreadsheet or data in an application. To connect to different sources of data, you use connectors. 
+Apps are the basic organizational units in Ikigai. Apps are much like folders and they contain all the components that work together to produce your desired output. An app includes Connectors, Datasets, Flows, Dashboards, and Models. You begin by creating an app, and then connecting to data. The data can exist in a variety of forms, such as records in a database, information in a spreadsheet or data in an application. To connect to different sources of data, you use connectors.
 
 Once you can access data, you create flows, which are pipelines to process and transform the data. In each flow you can add pre-built building-blocks that perform operations on your data. These building-blocks are called facets. With flows, you can store rules which restrict who can access data, define how data should appear in a standardized form and transform data so it’s easier to analyze. Flows are reusable, which means you or others can define them once and apply them to other apps.
 
 
 ## Getting an API Key
 
-The library needs to be configured with your account's API key which is available by logging into the Ikigai platform. To generate your API key follow the steps below. 
+The library needs to be configured with your account's API key which is available by logging into the Ikigai platform. To generate your API key follow the steps below.
 
 1. Once logged in, go to your account, under **Profile** > **Account**. 
 
@@ -52,11 +52,11 @@ The library needs to be configured with your account's API key which is availabl
 
 1. Click the **Eye icon** to reveal the API key. Save this key in a secure place and do not share it with anyone else. You will need this API key to use Ikigai's Python client library in the next sections.
 
-## Requirements 
+## Requirements
 
 You should have the latest stable version of Python installed in your environment (~3.12) to use Ikigai's Python client library. Ikigai will support Python version 3.9 until its [EOL (October 31, 2025)](https://endoflife.date/python).
 
-## Installation 
+## Installation
 
 Use the [Python Package Index (PyPI)](https://pypi.org/) to install the Ikigai client library with the following command:
 
@@ -66,7 +66,7 @@ pip install ikigai
 
 ### Creating an Ikigai Client
 
-In this section, you create the Ikigai client. The code snippet first imports the Ikigai library. Then, a new `Ikigai()` object is created. This object requires your user email and the API key that you generated in the previous section. 
+In this section, you create the Ikigai client. The code snippet first imports the Ikigai library. Then, a new `Ikigai()` object is created. This object requires your user email and the API key that you generated in the previous section.
 
 ```py
 from ikigai import Ikigai
@@ -80,9 +80,9 @@ Once you have initiated the Ikigai client, you have access to all Ikigai compone
 
 ### Apps
 
-Apps are the basic organizational units in Ikigai. Apps contain all the components that will work together to produce your desired output. 
+Apps are the basic organizational units in Ikigai. Apps contain all the components that will work together to produce your desired output.
 
-#### Listing All Apps   
+#### Listing All Apps
 
 The code snippet below gets all the apps that are accessible by your account and stores them in the `apps` variable. Then, it uses a loop to print each app.
 
@@ -214,37 +214,34 @@ The output resembles the following example:
 
 ```py
 {
-    'dataset': {
-        'dataset_id': '4444444bbbbbbb',
-        'name': 'Start Here (Tutorial)',
-        'project_id': 'abcdefg123456',
-        'filename': 'example.csv',
-        'data_types': {
-            'Channel/Location': {
-                'data_type': 'CATEGORICAL',
-                'data_formats': {}
-            },
-            'Product (name/description)': {
-                'data_type': 'TEXT',
-                'data_formats': {}
-            },
-            'Quantity': {
-                'data_type': 'NUMERIC',
-                'data_formats': {}
-            },
-            'SKU/Unique Item ID': {
-                'data_type': 'TEXT',
-                'data_formats': {}
-            }
+    'dataset_id': '4444444bbbbbbb',
+    'name': 'Start Here (Tutorial)',
+    'project_id': 'abcdefg123456',
+    'filename': 'example.csv',
+    'data_types': {
+        'Channel/Location': {
+            'data_type': 'CATEGORICAL',
+            'data_formats': {}
         },
-        'directory': {
-            'directory_id': '33333333iiiiiiii',
-            'name': '',
-            'type': 'DATASET',
-            'project_id': ''
+        'Product (name/description)': {
+            'data_type': 'TEXT',
+            'data_formats': {}
         },
-        'upload_id': ''
-    }
+        'Quantity': {
+            'data_type': 'NUMERIC',
+            'data_formats': {}
+        },
+        'SKU/Unique Item ID': {
+            'data_type': 'TEXT',
+            'data_formats': {}
+        }
+    },
+    'directory': {
+        'directory_id': '33333333iiiiiiii',
+        'name': '',
+        'type': 'DATASET',
+        'project_id': ''
+    },
 }
 
 ```
@@ -270,7 +267,7 @@ The output resembles the following example:
 | Ginger Cookie              | Ginger_C123_Am         | Amazon           | 271      |
 | Sugar Cookie               | Sugar_C123_Am          | Amazon           | 421      |
 | Double Chocolate Cookie    | Double_C123_Am         | Amazon           | 342      |
-    
+
 #### Creating a New Dataset
 
 The example snippet shows you how to create a new dataset using a Panda's DataFrame. First, create a new DataFrame object. The example stores the new DataFrame object in the `df` variable. Next, build a new dataset named `New Dataset` using the data stored in the `df` variable. Calling the `new_dataset` variable returns details about the dataset.
@@ -400,7 +397,7 @@ The example snippet shows you how to view the status of an existing flow. First,
 flows = app.flows()         # Get all flows in the app
 flow = flows["new flow"]    # Get flow named "new flow"
 
-flow.status()               # Get the status of the flow (IDLE: currently the flow is not running)          
+flow.status()               # Get the status of the flow (IDLE: currently the flow is not running)
 ```
 
 When the flow is NOT running, you should see a similar output:
@@ -416,5 +413,3 @@ FlowStatusReport(
 ## License
 
 - `ikigai` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
-
-
