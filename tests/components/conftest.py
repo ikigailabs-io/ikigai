@@ -106,3 +106,8 @@ def flow_directory_name_1(random_name: str) -> str:
 @pytest.fixture
 def flow_directory_name_2(random_name: str) -> str:
     return f"flow-dir-2-{random_name}"
+
+
+@pytest.fixture
+def model_name(random_name: str) -> str:
+    return f"model-{random_name}"

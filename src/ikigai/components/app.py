@@ -199,6 +199,45 @@ class App(BaseModel):
     def flow_directory(self) -> components.FlowDirectoryBuilder:
         return components.FlowDirectoryBuilder(client=self.__client, app_id=self.app_id)
 
+    def models(self) -> NamedMapping[components.Model]:
+        model_dicts = self.__client.component.get_models_for_app(app_id=self.app_id)
+
+        models = {
+            model.model_id: model
+            for model in (
+                components.Model.from_dict(data=model_dict, client=self.__client)
+                for model_dict in model_dicts
+            )
+        }
+
+        return NamedMapping(models)
+
+    @property
+    def model(self) -> components.ModelBuilder:
+        return components.ModelBuilder(client=self.__client, app_id=self.app_id)
+
+    def model_directories(self) -> NamedMapping[components.ModelDirectory]:
+        directory_dicts = self.__client.component.get_model_directories_for_app(
+            app_id=self.app_id
+        )
+        directories = {
+            directory.directory_id: directory
+            for directory in (
+                components.ModelDirectory.from_dict(
+                    data=directory_dict, client=self.__client
+                )
+                for directory_dict in directory_dicts
+            )
+        }
+
+        return NamedMapping(directories)
+
+    @property
+    def model_directory(self) -> components.ModelDirectoryBuilder:
+        return components.ModelDirectoryBuilder(
+            client=self.__client, app_id=self.app_id
+        )
+
 
 class AppDirectory(BaseModel):
     directory_id: str
