@@ -15,6 +15,7 @@ from pydantic import AliasChoices, BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
 
 from ikigai.client import Client
+from ikigai.components.flow_definition import FlowDefinition
 from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
@@ -28,24 +29,6 @@ from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.shim import flow_versioning_shim
 
 logger = logging.getLogger("ikigai.components")
-
-
-class FlowDefinition(BaseModel):
-    _facets: list = []
-    _arrows: list = []
-    _arguments: dict = {}
-    _variables: dict = {}
-    _model_variables: dict = {}
-
-    def to_dict(self) -> FlowDefinitionDict:
-        # TODO: Update implementation when feature is available
-        return {
-            "facets": self._facets,
-            "arrows": self._arrows,
-            "arguments": self._arguments,
-            "variables": self._variables,
-            "model_variables": self._model_variables,
-        }
 
 
 class FlowBuilder:
