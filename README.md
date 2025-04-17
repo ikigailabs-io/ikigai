@@ -323,9 +323,9 @@ datasets = app.datasets()             # Get all datasets in Start the app
 dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 df_updated = df[df.columns[:-1]]      # New dataframe (by dropping last column)
-new_dataset.edit_data(df_updated)     # Update the dataset
+dataset.edit_data(df_updated)     # Update the dataset
 
-new_dataset.df().head()
+dataset.df().head()
 ```
 
 The output resembles the following example:
@@ -408,6 +408,20 @@ FlowStatusReport(
     progress=None,
     message=''
 )
+```
+
+## Troubleshooting
+
+If you receive the following error message related to your authentication token, you may need to restart your Python Kernel:
+
+```py
+{"message":"Missing Authentication Token"}
+```
+
+Press **Ctrl+D** or type **exit** to exit IPython, then run it again:
+
+```bash
+ipython
 ```
 
 ## License
