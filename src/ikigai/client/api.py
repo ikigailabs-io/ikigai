@@ -503,16 +503,6 @@ class ComponentAPI:
 
         return cast(list[ModelDict], models)
 
-    @cache
-    def get_model_specs(self) -> list[ModelSpecDict]:
-        resp = self.__session.get(
-            path="/component/get-model-specs",
-        ).json()
-
-        model_specs = resp.values()
-
-        return cast(list[ModelSpecDict], model_specs)
-
     def edit_model(
         self,
         app_id: str,
@@ -696,3 +686,28 @@ class ComponentAPI:
 
         directories = resp["directories"]
         return cast(list[DirectoryDict], directories)
+
+    """
+    Spec APIs
+    """
+
+    @cache
+    def get_facet_specs(self) -> dict:
+        resp = self.__session.get(
+            path="/component/get-facet-specs",
+        ).json()
+
+        facet_specs = resp.values()
+        assert isinstance(facet_specs, dict)
+
+        return cast(dict, facet_specs)
+
+    @cache
+    def get_model_specs(self) -> list[ModelSpecDict]:
+        resp = self.__session.get(
+            path="/component/get-model-specs",
+        ).json()
+
+        model_specs = resp.values()
+
+        return cast(list[ModelSpecDict], model_specs)
