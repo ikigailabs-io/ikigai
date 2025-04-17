@@ -51,3 +51,7 @@ class Ikigai:
         }
 
         return NamedMapping(directories)
+
+    @property
+    def builder(self) -> components.FlowDefinitionBuilder:
+        return components.FlowDefinitionBuilder(client=self.__client)
