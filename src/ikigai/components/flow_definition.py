@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Generator
 from random import randbytes
 from typing import cast
 
@@ -12,6 +13,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from ikigai.client.client import Client
 from ikigai.typing.protocol import FlowDefinitionDict
+from ikigai.typing.protocol.flow import FacetSpecDict, FacetSpecsDict
 from ikigai.utils.compatibility import Self
 
 logger = logging.getLogger("ikigai.components")
@@ -26,15 +28,16 @@ class FacetRequirementSpec(BaseModel):
 
 class ArgumentSpec(BaseModel):
     name: str
-    type: str
+    argument_type: str
     children: dict[str, ArgumentSpec]
-    have_options: bool
     have_sub_arguments: bool
     is_deprecated: bool
     is_hidden: bool
     is_list: bool
     is_required: bool
-    options: list
+    options: list | None = None
+
+    model_config = ConfigDict(frozen=True)
 
 
 class FacetSpec(BaseModel):
@@ -45,6 +48,8 @@ class FacetSpec(BaseModel):
     facet_arguments: list[ArgumentSpec]
     in_arrow_arguments: list[ArgumentSpec]
     out_arrow_arguments: list[ArgumentSpec]
+
+    model_config = ConfigDict(frozen=True)
 
     def check_arguments(self, arguments: dict) -> None: ...
 
@@ -152,8 +157,30 @@ class FacetSpecs(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     @classmethod
-    def from_dict(cls, data: dict) -> Self:
-        return cls.model_validate(data)
+    def from_dict(cls, data: FacetSpecsDict) -> Self:
+        def flatten(
+            spec_groups: dict[str, dict[str, FacetSpecDict]],
+        ) -> Generator[tuple[str, FacetSpecDict]]:
+            for group in spec_groups.values():
+                yield from group.items()
+
+        _input = {
+            facet_type: FacetSpec.model_validate(facet_spec)
+            for facet_type, facet_spec in flatten(data["INPUT"])
+        }
+        _mid = {
+            facet_type: FacetSpec.model_validate(facet_spec)
+            for facet_type, facet_spec in flatten(data["MID"])
+        }
+        _output = {
+            facet_type: FacetSpec.model_validate(facet_spec)
+            for facet_type, facet_spec in flatten(data["OUTPUT"])
+        }
+        return cls(
+            INPUT=_input,
+            MID=_mid,
+            OUTPUT=_output,
+        )
 
 
 class FlowDefinitionBuilder:
@@ -172,6 +199,10 @@ class FlowDefinitionBuilder:
         facet_builder = FacetBuilder(builder=self, facet_type=facet_type, name=name)
         self._facets.append(facet_builder)
         return facet_builder
+
+    @property
+    def facet_types(self) -> FacetSpecs:
+        return self.__facet_specs
 
     def build(self) -> FlowDefinition:
         facets: list[Facet] = []

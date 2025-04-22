@@ -31,6 +31,7 @@ from ikigai.typing.protocol import (
     ModelType,
     ModelVersionDict,
 )
+from ikigai.typing.protocol.flow import FacetSpecsDict
 
 _UNSET: Any = object()
 
@@ -692,15 +693,12 @@ class ComponentAPI:
     """
 
     @cache
-    def get_facet_specs(self) -> dict:
+    def get_facet_specs(self) -> FacetSpecsDict:
         resp = self.__session.get(
             path="/component/get-facet-specs",
         ).json()
 
-        facet_specs = resp.values()
-        assert isinstance(facet_specs, dict)
-
-        return cast(dict, facet_specs)
+        return cast(FacetSpecsDict, resp)
 
     @cache
     def get_model_specs(self) -> list[ModelSpecDict]:
