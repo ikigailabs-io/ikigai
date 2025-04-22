@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, Protocol, TypedDict, TypeVar
+from typing import Any, Protocol, TypedDict
 
 from ikigai.typing.protocol.directory import DirectoryDict
 from ikigai.typing.protocol.generic import Empty
@@ -62,23 +62,21 @@ class SubModelSpecDict(TypedDict):
 
 ModelMetricsSpecDict = dict[str, Empty]
 
-VT = TypeVar("VT")
 
-
-class ModelParameterSpecDict(Generic[VT], TypedDict):
+class ModelParameterSpecDict(TypedDict):
     name: str
-    default_value: VT | None
+    default_value: Any
     have_options: bool
     is_deprecated: bool
     is_hidden: bool
     is_list: bool
-    options: list[VT]
+    options: list[Any]
     parameter_type: str
 
 
-class ModelHyperparameterSpecDict(Generic[VT], TypedDict):
+class ModelHyperparameterSpecDict(TypedDict):
     name: str
-    default_value: VT
+    default_value: Any
     have_options: bool
     have_sub_hyperparameters: bool
     hyperparameter_group: str
@@ -87,5 +85,5 @@ class ModelHyperparameterSpecDict(Generic[VT], TypedDict):
     is_hidden: bool
     is_list: bool
     children: list[dict]
-    options: list[VT]
+    options: list[Any]
     sub_hyperparameter_requirements: list[list]
