@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import InitVar
+from functools import cache
 from typing import Any, cast
 
 from pydantic import Field
@@ -25,6 +26,10 @@ from ikigai.typing.protocol import (
     FlowDict,
     FlowLogDict,
     FlowStatusReportDict,
+    ModelDict,
+    ModelSpecDict,
+    ModelType,
+    ModelVersionDict,
 )
 
 _UNSET: Any = object()
@@ -39,6 +44,10 @@ class ComponentAPI:
 
     def __post_init__(self, session: Session) -> None:
         self.__session = session
+
+    def __hash__(self) -> int:
+        # Enable the usage of @cache on specs related apis
+        return hash(id(self))
 
     """
     App APIs
@@ -440,6 +449,128 @@ class ComponentAPI:
         )
 
     """
+    Model APIs
+    """
+
+    def create_model(
+        self,
+        app_id: str,
+        name: str,
+        directory: Directory | None,
+        model_type: ModelType,
+        description: str,
+    ) -> str:
+        directory_dict = (
+            cast(dict, directory.to_dict()) if directory is not None else {}
+        )
+
+        resp = self.__session.post(
+            path="/component/create-model",
+            json={
+                "model": {
+                    "project_id": app_id,
+                    "name": name,
+                    "directory": directory_dict,
+                    "model_type": model_type.model_type,
+                    "sub_model_type": model_type.sub_model_type,
+                    "description": description,
+                }
+            },
+        ).json()
+
+        return resp["model_id"]
+
+    def get_model(self, app_id: str, model_id: str) -> ModelDict:
+        resp = self.__session.get(
+            path="/component/get-model",
+            params={"project_id": app_id, "model_id": model_id},
+        ).json()
+        model = resp["model"]
+        return cast(ModelDict, model)
+
+    def get_models_for_app(
+        self, app_id: str, directory_id: str = _UNSET
+    ) -> list[ModelDict]:
+        params = {"project_id": app_id}
+        if directory_id != _UNSET:
+            params["directory_id"] = directory_id
+
+        resp = self.__session.get(
+            path="/component/get-models-for-project",
+            params=params,
+        ).json()
+        models = resp["models"]
+
+        return cast(list[ModelDict], models)
+
+    @cache
+    def get_model_specs(self) -> list[ModelSpecDict]:
+        resp = self.__session.get(
+            path="/component/get-model-specs",
+        ).json()
+
+        model_specs = resp.values()
+
+        return cast(list[ModelSpecDict], model_specs)
+
+    def edit_model(
+        self,
+        app_id: str,
+        model_id: str,
+        name: str = _UNSET,
+        directory: Directory = _UNSET,
+        description: str = _UNSET,
+    ) -> str:
+        model: dict[str, Any] = {
+            "project_id": app_id,
+            "model_id": model_id,
+        }
+
+        if name != _UNSET:
+            model["name"] = name
+        if directory != _UNSET:
+            model["directory"] = directory.to_dict()
+        if description != _UNSET:
+            model["description"] = description
+
+        resp = self.__session.post(
+            path="/component/edit-model",
+            json={"model": model},
+        ).json()
+
+        return resp["model_id"]
+
+    def delete_model(self, app_id: str, model_id: str) -> str:
+        resp = self.__session.post(
+            path="/component/delete-model",
+            json={"model": {"project_id": app_id, "model_id": model_id}},
+        ).json()
+
+        return resp["model_id"]
+
+    """
+    Model Version APIs
+    """
+
+    def get_model_version(self, app_id: str, version_id: str) -> ModelVersionDict:
+        resp = self.__session.get(
+            path="/component/get-model-version",
+            params={"project_id": app_id, "version_id": version_id},
+        ).json()
+        model_version = resp["model_version"]
+
+        return cast(ModelVersionDict, model_version)
+
+    def get_model_versions(self, app_id: str, model_id: str) -> list[ModelVersionDict]:
+        resp = self.__session.get(
+            path="/component/get-model-versions",
+            params={"project_id": app_id, "model_id": model_id},
+        ).json()
+        model_versions = resp["versions"]
+
+        return cast(list[ModelVersionDict], model_versions)
+
+    """
     Directory APIs
     """
 
@@ -519,6 +650,47 @@ class ComponentAPI:
 
         resp = self.__session.get(
             path="/component/get-pipeline-directories-for-project",
+            params=params,
+        ).json()
+
+        directories = resp["directories"]
+        return cast(list[DirectoryDict], directories)
+
+    def create_model_directory(
+        self, app_id: str, name: str, parent: Directory | None = None
+    ) -> str:
+        parent_id = parent.directory_id if parent else ""
+
+        resp = self.__session.post(
+            path="/component/create-model-directory",
+            json={
+                "directory": {
+                    "name": name,
+                    "project_id": app_id,
+                    "parent_id": parent_id,
+                }
+            },
+        ).json()
+
+        return resp["directory_id"]
+
+    def get_model_directory(self, app_id: str, directory_id: str) -> DirectoryDict:
+        directory = self.__session.get(
+            path="/component/get-model-directory",
+            params={"project_id": app_id, "directory_id": directory_id},
+        ).json()["directory"]
+
+        return cast(DirectoryDict, directory)
+
+    def get_model_directories_for_app(
+        self, app_id: str, parent: Directory = _UNSET
+    ) -> list[DirectoryDict]:
+        params = {"project_id": app_id}
+        if parent != _UNSET:
+            params["directory_id"] = parent.directory_id
+
+        resp = self.__session.get(
+            path="/component/get-model-directories-for-project",
             params=params,
         ).json()
 
