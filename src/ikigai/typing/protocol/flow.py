@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import Any, TypedDict
 
 from ikigai.typing.protocol.directory import DirectoryDict
 from ikigai.utils.compatibility import NotRequired
@@ -109,15 +109,12 @@ class FacetRequirementDict(TypedDict):
     min_parent_count: int
 
 
-VT = TypeVar("VT")
-
-
-class FacetArgumentSpecDict(Generic[VT], TypedDict):
+class FacetArgumentSpecDict(TypedDict):
     name: str
     argument_type: str
     is_required: bool
-    default_value: VT | None
-    options: NotRequired[list[VT]]
+    default_value: Any | None
+    options: NotRequired[list[Any]]
     is_list: bool
     is_deprecated: bool
     is_hidden: bool
@@ -125,11 +122,11 @@ class FacetArgumentSpecDict(Generic[VT], TypedDict):
     children: Mapping[str, FacetArgumentSpecDict]
 
 
-class FacetArrowArgumentSpecDict(Generic[VT], TypedDict):
+class FacetArrowArgumentSpecDict(TypedDict):
     name: str
     argument_type: str
     is_required: bool
-    options: NotRequired[list[VT]]
+    options: NotRequired[list[Any]]
     is_list: bool
     is_deprecated: bool
     is_hidden: bool
