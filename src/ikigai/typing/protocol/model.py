@@ -41,8 +41,6 @@ class ModelVersionDict(TypedDict):
     modified_at: str
 
 
-# TODO: This needs to be reviewed by someone from the ML team
-# that is familiar with the model spec.
 class ModelSpecDict(TypedDict):
     name: str
     is_deprecated: bool
