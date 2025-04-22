@@ -4,7 +4,8 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict
+from collections.abc import Mapping
+from typing import Any, Generic, TypedDict, TypeVar
 
 from ikigai.typing.protocol.directory import DirectoryDict
 from ikigai.utils.compatibility import NotRequired
@@ -75,3 +76,62 @@ class FlowLogDict(TypedDict):
     erroneous_facet_id: NotRequired[str]
     message: str
     timestamp: str
+
+
+class FacetSpecsDict(TypedDict):
+    INPUT: dict[str, dict[str, FacetSpecDict]]
+    MID: dict[str, dict[str, FacetSpecDict]]
+    OUTPUT: dict[str, dict[str, FacetSpecDict]]
+
+
+class FacetSpecDict(TypedDict):
+    facet_info: FacetInfoDict
+    is_deprecated: bool
+    is_hidden: bool
+    facet_keywords: list[str]
+    facet_requirements: list[FacetRequirementDict]
+    facet_arguments: list[FacetArgumentSpecDict]
+    in_arrow_arguments: list[FacetArrowArgumentSpecDict]
+    out_arrow_arguments: list[FacetArrowArgumentSpecDict]
+
+
+class FacetInfoDict(TypedDict):
+    chain_group: str
+    facet_group: str
+    facet_type: str
+    facet_uid: str
+
+
+class FacetRequirementDict(TypedDict):
+    max_child_count: int
+    max_parent_count: int
+    min_child_count: int
+    min_parent_count: int
+
+
+VT = TypeVar("VT")
+
+
+class FacetArgumentSpecDict(Generic[VT], TypedDict):
+    name: str
+    argument_type: str
+    is_required: bool
+    default_value: VT | None
+    options: NotRequired[list[VT]]
+    is_list: bool
+    is_deprecated: bool
+    is_hidden: bool
+    have_sub_arguments: bool
+    children: Mapping[str, FacetArgumentSpecDict]
+
+
+class FacetArrowArgumentSpecDict(Generic[VT], TypedDict):
+    name: str
+    argument_type: str
+    is_required: bool
+    options: NotRequired[list[VT]]
+    is_list: bool
+    is_deprecated: bool
+    is_hidden: bool
+    have_sub_arguments: bool
+    children: Mapping[str, FacetArrowArgumentSpecDict]
