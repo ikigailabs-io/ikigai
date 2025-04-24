@@ -5,16 +5,17 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Generator
+from collections import ChainMap
 from random import randbytes
-from typing import cast
+from typing import Any, cast
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, RootModel
 
 from ikigai.client.client import Client
 from ikigai.typing.protocol import FlowDefinitionDict
-from ikigai.typing.protocol.flow import FacetSpecDict, FacetSpecsDict
+from ikigai.typing.protocol.flow import FacetSpecsDict
 from ikigai.utils.compatibility import Self
+from ikigai.utils.custom_validators import LowercaseStr
 
 logger = logging.getLogger("ikigai.components")
 
@@ -60,7 +61,7 @@ class FacetSpec(BaseModel):
 
 class FacetBuilder:
     __name: str
-    __arguments: dict
+    __arguments: dict[str, Any]
     __arrows: list[ArrowBuilder]
     __facet_spec: FacetSpec
     __facet: Facet | None
@@ -93,12 +94,8 @@ class FacetBuilder:
         )
         return facet
 
-    def arguments(self, arguments: dict) -> Self:
+    def arguments(self, **arguments: Any) -> Self:
         self.__arguments.update(arguments)
-        return self
-
-    def argument(self, key: str, value: str) -> Self:
-        self.__arguments[key] = value
         return self
 
     def add_arrow(self, parent: FacetBuilder, args: dict | None = None) -> Self:
@@ -109,7 +106,7 @@ class FacetBuilder:
         )
         return self
 
-    def build(self) -> tuple[Facet, list[Arrow]]:
+    def _build(self) -> tuple[Facet, list[Arrow]]:
         if self.__facet is not None:
             error_msg = "Facet already built, cannot build again"
             raise RuntimeError(error_msg)
@@ -125,23 +122,26 @@ class FacetBuilder:
             arguments=self.__arguments,
         )
 
-        arrows = [arrow_builder.build() for arrow_builder in self.__arrows]
+        arrows = [arrow_builder._build() for arrow_builder in self.__arrows]
         return self.__facet, arrows
+
+    def build(self) -> FlowDefinition:
+        return self.__builder.build()
 
 
 class ArrowBuilder:
     source: FacetBuilder
     destinition: FacetBuilder
-    arguments: dict
+    arguments: dict[str, Any]
 
     def __init__(
-        self, source: FacetBuilder, destinition: FacetBuilder, arguments: dict
+        self, source: FacetBuilder, destinition: FacetBuilder, arguments: dict[str, Any]
     ) -> None:
         self.source = source
         self.destinition = destinition
         self.arguments = arguments
 
-    def build(self) -> Arrow:
+    def _build(self) -> Arrow:
         return Arrow(
             source=self.source.facet_id,
             destinition=self.destinition.facet_id,
@@ -150,37 +150,47 @@ class ArrowBuilder:
 
 
 class FacetSpecs(BaseModel):
-    INPUT: dict[str, FacetSpec]
-    MID: dict[str, FacetSpec]
-    OUTPUT: dict[str, FacetSpec]
+    class ChainGroup(RootModel):
+        root: dict[LowercaseStr, FacetSpec]
+
+        def __post_init__(self) -> None:
+            self.root = {
+                facet_type.lower(): facet_spec
+                for facet_type, facet_spec in self.root.items()
+            }
+
+        def __contains__(self, name: str) -> bool:
+            return name.lower() in self.root
+
+        def __getitem__(self, name: str) -> FacetSpec:
+            if name not in self:
+                error_msg = f"{name.title()} facet does not exist"
+                raise AttributeError(error_msg)
+            return self.root[name.lower()]
+
+        def __getattr__(self, name: str) -> FacetSpec:
+            return self[name]
+
+        def __repr__(self) -> str:
+            keys = list(self.root.keys())
+            return f"ChainGroup({keys})"
+
+    INPUT: ChainGroup
+    MID: ChainGroup
+    OUTPUT: ChainGroup
 
     model_config = ConfigDict(frozen=True)
 
     @classmethod
     def from_dict(cls, data: FacetSpecsDict) -> Self:
-        def flatten(
-            spec_groups: dict[str, dict[str, FacetSpecDict]],
-        ) -> Generator[tuple[str, FacetSpecDict]]:
-            for group in spec_groups.values():
-                yield from group.items()
+        flattened_data = {
+            "INPUT": ChainMap(*data["INPUT"].values()),
+            "MID": ChainMap(*data["MID"].values()),
+            "OUTPUT": ChainMap(*data["OUTPUT"].values()),
+        }
+        self = cls.model_validate(flattened_data)
 
-        _input = {
-            facet_type: FacetSpec.model_validate(facet_spec)
-            for facet_type, facet_spec in flatten(data["INPUT"])
-        }
-        _mid = {
-            facet_type: FacetSpec.model_validate(facet_spec)
-            for facet_type, facet_spec in flatten(data["MID"])
-        }
-        _output = {
-            facet_type: FacetSpec.model_validate(facet_spec)
-            for facet_type, facet_spec in flatten(data["OUTPUT"])
-        }
-        return cls(
-            INPUT=_input,
-            MID=_mid,
-            OUTPUT=_output,
-        )
+        return self
 
 
 class FlowDefinitionBuilder:
@@ -208,7 +218,7 @@ class FlowDefinitionBuilder:
         facets: list[Facet] = []
         arrows: list[Arrow] = []
         for facet_builder in self._facets:
-            facet, arrows = facet_builder.build()
+            facet, arrows = facet_builder._build()
             facets.append(facet)
             arrows.extend(arrows)
         flow_definition = FlowDefinition(
@@ -225,13 +235,13 @@ class Facet(BaseModel):
     facet_id: str
     facet_uid: str
     name: str = ""
-    arguments: dict
+    arguments: dict[str, Any]
 
 
 class Arrow(BaseModel):
     source: str
     destinition: str
-    arguments: dict
+    arguments: dict[str, Any]
 
 
 class FlowDefinition(BaseModel):

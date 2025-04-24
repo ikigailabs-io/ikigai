@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Optional
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, StringConstraints
 
 
 def __optional_str(value: Any) -> str | None:
@@ -16,3 +16,5 @@ def __optional_str(value: Any) -> str | None:
 
 
 OptionalStr = Annotated[Optional[str], BeforeValidator(__optional_str)]
+
+LowercaseStr = Annotated[str, StringConstraints(to_lower=True)]

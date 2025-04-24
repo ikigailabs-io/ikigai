@@ -5,7 +5,9 @@
 
 from contextlib import ExitStack
 
+import pandas as pd
 from ikigai import Ikigai
+from ikigai.components import FlowStatus
 
 
 def test_flow_definition_builder_facet_types(
@@ -44,3 +46,43 @@ def test_flow_definition_empty(
 
     flow = app.flow.new(name=flow_name).definition(ikigai.builder.build()).build()
     cleanup.callback(flow.delete)
+
+
+def test_flow_definition_simple(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("A test app").build()
+    cleanup.callback(app.delete)
+
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
+    cleanup.callback(dataset.delete)
+
+    facet_types = ikigai.builder.facet_types
+    flow_definition = (
+        ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED)
+        .arguments(
+            dataset_id=dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .facet(facet_type=facet_types.MID.COUNT)
+        .arguments(
+            output_column_name="count",
+            sort=True,
+            target_columns=df1.columns.tolist()[:-2],
+        )
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED)
+        .arguments(dataset_name=f"output-{flow_name}", file_type="csv", header=True)
+        .build()
+    )
+    flow = app.flow.new(name=flow_name).definition(flow_definition).build()
+    cleanup.callback(flow.delete)
+
+    log = flow.run()
+    assert log.status == FlowStatus.SUCCESS
