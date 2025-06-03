@@ -69,7 +69,7 @@ def _flow_facet_shim(facet: FacetDict, facet_spec: dict | None) -> FacetDict:
 
         normalization_is_required: bool = (
             isinstance(value, list)
-            and argument_spec.get("is_list", False)
+            and not argument_spec.get("is_list", False)
             and argument_spec["argument_type"] == "MAP"
         )
         if normalization_is_required:
