@@ -51,7 +51,7 @@ python = ["3.13"]
 
 ### Setup venv used for development
 [tool.hatch.envs.default]
-dependencies = ["coverage[toml]>=6.5", "pytest", "pytest-profiling", "ipython", "Faker>=33.1.0"]
+dependencies = ["coverage[toml]>=6.5", "pytest", "pytest-profiling", "ipython", "ipykernel", "Faker>=33.1.0"]
 
 ### Setup venv used for test
 [tool.hatch.envs.hatch-test]
