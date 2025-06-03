@@ -54,4 +54,10 @@ class Ikigai:
 
     @property
     def builder(self) -> components.FlowDefinitionBuilder:
-        return components.FlowDefinitionBuilder(client=self.__client)
+        return components.FlowDefinitionBuilder()
+
+    @property
+    def facet_types(self) -> components.FacetTypes:
+        return components.FacetTypes.from_dict(
+            data=self.__client.component.get_facet_specs()
+        )
