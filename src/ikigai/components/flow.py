@@ -25,6 +25,7 @@ from ikigai.typing.protocol import (
 from ikigai.utils.compatibility import UTC, Self
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
+from ikigai.utils.shim import flow_versioning_shim
 
 logger = logging.getLogger("ikigai.components")
 
@@ -217,7 +218,13 @@ class Flow(BaseModel):
 
     def describe(self) -> FlowDict:
         flow = self.__client.component.get_flow(flow_id=self.flow_id)
-        return flow
+        # Apply flow_versioning_shim to allow migration of older flows
+        # TODO: Remove this shim after "important" flows are migrated
+        facet_specs = self.__client.get(
+            path="/component/get-facet-specs",
+        ).json()
+        shimed_flow = flow_versioning_shim(flow=flow, facet_specs=facet_specs)
+        return shimed_flow
 
     def __await_run(self) -> RunLog:
         start_time = datetime.now(UTC)
