@@ -23,6 +23,7 @@ from ikigai.components.model import (
     ModelDirectory,
     ModelDirectoryBuilder,
 )
+from ikigai.components.specs import FacetTypes
 
 __all__ = [
     "App",
@@ -32,6 +33,7 @@ __all__ = [
     "DatasetBuilder",
     "DatasetDirectory",
     "DatasetDirectoryBuilder",
+    "FacetTypes",
     "Flow",
     "FlowBuilder",
     "FlowDefinitionBuilder",
