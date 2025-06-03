@@ -11,7 +11,6 @@ from typing import Any, cast
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, RootModel
 
-from ikigai.client.client import Client
 from ikigai.typing.protocol import FlowDefinitionDict
 from ikigai.typing.protocol.flow import FacetSpecsDict
 from ikigai.utils.compatibility import Self
@@ -195,24 +194,14 @@ class FacetSpecs(BaseModel):
 
 class FlowDefinitionBuilder:
     _facets: list[FacetBuilder]
-    __facet_specs: FacetSpecs
-    __client: Client
 
-    def __init__(self, client: Client) -> None:
-        self.__client = client
-        self.__facet_specs = FacetSpecs.from_dict(
-            self.__client.component.get_facet_specs()
-        )
+    def __init__(self) -> None:
         self._facets = []
 
     def facet(self, facet_type, name: str = "") -> FacetBuilder:
         facet_builder = FacetBuilder(builder=self, facet_type=facet_type, name=name)
         self._facets.append(facet_builder)
         return facet_builder
-
-    @property
-    def facet_types(self) -> FacetSpecs:
-        return self.__facet_specs
 
     def build(self) -> FlowDefinition:
         facets: list[Facet] = []

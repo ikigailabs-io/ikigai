@@ -13,7 +13,7 @@ from ikigai.components import FlowStatus
 def test_flow_definition_builder_facet_types(
     ikigai: Ikigai,
 ) -> None:
-    facet_types = ikigai.builder.facet_types
+    facet_types = ikigai.facet_types
     assert facet_types.INPUT
     assert facet_types.MID
     assert facet_types.OUTPUT
@@ -62,7 +62,7 @@ def test_flow_definition_simple(
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
     cleanup.callback(dataset.delete)
 
-    facet_types = ikigai.builder.facet_types
+    facet_types = ikigai.facet_types
     flow_definition = (
         ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED)
         .arguments(
