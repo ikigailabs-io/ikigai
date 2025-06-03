@@ -41,8 +41,6 @@ class ModelVersionDict(TypedDict):
     modified_at: str
 
 
-# TODO: This needs to be reviewed by someone from the ML team
-# that is familiar with the model spec.
 class ModelSpecDict(TypedDict):
     name: str
     is_deprecated: bool
@@ -58,8 +56,8 @@ class SubModelSpecDict(TypedDict):
     is_hidden: bool
     keywords: list[str]
     metrics: ModelMetricsSpecDict
-    parameters: list[ModelParameterSpecDict]
-    hyperparameters: list[ModelHyperparameterSpecDict]
+    parameters: dict[str, ModelParameterSpecDict]
+    hyperparameters: dict[str, ModelHyperparameterSpecDict]
 
 
 ModelMetricsSpecDict = dict[str, Empty]
@@ -90,4 +88,4 @@ class ModelHyperparameterSpecDict(Generic[VT], TypedDict):
     is_list: bool
     children: list[dict]
     options: list[VT]
-    sub_hyperparameter_requirements: list[list]
+    sub_hyperparameter_requirements: dict[str, list]

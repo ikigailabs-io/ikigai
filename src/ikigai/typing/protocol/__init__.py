@@ -13,6 +13,7 @@ from ikigai.typing.protocol.directory import (
 from ikigai.typing.protocol.flow import (
     ArrowDict,
     FacetDict,
+    FacetSpecsDict,
     FlowDefinitionDict,
     FlowDict,
     FlowLogDict,
@@ -23,9 +24,11 @@ from ikigai.typing.protocol.flow import (
 from ikigai.typing.protocol.generic import Named
 from ikigai.typing.protocol.model import (
     ModelDict,
+    ModelHyperparameterSpecDict,
     ModelSpecDict,
     ModelType,
     ModelVersionDict,
+    SubModelSpecDict,
 )
 
 __all__ = [
@@ -42,6 +45,7 @@ __all__ = [
     # Flow Protocol
     "ArrowDict",
     "FacetDict",
+    "FacetSpecsDict",
     "FlowDict",
     "FlowLogDict",
     "FlowDefinitionDict",
@@ -50,9 +54,11 @@ __all__ = [
     "FlowVariableDict",
     # Model Protocol
     "ModelDict",
+    "ModelHyperparameterSpecDict",
     "ModelSpecDict",
     "ModelType",
     "ModelVersionDict",
+    "SubModelSpecDict",
     # Generic Protocol
     "Named",
 ]
