@@ -47,14 +47,14 @@ def _flow_facet_shim(facet: FacetDict, facet_spec: dict | None) -> FacetDict:
         facet_args["sub_model_type"] = facet_args["submodel_type"]
         del facet_args["submodel_type"]
 
-    facet["arguments"] = facet_args
+    facet["arguments"] = facet_args.copy()
 
     if facet_spec is None:
         # If no facet specification is found, return the facet as is
         return facet
 
     # Normalize the facet arguments based on the facet specification
-    for key, value in facet_args.items():
+    for key, value in facet["arguments"].items():
         argument_spec = next(
             (
                 arg_spec
@@ -65,6 +65,7 @@ def _flow_facet_shim(facet: FacetDict, facet_spec: dict | None) -> FacetDict:
         )
         if not argument_spec:
             # If the argument is not specified in the facet spec, skip it
+            del facet_args[key]
             continue
 
         normalization_is_required: bool = (
