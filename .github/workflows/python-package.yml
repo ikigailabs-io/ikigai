@@ -24,6 +24,18 @@ jobs:
       run: hatch fmt --check
     - name: Type Check
       run: hatch run types:check
+    - name: Collect changed files
+      uses: tj-actions/changed-files@v46
+      id: changed-files
+      with:
+        files: '**/*.md'
+        separator: ","
+    - name: Lint docs
+      uses: DavidAnson/markdownlint-cli2-action@v20
+      if: steps.changed-files.outputs.any_changed == 'true'
+      with:
+        globs: ${{ steps.changed-files.outputs.all_changed_files }}
+        separator: ","
 
   test:
     runs-on: ubuntu-latest
