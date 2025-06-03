@@ -56,8 +56,8 @@ class SubModelSpecDict(TypedDict):
     is_hidden: bool
     keywords: list[str]
     metrics: ModelMetricsSpecDict
-    parameters: list[ModelParameterSpecDict]
-    hyperparameters: list[ModelHyperparameterSpecDict]
+    parameters: dict[str, ModelParameterSpecDict]
+    hyperparameters: dict[str, ModelHyperparameterSpecDict]
 
 
 ModelMetricsSpecDict = dict[str, Empty]
@@ -85,5 +85,5 @@ class ModelHyperparameterSpecDict(TypedDict):
     is_hidden: bool
     is_list: bool
     children: list[dict]
-    options: list[Any]
-    sub_hyperparameter_requirements: list[list]
+    options: list[VT]
+    sub_hyperparameter_requirements: dict[str, list]
