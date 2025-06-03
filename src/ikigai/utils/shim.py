@@ -75,6 +75,9 @@ def _flow_facet_shim(facet: FacetDict, facet_spec: dict | None) -> FacetDict:
         if normalization_is_required:
             facet_args[key] = value[0] if value else {}
 
+        if "experiment_selection" in facet_args:
+            del facet_args["experiment_selection"]
+
     # Update the facet arguments with the normalized values
     facet["arguments"] = facet_args
     return facet
