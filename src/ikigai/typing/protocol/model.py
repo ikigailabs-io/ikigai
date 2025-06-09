@@ -17,6 +17,8 @@ class ModelType(Protocol):
     @property
     def sub_model_type(self) -> str: ...
 
+    def help(self) -> str: ...
+
 
 class ModelDict(TypedDict):
     project_id: str
@@ -46,7 +48,6 @@ class ModelSpecDict(TypedDict):
     is_deprecated: bool
     is_hidden: bool
     keywords: list[str]
-    metrics: ModelMetricsSpecDict
     sub_model_types: list[SubModelSpecDict]
 
 
@@ -79,11 +80,11 @@ class ModelHyperparameterSpecDict(TypedDict):
     default_value: Any
     have_options: bool
     have_sub_hyperparameters: bool
-    hyperparameter_group: str
+    hyperparameter_group: str | None
     hyperparameter_type: str
     is_deprecated: bool
     is_hidden: bool
     is_list: bool
-    children: list[dict]
+    children: dict[str, ModelHyperparameterSpecDict]
     options: list[VT]
-    sub_hyperparameter_requirements: dict[str, list]
+    sub_hyperparameter_requirements: list[tuple[VT, list[str]]]

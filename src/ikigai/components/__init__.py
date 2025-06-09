@@ -23,7 +23,7 @@ from ikigai.components.model import (
     ModelDirectory,
     ModelDirectoryBuilder,
 )
-from ikigai.components.specs import FacetTypes
+from ikigai.components.specs import FacetTypes, ModelTypes
 
 __all__ = [
     "App",
@@ -44,4 +44,5 @@ __all__ = [
     "ModelBuilder",
     "ModelDirectory",
     "ModelDirectoryBuilder",
+    "ModelTypes",
 ]
