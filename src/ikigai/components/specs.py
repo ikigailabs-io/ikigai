@@ -64,7 +64,7 @@ class ArgumentSpec(BaseModel, Helpful):
             yield "}"
 
 
-class FacetSpec(BaseModel, Helpful):
+class FacetType(BaseModel, Helpful):
     facet_uid: str = Field(validation_alias=AliasPath("facet_info", "facet_uid"))
     name: str = Field(validation_alias=AliasPath("facet_info", "facet_type"))
     is_deprecated: bool
@@ -96,7 +96,7 @@ class FacetSpec(BaseModel, Helpful):
 
 class FacetTypes(BaseModel, Helpful):
     class ChainGroup(RootModel, Helpful):
-        root: dict[LowercaseStr, FacetSpec]
+        root: dict[LowercaseStr, FacetType]
 
         def __post_init__(self) -> None:
             self.root = {
@@ -107,13 +107,13 @@ class FacetTypes(BaseModel, Helpful):
         def __contains__(self, name: str) -> bool:
             return name.lower() in self.root
 
-        def __getitem__(self, name: str) -> FacetSpec:
+        def __getitem__(self, name: str) -> FacetType:
             if name not in self:
                 error_msg = f"{name.title()} facet does not exist"
                 raise AttributeError(error_msg)
             return self.root[name.lower()]
 
-        def __getattr__(self, name: str) -> FacetSpec:
+        def __getattr__(self, name: str) -> FacetType:
             return self[name]
 
         def __repr__(self) -> str:
