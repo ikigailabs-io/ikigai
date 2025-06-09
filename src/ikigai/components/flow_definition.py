@@ -10,7 +10,7 @@ from typing import Any, cast
 
 from pydantic import BaseModel
 
-from ikigai.components.specs import FacetSpec
+from ikigai.components.specs import FacetType
 from ikigai.typing.protocol import FlowDefinitionDict
 from ikigai.utils.compatibility import Self
 
@@ -21,12 +21,12 @@ class FacetBuilder:
     __name: str
     __arguments: dict[str, Any]
     __arrows: list[ArrowBuilder]
-    __facet_spec: FacetSpec
+    __facet_spec: FacetType
     __facet: Facet | None
     __builder: FlowDefinitionBuilder
 
     def __init__(
-        self, builder: FlowDefinitionBuilder, facet_type: FacetSpec, name: str = ""
+        self, builder: FlowDefinitionBuilder, facet_type: FacetType, name: str = ""
     ) -> None:
         self.__builder = builder
         self.__facet_spec = facet_type
@@ -112,7 +112,7 @@ class FlowDefinitionBuilder:
     def __init__(self) -> None:
         self._facets = []
 
-    def facet(self, facet_type: FacetSpec, name: str = "") -> FacetBuilder:
+    def facet(self, facet_type: FacetType, name: str = "") -> FacetBuilder:
         facet_builder = FacetBuilder(builder=self, facet_type=facet_type, name=name)
         self._facets.append(facet_builder)
         return facet_builder
