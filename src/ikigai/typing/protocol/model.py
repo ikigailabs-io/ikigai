@@ -86,5 +86,5 @@ class ModelHyperparameterSpecDict(TypedDict):
     is_hidden: bool
     is_list: bool
     children: dict[str, ModelHyperparameterSpecDict]
-    options: list[VT]
-    sub_hyperparameter_requirements: list[tuple[VT, list[str]]]
+    options: list[Any]
+    sub_hyperparameter_requirements: list[tuple[Any, list[str]]]
