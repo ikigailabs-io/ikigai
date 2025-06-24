@@ -21,7 +21,7 @@ from ikigai.utils.compatibility import Self
 from ikigai.utils.custom_validators import LowercaseStr
 from ikigai.utils.helpful import Helpful
 
-logger = logging.getLogger("ikigai.components")
+logger = logging.getLogger("ikigai.components.specs")
 
 
 class FacetRequirementSpec(BaseModel):
@@ -96,7 +96,10 @@ class FacetType(BaseModel, Helpful):
         for argument in visible_facet_arguments:
             yield from (f"  {argument_help}" for argument_help in argument._help())
 
-    def check_arguments(self, arguments: dict) -> None: ...
+    def check_arguments(self, arguments: dict) -> None:
+        # TODO: Add facet spec checking here,
+        #  right now we let platform inform the user on create/edit
+        ...
 
 
 class FacetTypes(BaseModel, Helpful):
@@ -146,7 +149,6 @@ class FacetTypes(BaseModel, Helpful):
 
     @classmethod
     def from_dict(cls, data: FacetSpecsDict) -> Self:
-        logger.debug("Creating %s from %s", cls.__name__, data)
         flattened_data = {
             "INPUT": ChainMap(*data["INPUT"].values()),
             "MID": ChainMap(*data["MID"].values()),
@@ -186,7 +188,6 @@ class ModelMetricsSpec(RootModel, Helpful):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
-        logger.debug("Creating %s from %s", cls.__name__, data)
         self = cls.model_validate({key.lower(): value for key, value in data.items()})
         return self
 
@@ -248,7 +249,6 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
 
     @classmethod
     def from_dict(cls, data: ModelHyperparameterSpecDict) -> Self:
-        logger.debug("Creating a %s from %s", cls.__name__, data)
         children = {
             name: ModelHyperparameterSpec.from_dict(child)
             for name, child in data["children"].items()
@@ -318,7 +318,6 @@ class SubModelSpec(BaseModel, Helpful):
 
     @classmethod
     def from_dict(cls, model_type: str, data: SubModelSpecDict) -> Self:
-        logger.debug("Creating a %s from %s", cls.__name__, data)
         data_dict = {
             **data,
             "parameters": list(data["parameters"].values()),
@@ -441,10 +440,11 @@ class ModelTypes(RootModel, Helpful):
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
-        logger.debug("Creating %s from %s", cls.__name__, data)
         self = cls(
             {
-                model_name.lower(): ModelSpec.from_dict(model_spec)
+                model_name.lower()
+                .replace("_", "")
+                .replace(" ", ""): ModelSpec.from_dict(model_spec)
                 for model_name, model_spec in data.items()
             }
         )
@@ -454,13 +454,16 @@ class ModelTypes(RootModel, Helpful):
         return len(self.root)
 
     def __contains__(self, name: str) -> bool:
-        return name.lower() in self.root
+        return name.lower().replace("_", "").replace(" ", "") in self.root
 
     def __getitem__(self, name: str) -> ModelSpec:
         if name not in self:
             error_msg = f"{name.title()} model does not exist"
             raise AttributeError(error_msg)
         return self.root[name.lower()]
+
+    def __getattr__(self, name: str) -> ModelSpec:
+        return self[name]
 
     @override
     def _help(self) -> Generator[str]:

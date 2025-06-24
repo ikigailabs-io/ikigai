@@ -12,23 +12,28 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Self  # noqa: F401
 
+# Multiple python version compatible import for StrEnum
+if sys.version_info >= (3, 11):
+    from enum import StrEnum  # noqa: F401
+else:
+    from backports.strenum import StrEnum  # noqa: F401
+
 # Multiple python version compatible import for HTTPMethod
 if sys.version_info >= (3, 11):
     from http import HTTPMethod
 else:
-    from types import SimpleNamespace
 
-    HTTPMethod = SimpleNamespace(
-        CONNECT="CONNECT",
-        DELETE="DELETE",
-        GET="GET",
-        HEAD="HEAD",
-        OPTIONS="OPTIONS",
-        PATCH="PATCH",
-        POST="POST",
-        PUT="PUT",
-        TRACE="TRACE",
-    )
+    class HTTPMethod(StrEnum):
+        CONNECT = "CONNECT"
+        DELETE = "DELETE"
+        GET = "GET"
+        HEAD = "HEAD"
+        OPTIONS = "OPTIONS"
+        PATCH = "PATCH"
+        POST = "POST"
+        PUT = "PUT"
+        TRACE = "TRACE"
+
 
 # Multiple python version compatible import for datetime.UTC
 if sys.version_info >= (3, 11):

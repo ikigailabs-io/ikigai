@@ -51,7 +51,6 @@ def test_flow_editing(
 
     flow = app.flow.new(name=flow_name).build()
     cleanup.callback(flow.delete)
-    # TODO: Update test once we can nicely create pipeline definitions
 
     flow.rename(f"updated {flow_name}")
 
@@ -161,7 +160,7 @@ def test_flow_clone(
     assert flows[cloned_flow.name]
 
 
-def test_flow_run_success(
+def test_flow_run_success_1(
     ikigai: Ikigai,
     app_name: str,
     dataset_name: str,
@@ -175,60 +174,27 @@ def test_flow_run_success(
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
     cleanup.callback(dataset.delete)
 
-    # TODO: Update test once we can nicely create pipelines
-    flow = (
-        app.flow.new(name=flow_name)
-        .definition(
-            {
-                "facets": [
-                    {
-                        "facet_id": "input",
-                        "name": dataset.name,
-                        "facet_uid": "I_005",  # Imported dataset
-                        "arguments": {
-                            "dataset_id": dataset.dataset_id,
-                            "file_type": "csv",
-                            "header": True,
-                            "use_raw_file": False,
-                        },
-                    },
-                    {
-                        "facet_id": "count",
-                        "name": "count",
-                        "facet_uid": "M_003",  # Count
-                        "arguments": {
-                            "output_column_name": "count",
-                            "sort": True,
-                            "target_columns": df1.columns.to_list()[:-2],
-                        },
-                    },
-                    {
-                        "facet_id": "output",
-                        "name": "output",
-                        "facet_uid": "O_005",  # Exported dataset
-                        "arguments": {
-                            "dataset_name": f"output-{flow_name}",
-                            "file_type": "csv",
-                            "header": True,
-                        },
-                    },
-                ],
-                "arrows": [
-                    {
-                        "arguments": {},
-                        "source": "input",
-                        "destination": "count",
-                    },
-                    {
-                        "arguments": {},
-                        "source": "count",
-                        "destination": "output",
-                    },
-                ],
-            }
+    facet_types = ikigai.facet_types
+    flow_definition = (
+        ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED, name=dataset.name)
+        .arguments(
+            dataset_id=dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .facet(facet_type=facet_types.MID.PYTHON, name="count")
+        .arguments(script=("import pandas as pd\n" "df = data\n" "result = df\n"))
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(
+            dataset_name=f"output-{flow_name}",
+            file_type="csv",
+            header=True,
         )
         .build()
     )
+
+    flow = app.flow.new(name=flow_name).definition(definition=flow_definition).build()
     cleanup.callback(flow.delete)
 
     log = flow.run()
@@ -237,7 +203,7 @@ def test_flow_run_success(
     assert not log.data
 
 
-def test_flow_run_fail(
+def test_flow_run_fail_1(
     ikigai: Ikigai,
     app_name: str,
     dataset_name: str,
@@ -251,68 +217,46 @@ def test_flow_run_fail(
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
     cleanup.callback(dataset.delete)
 
-    # TODO: Update test once we can nicely create pipelines
-    flow = (
-        app.flow.new(name=flow_name)
-        .definition(
-            {
-                "facets": [
-                    {
-                        "facet_id": "input",
-                        "name": dataset.name,
-                        "facet_uid": "I_005",  # Imported dataset
-                        "arguments": {
-                            "dataset_id": dataset.dataset_id,
-                            "file_type": "csv",
-                            "header": True,
-                            "use_raw_file": False,
-                        },
-                    },
-                    {
-                        "facet_id": "failing",
-                        "name": "failing",
-                        "facet_uid": "M_000",  # Python Code
-                        "arguments": {
-                            "script": (
-                                "import pandas as pd\n"
-                                "df = data\n"
-                                "raise ValueError('Expected Error')\n"
-                                "result = df\n"
-                            ),
-                        },
-                    },
-                    {
-                        "facet_id": "output",
-                        "name": "output",
-                        "facet_uid": "O_005",  # Exported dataset
-                        "arguments": {
-                            "dataset_name": f"output-{flow_name}",
-                            "file_type": "csv",
-                            "header": True,
-                        },
-                    },
-                ],
-                "arrows": [
-                    {
-                        "arguments": {},
-                        "source": "input",
-                        "destination": "failing",
-                    },
-                    {
-                        "arguments": {},
-                        "source": "failing",
-                        "destination": "output",
-                    },
-                ],
-            }
+    facet_types = ikigai.facet_types
+    flow_definition = (
+        ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED, name=dataset.name)
+        .arguments(
+            dataset_id=dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .facet(facet_type=facet_types.MID.PYTHON, name="failing")
+        .arguments(
+            script=(
+                "import pandas as pd\n"
+                "df = data\n"
+                "raise ValueError('Expected Error')\n"
+                "result = df\n"
+            )
+        )
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(
+            dataset_name=f"output-{flow_name}",
+            file_type="csv",
+            header=True,
         )
         .build()
     )
+
+    flow = app.flow.new(name=flow_name).definition(definition=flow_definition).build()
     cleanup.callback(flow.delete)
 
     log = flow.run()
     assert log.status == FlowStatus.FAILED
-    assert log.erroneous_facet_id == "failing"
+    assert log.erroneous_facet_id
+    failing_facets = [
+        facet
+        for facet in flow_definition.facets
+        if facet.facet_id == log.erroneous_facet_id
+    ]
+    assert len(failing_facets) == 1
+    assert failing_facets[0].name == "failing"
     assert log.data
 
 

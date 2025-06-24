@@ -86,3 +86,58 @@ def test_flow_definition_simple(
 
     log = flow.run()
     assert log.status == FlowStatus.SUCCESS
+
+
+def test_flow_definition_simple_ml_facet(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df_ml_regression1: pd.DataFrame,
+    model_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("A test app").build()
+    cleanup.callback(app.delete)
+
+    dataset = app.dataset.new(name=dataset_name).df(df_ml_regression1).build()
+    cleanup.callback(dataset.delete)
+
+    model_types = ikigai.model_types
+    model = (
+        app.model.new(model_name)
+        .model_type(model_type=model_types["Linear"]["Lasso"])
+        .build()
+    )
+    cleanup.callback(model.delete)
+
+    facet_types = ikigai.facet_types
+    flow_definition = (
+        ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED)
+        .arguments(
+            dataset_id=dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .model_facet(
+            facet_type=facet_types.MID.PREDICT,
+            model_type=model_types["Linear"]["Lasso"],
+        )
+        .arguments(
+            model_name=model.name,
+            version="initial-train",
+        )
+        .hyperparameters(alpha=0.1, fit_intercept=True)
+        .parameters(
+            target_column="target",
+        )
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED)
+        .arguments(dataset_name=f"output-{flow_name}", file_type="csv", header=True)
+        .build()
+    )
+    flow = app.flow.new(name=flow_name).definition(flow_definition).build()
+    cleanup.callback(flow.delete)
+
+    log = flow.run()
+    assert log.status == FlowStatus.SUCCESS
