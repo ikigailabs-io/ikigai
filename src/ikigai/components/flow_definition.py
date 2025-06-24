@@ -27,6 +27,11 @@ class KnownModelFacetUIDS(StrEnum):
     AiPredict = "M_049"
     Predict = "M_016"
 
+    @classmethod
+    def values(cls) -> list[str]:
+        """Get all known model facet UIDs."""
+        return [member.value for member in cls.__members__.values()]
+
 
 class FacetBuilder:
     __name: str
@@ -199,7 +204,7 @@ class FlowDefinitionBuilder:
     def model_facet(
         self, facet_type: FacetType, model_type: ModelType, name: str = ""
     ) -> ModelFacetBuilder:
-        if facet_type.facet_uid not in KnownModelFacetUIDS:
+        if facet_type.facet_uid not in KnownModelFacetUIDS.values():
             error_msg = f"{facet_type.name.title()} is not a known Model Facet"
             raise ValueError(error_msg)
         facet_builder = ModelFacetBuilder(
