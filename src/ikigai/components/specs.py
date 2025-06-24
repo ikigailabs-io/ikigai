@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 from collections import ChainMap
 from collections.abc import Generator, Mapping
-from typing import Any, override
+from typing import Any
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, RootModel
 
@@ -17,7 +17,7 @@ from ikigai.typing.protocol import (
     ModelSpecDict,
     SubModelSpecDict,
 )
-from ikigai.utils.compatibility import Self
+from ikigai.utils.compatibility import Self, override
 from ikigai.utils.custom_validators import LowercaseStr
 from ikigai.utils.helpful import Helpful
 
