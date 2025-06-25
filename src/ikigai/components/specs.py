@@ -93,8 +93,41 @@ class FacetType(BaseModel, Helpful):
             yield "  No arguments"
             return
 
-        for argument in visible_facet_arguments:
-            yield from (f"  {argument_help}" for argument_help in argument._help())
+        if visible_facet_arguments:
+            yield "  facet_arguments:"
+            for argument in visible_facet_arguments:
+                yield from (
+                    f"    {argument_help}" for argument_help in argument._help()
+                )
+
+        # Arrow Arguments
+        visible_in_arrow_arguments, out_arrow_arguments = (
+            [
+                argument
+                for argument in self.in_arrow_arguments
+                if not argument.is_hidden
+            ],
+            [
+                argument
+                for argument in self.out_arrow_arguments
+                if not argument.is_hidden
+            ],
+        )
+
+        # In Arrow Arguments
+        if visible_in_arrow_arguments:
+            yield "  in_arrow_arguments:"
+            for argument in visible_in_arrow_arguments:
+                yield from (
+                    f"    {argument_help}" for argument_help in argument._help()
+                )
+        # Out Arrow Arguments
+        if out_arrow_arguments:
+            yield "  out_arrow_arguments:"
+            for argument in out_arrow_arguments:
+                yield from (
+                    f"    {argument_help}" for argument_help in argument._help()
+                )
 
     def check_arguments(self, arguments: dict) -> None:
         # TODO: Add facet spec checking here,
