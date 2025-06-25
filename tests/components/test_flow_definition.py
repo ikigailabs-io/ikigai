@@ -85,7 +85,7 @@ def test_flow_definition_simple(
     cleanup.callback(flow.delete)
 
     log = flow.run()
-    assert log.status == FlowStatus.SUCCESS
+    assert log.status == FlowStatus.SUCCESS, log.data
 
 
 def test_flow_definition_simple_ml_facet(
@@ -140,4 +140,4 @@ def test_flow_definition_simple_ml_facet(
     cleanup.callback(flow.delete)
 
     log = flow.run()
-    assert log.status == FlowStatus.SUCCESS
+    assert log.status == FlowStatus.SUCCESS, log.data
