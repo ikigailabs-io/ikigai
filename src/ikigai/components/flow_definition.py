@@ -65,8 +65,10 @@ class FacetBuilder:
     def facet(
         self, facet_type: FacetType, name: str = "", arrow_args: dict | None = None
     ) -> FacetBuilder:
+        if arrow_args is None:
+            arrow_args = {}
         facet = self._builder.facet(facet_type=facet_type, name=name).add_arrow(
-            parent=self, args=arrow_args
+            self, **arrow_args
         )
         return facet
 
@@ -77,18 +79,19 @@ class FacetBuilder:
         name: str = "",
         arrow_args: dict | None = None,
     ) -> ModelFacetBuilder:
+        if arrow_args is None:
+            arrow_args = {}
+
         facet = self._builder.model_facet(
             facet_type=facet_type, model_type=model_type, name=name
-        ).add_arrow(parent=self, args=arrow_args)
+        ).add_arrow(self, **arrow_args)
         return facet
 
     def arguments(self, **arguments: Any) -> Self:
         self.__arguments.update(arguments)
         return self
 
-    def add_arrow(self, parent: FacetBuilder, args: dict | None = None) -> Self:
-        if args is None:
-            args = {}
+    def add_arrow(self, parent: FacetBuilder, /, **args) -> Self:
         self.__arrow_builders.append(
             ArrowBuilder(source=parent, destination=self, arguments=args)
         )
