@@ -198,8 +198,8 @@ def test_flow_run_success_1(
     cleanup.callback(flow.delete)
 
     log = flow.run()
-    assert log.status == FlowStatus.SUCCESS
-    assert log.erroneous_facet_id is None
+    assert log.status == FlowStatus.SUCCESS, log.data
+    assert log.erroneous_facet_id is None, log
     assert not log.data
 
 
@@ -248,8 +248,8 @@ def test_flow_run_fail_1(
     cleanup.callback(flow.delete)
 
     log = flow.run()
-    assert log.status == FlowStatus.FAILED
-    assert log.erroneous_facet_id
+    assert log.status == FlowStatus.FAILED, log.data
+    assert log.erroneous_facet_id, log
     failing_facets = [
         facet
         for facet in flow_definition.facets
@@ -257,7 +257,7 @@ def test_flow_run_fail_1(
     ]
     assert len(failing_facets) == 1
     assert failing_facets[0].name == "failing"
-    assert log.data
+    assert log.data, log
 
 
 def test_flow_directories_creation(
