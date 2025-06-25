@@ -16,7 +16,7 @@ def test_model_types(
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
 
-    model_types = app.model.model_types
+    model_types = ikigai.model_types
     assert model_types is not None
     assert len(model_types) > 0
     lasso = model_types["Linear"]["Lasso"]
@@ -38,7 +38,7 @@ def test_model_creation(
     models = app.models()
     assert len(models) == 0
 
-    model_types = app.model.model_types
+    model_types = ikigai.model_types
     model = (
         app.model.new(model_name)
         .model_type(model_type=model_types["Linear"]["Lasso"])
@@ -67,7 +67,7 @@ def test_model_editing(
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
 
-    model_types = app.model.model_types
+    model_types = ikigai.model_types
     model = (
         app.model.new(model_name)
         .model_type(model_type=model_types["Linear"]["Lasso"])
@@ -98,7 +98,7 @@ def test_model_describe(
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
 
-    model_types = app.model.model_types
+    model_types = ikigai.model_types
     model = (
         app.model.new(model_name)
         .model_type(model_type=model_types["Linear"]["Lasso"])

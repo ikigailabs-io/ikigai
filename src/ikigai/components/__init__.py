@@ -16,12 +16,14 @@ from ikigai.components.flow import (
     FlowDirectoryBuilder,
     FlowStatus,
 )
+from ikigai.components.flow_definition import FlowDefinitionBuilder
 from ikigai.components.model import (
     Model,
     ModelBuilder,
     ModelDirectory,
     ModelDirectoryBuilder,
 )
+from ikigai.components.specs import FacetTypes, ModelTypes
 
 __all__ = [
     "App",
@@ -31,8 +33,10 @@ __all__ = [
     "DatasetBuilder",
     "DatasetDirectory",
     "DatasetDirectoryBuilder",
+    "FacetTypes",
     "Flow",
     "FlowBuilder",
+    "FlowDefinitionBuilder",
     "FlowDirectoryBuilder",
     "FlowStatus",
     "FlowDirectory",
@@ -40,4 +44,5 @@ __all__ = [
     "ModelBuilder",
     "ModelDirectory",
     "ModelDirectoryBuilder",
+    "ModelTypes",
 ]

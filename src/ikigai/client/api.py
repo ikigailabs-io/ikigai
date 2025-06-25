@@ -31,6 +31,7 @@ from ikigai.typing.protocol import (
     ModelType,
     ModelVersionDict,
 )
+from ikigai.typing.protocol.flow import FacetSpecsDict
 
 _UNSET: Any = object()
 
@@ -503,16 +504,6 @@ class ComponentAPI:
 
         return cast(list[ModelDict], models)
 
-    @cache
-    def get_model_specs(self) -> list[ModelSpecDict]:
-        resp = self.__session.get(
-            path="/component/get-model-specs",
-        ).json()
-
-        model_specs = resp.values()
-
-        return cast(list[ModelSpecDict], model_specs)
-
     def edit_model(
         self,
         app_id: str,
@@ -696,3 +687,25 @@ class ComponentAPI:
 
         directories = resp["directories"]
         return cast(list[DirectoryDict], directories)
+
+    """
+    Spec APIs
+    """
+
+    @cache
+    def get_facet_specs(self) -> FacetSpecsDict:
+        resp = self.__session.get(
+            path="/component/get-facet-specs",
+        ).json()
+
+        return cast(FacetSpecsDict, resp)
+
+    @cache
+    def get_model_specs(self) -> list[ModelSpecDict]:
+        resp = self.__session.get(
+            path="/component/get-model-specs",
+        ).json()
+
+        model_specs = resp.values()
+
+        return cast(list[ModelSpecDict], model_specs)

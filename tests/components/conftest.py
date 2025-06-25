@@ -79,6 +79,42 @@ def df2(faker: Faker) -> pd.DataFrame:
 
 
 @pytest.fixture
+def df_ml_regression1(faker: Faker) -> pd.DataFrame:
+    """
+    Generate a DataFrame suitable for ML regression tasks
+    """
+    num_generator_selections = random.randint(3, 10)
+    num_rows = math.ceil(random.triangular(100, 1000))
+    table_generator = create_table_generator(faker, num_generator_selections)
+    # Add a target column for regression
+    target_column_name = "target"
+    generated_df = generate_df(table_generator=table_generator, num_rows=num_rows)
+    generated_df[target_column_name] = generated_df.apply(
+        lambda _: random.uniform(0, 100), axis=1
+    )
+    return generated_df
+
+
+@pytest.fixture
+def df_ml_classification1(faker: Faker) -> pd.DataFrame:
+    """
+    Generate a DataFrame suitable for ML classification tasks
+    """
+    num_generator_selections = random.randint(3, 10)
+    num_rows = math.ceil(random.triangular(100, 1000))
+    num_classes = math.floor(random.triangular(2, num_rows / 3))
+    table_generator = create_table_generator(faker, num_generator_selections)
+    # Add a target column for classification
+    target_column_name = "target"
+    generated_df = generate_df(table_generator=table_generator, num_rows=num_rows)
+    generated_df[target_column_name] = generated_df.apply(
+        lambda _: random.choice([f"class-{i}" for i in range(1, num_classes + 1)]),
+        axis=1,
+    )
+    return generated_df
+
+
+@pytest.fixture
 def dataset_name(random_name: str) -> str:
     return f"dats-{random_name}"
 

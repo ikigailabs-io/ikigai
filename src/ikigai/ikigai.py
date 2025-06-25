@@ -51,3 +51,19 @@ class Ikigai:
         }
 
         return NamedMapping(directories)
+
+    @property
+    def builder(self) -> components.FlowDefinitionBuilder:
+        return components.FlowDefinitionBuilder()
+
+    @property
+    def facet_types(self) -> components.FacetTypes:
+        return components.FacetTypes.from_dict(
+            data=self.__client.component.get_facet_specs()
+        )
+
+    @property
+    def model_types(self) -> components.ModelTypes:
+        return components.ModelTypes.from_list(
+            data=self.__client.component.get_model_specs()
+        )
