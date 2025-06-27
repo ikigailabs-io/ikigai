@@ -116,6 +116,7 @@ class FlowBuilder:
 class FlowStatus(str, Enum):
     SCHEDULED = "SCHEDULED"
     RUNNING = "RUNNING"
+    STOPPING = "STOPPING"
     STOPPED = "STOPPED"
     FAILED = "FAILED"
     IDLE = "IDLE"
@@ -244,7 +245,12 @@ class Flow(BaseModel):
             progress_bar.update(last_progress)
 
             # Wait while pipeline is running
-            while status_report.status in (FlowStatus.RUNNING, FlowStatus.UNKNOWN):
+            running_states = (
+                FlowStatus.RUNNING,
+                FlowStatus.STOPPING,
+                FlowStatus.UNKNOWN,
+            )
+            while status_report.status in running_states:
                 time.sleep(1)
                 status_report = self.status()
                 progress = status_report.progress if status_report.progress else 100
