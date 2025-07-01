@@ -323,7 +323,7 @@ datasets = app.datasets()             # Get all datasets in Start the app
 dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
 df = dataset.df()                     # Download the dataset as a a pandas dataframe
 df_updated = df[df.columns[:-1]]      # New dataframe (by dropping last column)
-dataset.edit_data(df_updated)     # Update the dataset
+dataset.edit_data(df_updated)         # Update the dataset
 
 dataset.df().head()
 ```
