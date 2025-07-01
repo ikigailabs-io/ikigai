@@ -423,6 +423,14 @@ Press **Ctrl+D** or type **exit** to exit IPython, then run it again:
 ```bash
 ipython
 ```
+For JupyterLab: 
+- Navigate to the **Kernel menu**, select **Restart Kernel**, and confirm the restart if prompted.
+
+For Google Colab: 
+- Navigate to the **Runtime menu** and select **Restart session**.
+
+Others Python interpreters: 
+- Refer to the documentation of your Python Notebook software.
 
 ## License
 
