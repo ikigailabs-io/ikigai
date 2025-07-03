@@ -31,34 +31,57 @@
 
 ## Ikigai Platform Overview
 
-The Ikigai Python library provides access to [Ikigai's Platform API](https://docs.ikigailabs.io/api/platform-api) from applications written in the Python language.
+The Ikigai Python library provides access to 
+[Ikigai's Platform API](https://docs.ikigailabs.io/api/platform-api) 
+from applications written in the Python language.
 
-Ikigai enables you to build artificial intelligence apps, or AI apps, that support business intelligence, machine learning and operational actions.
+Ikigai enables you to build artificial intelligence apps, or AI apps, 
+that support business intelligence, machine learning and operational actions.
 
-Apps are the basic organizational units in Ikigai. Apps are much like folders and they contain all the components that work together to produce your desired output. An app includes Connectors, Datasets, Flows, Dashboards, and Models. You begin by creating an app, and then connecting to data. The data can exist in a variety of forms, such as records in a database, information in a spreadsheet or data in an application. To connect to different sources of data, you use connectors.
+Apps are the basic organizational units in Ikigai. Apps are much like folders 
+and they contain all the components that work together to produce your desired 
+output. An app includes Connectors, Datasets, Flows, Dashboards, and Models. 
+You begin by creating an app, and then connecting to data. The data can exist 
+in a variety of forms, such as records in a database, information in a 
+spreadsheet or data in an application. To connect to different sources 
+of data, you use connectors.
 
-Once you can access data, you create flows, which are pipelines to process and transform the data. In each flow you can add pre-built building-blocks that perform operations on your data. These building-blocks are called facets. With flows, you can store rules which restrict who can access data, define how data should appear in a standardized form and transform data so it’s easier to analyze. Flows are reusable, which means you or others can define them once and apply them to other apps.
-
+Once you can access data, you create flows, which are pipelines to process and 
+transform the data. In each flow you can add pre-built building-blocks that 
+perform operations on your data. These building-blocks are called facets. 
+With flows, you can store rules which restrict who can access data, define 
+how data should appear in a standardized form and transform data so it’s easier 
+to analyze. Flows are reusable, which means you or others can define them once 
+and apply them to other apps.
 
 ## Getting an API Key
 
-The library needs to be configured with your account's API key which is available by logging into the Ikigai platform. To generate your API key follow the steps below.
+The library needs to be configured with your account's API key which is 
+available by logging into the Ikigai platform. To generate your API key 
+follow the steps below.
 
-1. Once logged in, go to your account, under **Profile** > **Account**. 
+1. Once logged in, go to your account, under 
+**Profile** > **Account**. 
 
 1. Select the Keys option.
 
 1. Click **Generate API Key** to generate a unique API key.
 
-1. Click the **Eye icon** to reveal the API key. Save this key in a secure place and do not share it with anyone else. You will need this API key to use Ikigai's Python client library in the next sections.
+1. Click the **Eye icon** to reveal the API key. Save this key in a 
+secure place and do not share it with anyone else. You will need this 
+API key to use Ikigai's Python client library in the next sections.
 
 ## Requirements
 
-You should have the latest stable version of Python installed in your environment (~3.12) to use Ikigai's Python client library. Ikigai will support Python version 3.9 until its [EOL (October 31, 2025)](https://endoflife.date/python).
+You should have the latest stable version of Python installed in your 
+environment (~3.12) to use Ikigai's Python client library. Ikigai will 
+support Python version 3.9 until it's 
+[EOL (October 31, 2025)](https://endoflife.date/python).
 
 ## Installation
 
-Use the [Python Package Index (PyPI)](https://pypi.org/) to install the Ikigai client library with the following command:
+Use the [Python Package Index (PyPI)](https://pypi.org/) to install the Ikigai
+client library with the following command:
 
 ```sh
 pip install ikigai
