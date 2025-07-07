@@ -197,9 +197,7 @@ class FlowDefinitionBuilder:
     def __init__(self) -> None:
         self._facets = []
 
-    def facet(
-        self, facet_type: FacetType, name: str = ""
-    ) -> FacetBuilder | ModelFacetBuilder:
+    def facet(self, facet_type: FacetType, name: str = "") -> FacetBuilder:
         facet_builder = FacetBuilder(builder=self, facet_type=facet_type, name=name)
         self._facets.append(facet_builder)
         return facet_builder

@@ -61,12 +61,13 @@ class ArgumentSpec(BaseModel, Helpful):
             )
 
         if self.children:
-            yield f"{self.name}: {argument_type} = " "{"
+            start_brackets, end_brackets = ("[{", "}]") if self.is_list else ("{", "}")
+            yield f"{self.name}: {argument_type} = " + start_brackets
             for child in self.children.values():
                 if child.is_hidden:
                     continue
                 yield from (f"  {child_help}" for child_help in child._help())
-            yield "}"
+            yield end_brackets
 
 
 class FacetType(BaseModel, Helpful):
@@ -141,21 +142,31 @@ class FacetTypes(BaseModel, Helpful):
 
         def __post_init__(self) -> None:
             self.root = {
-                facet_type.lower(): facet_spec
+                facet_type.lower().replace("_", "").replace(" ", ""): facet_spec
                 for facet_type, facet_spec in self.root.items()
             }
 
         def __contains__(self, name: str) -> bool:
-            return name.lower() in self.root
+            key = name.lower().replace("_", "").replace(" ", "")
+            return key in self.root
 
         def __getitem__(self, name: str) -> FacetType:
             if name not in self:
                 error_msg = f"{name.title()} facet does not exist"
                 raise AttributeError(error_msg)
-            return self.root[name.lower()]
+            key = name.lower().replace("_", "").replace(" ", "")
+            return self.root[key]
 
         def __getattr__(self, name: str) -> FacetType:
             return self[name]
+
+        @property
+        def types(self) -> list[str]:
+            return [
+                facet_type.name
+                for facet_type in self.root.values()
+                if not facet_type.is_hidden
+            ]
 
         def __repr__(self) -> str:
             keys = list(self.root.keys())
@@ -423,22 +434,35 @@ class ModelSpec(BaseModel, Helpful):
             is_hidden=data["is_hidden"],
             keywords=data["keywords"],
             sub_model_types={
-                sub_model_spec["name"].lower(): SubModelSpec.from_dict(
-                    model_type=data["name"], data=sub_model_spec
-                )
+                (
+                    sub_model_spec["name"].lower().replace("_", "").replace(" ", "")
+                ): SubModelSpec.from_dict(model_type=data["name"], data=sub_model_spec)
                 for sub_model_spec in data["sub_model_types"]
             },
         )
         return self
 
     def __contains__(self, sub_model_type: str) -> bool:
-        return sub_model_type.lower() in self.sub_model_types
+        key = sub_model_type.lower().replace("_", "").replace(" ", "")
+        return key in self.sub_model_types
 
     def __getitem__(self, sub_model_type: str) -> SubModelSpec:
         if sub_model_type not in self:
             error_msg = f"{sub_model_type.title()} sub-model does not exist"
             raise AttributeError(error_msg)
-        return self.sub_model_types[sub_model_type.lower()]
+        key = sub_model_type.lower().replace("_", "").replace(" ", "")
+        return self.sub_model_types[key]
+
+    def __getattr__(self, sub_model_type: str) -> SubModelSpec:
+        return self[sub_model_type]
+
+    @property
+    def types(self) -> list[str]:
+        return [
+            sub_model_spec.name
+            for sub_model_spec in self.sub_model_types.values()
+            if not sub_model_spec.is_hidden
+        ]
 
     @override
     def _help(self) -> Generator[str]:
@@ -493,10 +517,15 @@ class ModelTypes(RootModel, Helpful):
         if name not in self:
             error_msg = f"{name.title()} model does not exist"
             raise AttributeError(error_msg)
-        return self.root[name.lower()]
+        key = name.lower().replace("_", "").replace(" ", "")
+        return self.root[key]
 
     def __getattr__(self, name: str) -> ModelSpec:
         return self[name]
+
+    @property
+    def types(self) -> list[str]:
+        return [model.name for model in self.root.values() if not model.is_hidden]
 
     @override
     def _help(self) -> Generator[str]:
