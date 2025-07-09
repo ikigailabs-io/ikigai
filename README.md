@@ -61,7 +61,7 @@ available by logging into the Ikigai platform. To generate your API key
 follow the steps below.
 
 1. Once logged in, go to your account, under
-**Profile** > **Account**. 
+**Profile** > **Account**.
 
 1. Select the Keys option.
 
@@ -477,6 +477,7 @@ flow = flows["new flow"]   # Get flow named "new flow"
 
 flow.run()                 # Run the flow
 ```
+
 When the run is successful, the output resembles the following example:
 
 ```py
@@ -531,14 +532,18 @@ Press **Ctrl+D** or type **exit** to exit IPython, then run it again:
 ```bash
 ipython
 ```
+
 For JupyterLab:
+
 - Navigate to the **Kernel menu**, select **Restart Kernel**, and confirm the
   restart if prompted.
 
 For Google Colab:
+
 - Navigate to the **Runtime menu** and select **Restart session**.
 
 Others Python interpreters:
+
 - Refer to the documentation of your Python Notebook software.
 
 ## License
