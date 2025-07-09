@@ -63,13 +63,17 @@ class FacetBuilder:
         return self.__facet.facet_id
 
     def facet(
-        self, facet_type: FacetType, name: str = "", arrow_args: dict | None = None
+        self,
+        facet_type: FacetType,
+        name: str = "",
+        args: dict[str, Any] | None = None,
+        arrow_args: dict[str, Any] | None = None,
     ) -> FacetBuilder:
         if arrow_args is None:
             arrow_args = {}
-        facet = self._builder.facet(facet_type=facet_type, name=name).add_arrow(
-            self, **arrow_args
-        )
+        facet = self._builder.facet(
+            facet_type=facet_type, name=name, args=args
+        ).add_arrow(self, **arrow_args)
         return facet
 
     def model_facet(
@@ -77,13 +81,14 @@ class FacetBuilder:
         facet_type: FacetType,
         model_type: ModelType,
         name: str = "",
-        arrow_args: dict | None = None,
+        args: dict[str, Any] | None = None,
+        arrow_args: dict[str, Any] | None = None,
     ) -> ModelFacetBuilder:
         if arrow_args is None:
             arrow_args = {}
 
         facet = self._builder.model_facet(
-            facet_type=facet_type, model_type=model_type, name=name
+            facet_type=facet_type, model_type=model_type, name=name, args=args
         ).add_arrow(self, **arrow_args)
         return facet
 
@@ -197,20 +202,32 @@ class FlowDefinitionBuilder:
     def __init__(self) -> None:
         self._facets = []
 
-    def facet(self, facet_type: FacetType, name: str = "") -> FacetBuilder:
-        facet_builder = FacetBuilder(builder=self, facet_type=facet_type, name=name)
+    def facet(
+        self, facet_type: FacetType, name: str = "", args: dict[str, Any] | None = None
+    ) -> FacetBuilder:
+        if args is None:
+            args = {}
+        facet_builder = FacetBuilder(
+            builder=self, facet_type=facet_type, name=name
+        ).arguments(**args)
         self._facets.append(facet_builder)
         return facet_builder
 
     def model_facet(
-        self, facet_type: FacetType, model_type: ModelType, name: str = ""
+        self,
+        facet_type: FacetType,
+        model_type: ModelType,
+        name: str = "",
+        args: dict[str, Any] | None = None,
     ) -> ModelFacetBuilder:
         if facet_type.facet_uid not in KnownModelFacetUIDS.values():
             error_msg = f"{facet_type.name.title()} is not a known Model Facet"
             raise ValueError(error_msg)
+        if args is None:
+            args = {}
         facet_builder = ModelFacetBuilder(
             builder=self, facet_type=facet_type, model_type=model_type, name=name
-        )
+        ).arguments(**args)
         self._facets.append(facet_builder)
         return facet_builder
 
