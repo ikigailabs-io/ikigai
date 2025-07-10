@@ -166,7 +166,7 @@ The output resembles the following example:
         'charts': [
             {
                 'chart_id': '88888888fffffff',
-                'name': 'Dataset: junk',
+                'name': 'Dataset: Sample Chart',
                 'project_id': 'abcdefg123456',
                 'dataset_id': '4444444bbbbbbb',
                 'superset_chart_id': '40929',
@@ -322,7 +322,7 @@ default, the method displays the first 5 rows of the dataset.
 ```py
 datasets = app.datasets()             # Get all datasets in the app
 dataset = datasets["[INPUT]"]         # Get dataset named "[INPUT]"
-df = dataset.df()                     # Download dataset as a a pandas dataframe
+df = dataset.df()                     # Download dataset as a pandas dataframe
 
 df.head()
 ```
@@ -346,9 +346,9 @@ DataFrame object in the `df` variable. Next, build a new dataset named
 `new_dataset` variable returns details about the dataset.
 
 ```py
-df = pd.Dataframe({"Name": ["Alice", "Bob"], "Age": [25, 30]})
-new_dataset = app.dataset.new("New Dataset").df(df).build()
+df = pd.DataFrame({"Name": ["Alice", "Bob"], "Age": [25, 30]})
 # Build a new dataset named "New Dataset" with data df
+new_dataset = app.dataset.new("New Dataset").df(df).build()
 
 new_dataset
 ```
