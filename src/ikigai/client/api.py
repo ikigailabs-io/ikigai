@@ -202,7 +202,7 @@ class ComponentAPI:
         return cast(list[DatasetDict], datasets)
 
     def get_dataset_multipart_upload_urls(
-        self, dataset_id: str, app_id: str, filename: str, num_parts: int
+        self, dataset_id: str, app_id: str, filename: str, file_size: int
     ) -> GetDatasetMultipartUploadUrlsResponse:
         resp = self.__session.get(
             path="/component/get-dataset-multipart-upload-urls",
@@ -210,7 +210,7 @@ class ComponentAPI:
                 "dataset_id": dataset_id,
                 "project_id": app_id,
                 "filename": filename,
-                "number_of_parts": num_parts,
+                "file_size": file_size,
             },
         ).json()
 

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import io
 import logging
-import math
 import time
 from collections.abc import Mapping
 from datetime import datetime
@@ -41,13 +40,11 @@ def __upload_data(
     filename: str,
     chunk_size: int,
 ) -> None:
-    num_parts = math.ceil(len(data) / chunk_size)
-
     multipart_upload_metadata = client.component.get_dataset_multipart_upload_urls(
         dataset_id=dataset_id,
         app_id=app_id,
         filename=filename,
-        num_parts=num_parts,
+        file_size=len(data),
     )
 
     content_type = multipart_upload_metadata["content_type"]
