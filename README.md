@@ -442,6 +442,7 @@ models = app.models()
 for model in models.values():
     print(model)
 ```
+
 The output containing information about all of the app's models resembles the
 following example:
 
@@ -528,6 +529,7 @@ Model(app_id='Rt1WsGbK',
       modified_at='1659531845')
 ...
 ```
+
 ### Showing Details of a Model
 
 The example code snippet shows you how to retrieve the details of any existing
@@ -677,6 +679,7 @@ the `pprint()` function.
 model_types = ikigai.model_types
 pprint(model_types.types)
 ```
+
 The output resembles the example below:
 
 ```py
@@ -1056,6 +1059,7 @@ pprint(facet_types.INPUT.types)
 pprint(facet_types.MID.types)
 pprint(facet_types.OUTPUT.types)
 ```
+
 The output resembles the following example:
 
 ```py
@@ -1192,6 +1196,7 @@ flow_definition = (
 
 pprint(flow_definition.model_dump(), sort_dicts=False)
 ```
+
 The example output displays the details of the facets used in the flow
 definition that was created.
 
@@ -1295,6 +1300,7 @@ Imported:
       data_type: TEXT | None  options=[CATEGORICAL|NUMERIC|TEXT|TIME]
     }]
 ```
+
 #### Chaining Facets
 
 The order in which you chain a flow's facets, is the order in which they are
@@ -1789,7 +1795,3 @@ Others Python interpreters:
 
 - `ikigai` is distributed under the terms of the
   [MIT](https://spdx.org/licenses/MIT.html) license.
-
-
-
-
