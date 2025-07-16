@@ -49,29 +49,19 @@ def __upload_data(
     content_type = multipart_upload_metadata["content_type"]
     upload_urls = multipart_upload_metadata["urls"]
     upload_id = multipart_upload_metadata["upload_id"]
+
     num_chunks = len(upload_urls)
     chunk_size = math.ceil(file_size / num_chunks)
 
-    assert (
-        num_chunks - 1
-    ) * chunk_size < file_size, "Last chunk must start before the end of file"
-    assert (
-        num_chunks * chunk_size >= file_size
-    ), "Last chunk must end at the end of the file"
-
     etags: dict[int, str] = {}
-
     try:
         with requests.session() as request:
             request.headers.update(
                 {"Content-Type": content_type, "Cache-Control": "no-cache"}
             )
             for idx, (chunk_idx, upload_url) in enumerate(sorted(upload_urls.items())):
-                chunk_start, chunk_end = (
-                    idx * chunk_size,
-                    min((idx + 1) * chunk_size, file_size),
-                )
-                chunk = data[chunk_start:chunk_end]
+                chunk_start, chunk_end = (idx * chunk_size, (idx + 1) * chunk_size)
+                chunk = data[chunk_start : min(chunk_end, file_size)]
                 resp = request.put(url=upload_url, data=chunk)
                 assert resp.status_code == HTTPStatus.OK
 
