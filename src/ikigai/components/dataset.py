@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import io
 import logging
+import math
 import time
 from collections.abc import Mapping
 from datetime import datetime
@@ -27,8 +28,6 @@ from ikigai.typing.protocol import (
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
 
-CHUNK_SIZE = int(50e6)  # 50 MB
-
 logger = logging.getLogger("ikigai.components")
 
 
@@ -38,18 +37,27 @@ def __upload_data(
     dataset_id: str,
     data: bytes,
     filename: str,
-    chunk_size: int,
 ) -> None:
+    file_size = len(data)
     multipart_upload_metadata = client.component.get_dataset_multipart_upload_urls(
         dataset_id=dataset_id,
         app_id=app_id,
         filename=filename,
-        file_size=len(data),
+        file_size=file_size,
     )
 
     content_type = multipart_upload_metadata["content_type"]
     upload_urls = multipart_upload_metadata["urls"]
     upload_id = multipart_upload_metadata["upload_id"]
+    num_chunks = len(upload_urls)
+    chunk_size = math.ceil(file_size / num_chunks)
+
+    assert (
+        num_chunks - 1
+    ) * chunk_size < file_size, "Last chunk must start before the end of file"
+    assert (
+        num_chunks * chunk_size >= file_size
+    ), "Last chunk must end at the end of the file"
 
     etags: dict[int, str] = {}
 
@@ -58,10 +66,10 @@ def __upload_data(
             request.headers.update(
                 {"Content-Type": content_type, "Cache-Control": "no-cache"}
             )
-            for chunk_idx, upload_url in upload_urls.items():
+            for idx, (chunk_idx, upload_url) in enumerate(sorted(upload_urls.items())):
                 chunk_start, chunk_end = (
-                    (chunk_idx - 1) * chunk_size,
-                    chunk_idx * chunk_size,
+                    idx * chunk_size,
+                    min((idx + 1) * chunk_size, file_size),
                 )
                 chunk = data[chunk_start:chunk_end]
                 resp = request.put(url=upload_url, data=chunk)
@@ -100,7 +108,6 @@ def _upload_data(
         dataset_id=dataset_id,
         data=data,
         filename=filename,
-        chunk_size=CHUNK_SIZE,
     )
 
     upload_completion_time = time.time()
@@ -157,14 +164,14 @@ class DatasetBuilder:
     def df(self, data: pd.DataFrame) -> Self:
         buffer = io.BytesIO()
         data.to_csv(buffer, index_label=False, index=False)
-        self._data = bytearray(buffer.getvalue())
+        self._data = buffer.getvalue()
         return self
 
     def csv(self, file: Path | str) -> Self:
         if isinstance(file, str):
             file = Path(file)
         with file.open("rb") as fp:
-            self._data = bytearray(fp.read())
+            self._data = fp.read()
         return self
 
     def directory(self, directory: Directory) -> Self:
@@ -284,7 +291,7 @@ class Dataset(BaseModel):
             app_id=self.app_id,
             dataset_id=self.dataset_id,
             name=self.name,
-            data=bytearray(buffer.getvalue()),
+            data=buffer.getvalue(),
         )
 
     def describe(self) -> Mapping[str, Any]:

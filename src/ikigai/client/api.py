@@ -204,12 +204,17 @@ class ComponentAPI:
     def get_dataset_multipart_upload_urls(
         self, dataset_id: str, app_id: str, filename: str, file_size: int
     ) -> GetDatasetMultipartUploadUrlsResponse:
+        # TODO: Remove api-backwards compatibility once production apis are updated
+        # Compatability: Also provide number of parts for backwards compatability
+        CHUNK_SIZE = int(50e6)  # noqa: N806 -- 50 MB
+        num_parts = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
         resp = self.__session.get(
             path="/component/get-dataset-multipart-upload-urls",
             params={
                 "dataset_id": dataset_id,
                 "project_id": app_id,
                 "filename": filename,
+                "number_of_parts": num_parts,
                 "file_size": file_size,
             },
         ).json()
