@@ -11,6 +11,7 @@ from typing import Any
 from pydantic import AliasChoices, BaseModel, Field
 
 from ikigai.client.client import Client
+from ikigai.components.specs import SubModelSpec
 from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
 from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
@@ -18,16 +19,11 @@ from ikigai.utils.named_mapping import NamedMapping
 logger = logging.getLogger("ikigai.components")
 
 
-class ModelType(BaseModel):
-    model_type: str
-    sub_model_type: str
-
-
 class ModelBuilder:
     _app_id: str
     _name: str
     _directory: Directory | None
-    _model_type: ModelType | None
+    _model_type: SubModelSpec | None
     _description: str
     __client: Client
 
@@ -47,7 +43,7 @@ class ModelBuilder:
         self._directory = directory
         return self
 
-    def model_type(self, model_type: ModelType) -> Self:
+    def model_type(self, model_type: SubModelSpec) -> Self:
         self._model_type = model_type
         return self
 
@@ -73,23 +69,6 @@ class ModelBuilder:
         )
         model = Model.from_dict(data=model_dict, client=self.__client)
         return model
-
-    @property
-    def model_types(self) -> dict[str, dict[str, ModelType]]:
-        model_specs = self.__client.component.get_model_specs()
-
-        model_types = {
-            model_spec["name"]: {
-                sub_model_spec["name"]: ModelType(
-                    model_type=model_spec["name"],
-                    sub_model_type=sub_model_spec["name"],
-                )
-                for sub_model_spec in model_spec["sub_model_types"]
-            }
-            for model_spec in model_specs
-        }
-
-        return model_types
 
 
 class Model(BaseModel):
