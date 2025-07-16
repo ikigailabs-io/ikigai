@@ -8,9 +8,10 @@ import sys
 from collections.abc import Generator
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
+from _pytest.fixtures import FixtureRequest
 
 # Multiple python version compatible import for reading toml
 if sys.version_info >= (3, 11):
@@ -26,8 +27,9 @@ def read_credentials(env_file: Path) -> dict[str, Any]:
 
 
 @pytest.fixture(**read_credentials(Path("./test-env.toml")))
-def cred(request) -> dict[str, str]:
-    return request.param
+def cred(request: FixtureRequest) -> dict[str, str]:
+    assert isinstance(request.param, dict)
+    return cast(dict[str, str], request.param)
 
 
 @pytest.fixture
