@@ -429,7 +429,9 @@ like aiMatch for data reconciliation, aiCast for forecasting, and aiPlan for
 scenario planning. It also provides commonly used general models, like
 Clustering, Decision Trees, Dimensionality Reduction, and several more.
 
-The `ModelType` class generates a [list of all the model types](#model-types) that are available on the platform. You may want to consult this list before deciding which model you want to use in a particular flow.
+The `ModelType` class generates a [list of all the model types](#model-types)
+that are available on the platform. You may want to consult this list before
+deciding which model you want to use in a particular flow.
 
 A Model is one of the main components used to generate output that helps you
 gather insights from your data. Typically, a model ingests a dataset using an
@@ -741,6 +743,7 @@ help text for all models.
 # Help on all model types
 print(model_types.help())
 ```
+
 The example output displays the
 [aiCast model's](https://docs.ikigailabs.io/guides/aicast) help text.
 Ai Cast is used for automatic time series forecasting. Note that the `help()`
@@ -1546,9 +1549,13 @@ helps you verify which facet arguments are supported.
 
 The code gets a flow builder instance and stores it in the `flow_builder` variable.
 
-Then, an `Imported` facet is created and its required arguments are configured. This `FacetBuilder` instance is stored in the `facet_1` variable.
+Then, an `Imported` facet is created and its required arguments are configured.
+This `FacetBuilder` instance is stored in the `facet_1` variable.
 
-Next, the `model_facet()` method is called on the `FacetBuilder` instance, `facet_1`, to add a `Predict` model to the flow definition. The model is configured by calling its `arguments()`, `parameters()`, and `hyperparameters()` methods and defining values for the required parameters.
+Next, the `model_facet()` method is called on the `FacetBuilder` instance,
+`facet_1`, to add a `Predict` model to the flow definition. The model is
+configured by calling its `arguments()`, `parameters()`, and `hyperparameters()`
+methods and defining values for the required parameters.
 
 Notice that in the model's `arguments()` method an existing model that belongs
 to the app project is called (`model_name="my-model-name"`). Also, a specific
