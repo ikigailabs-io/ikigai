@@ -33,7 +33,7 @@
 
 The Ikigai Python library provides access to
 [Ikigai's Platform API](https://docs.ikigailabs.io/api/platform-api)
-from applications written in the Python language.
+for applications written in the Python language.
 
 Ikigai enables you to build artificial intelligence apps, or AI apps,
 that support business intelligence, machine learning and operational actions.
@@ -427,15 +427,48 @@ The output resembles the following example:
 The Ikigai platform generates insights using patented Large Graphical Models,
 like aiMatch for data reconciliation, aiCast for forecasting, and aiPlan for
 scenario planning. It also provides commonly used general models, like
-Clustering, Decision Trees, Dimensionality Reduction, and several more. This
-section shows you how to create and interact with models using Ikigai's Python
-Library.
+Clustering, Decision Trees, Dimensionality Reduction, and several more.
+
+The `ModelType` class generates a [list of all the model types](#model-types) that are available on the platform. You may want to consult this list before deciding which model you want to use in a particular flow.
+
+A Model is one of the main components used to generate output that helps you
+gather insights from your data. Typically, a model ingests a dataset using an
+Input facet and then exports the results using an Output facet. You might also
+modify a dataset using a data transformation facet. This sequence of steps is
+defined when building a [Flow definition](#building-a-flow-definition).
+
+Each model supports a variety of different parameters that affect the behavior
+of the model. Once you know which model your app requires, you can consult the
+[help text](#getting-help-with-model-types) connected to that model to learn
+which parameters are available and their corresponding default values and
+required types. The help text is accessible via the `ModelType` class.
+
+Once you know which model you want to use and the parameters that you need to
+define it, you can [build the new model](#creating-a-new-model) on an existing
+app object.
+
+Every time that you run a flow that contains a model, a snapshot of the model is
+created. You can view all the existing
+[versions of a model](#listing-all-versions-of-a-model) by calling the
+`versions()` method of the `Model` class. Similarly, the `describe()` method of
+the `ModelVersion` class displays
+[details related to a specific model version](#showing-details-of-model-version).
+
+Finally, you can list all existing models that are associated with an app and
+also, retrieve more details for a specific model contained within an app.
 
 ### Listing All Models
 
-The example snippet shows you how to list all models associated with a specific
-app. All the existing models are stored in the models variable. Then, a `for`
-loop is used to print out all of the models that exist within the app.
+When you create a model, it is created on an existing app object. This means
+that the model is available to the entire app and can be used in any flow that
+is also associated with the app. When building a
+[flow definition](#building-a-flow-definition), it may be useful to view a list
+of all the models that are associated with an app object.
+
+The Python snippet lists all models associated with the app object, `app`, by
+calling the `Model` class' `models()` method. This result is stored in a
+variable named `models`. A `for` loop is used to print out all of the app's
+associated models.
 
 ```py
 models = app.models()
@@ -443,8 +476,8 @@ for model in models.values():
     print(model)
 ```
 
-The output containing information about all of the app's models resembles the
-following example:
+The resulting output resembles the example and contains information,
+like the model's name, associated app id, and the model type.
 
 ```py
 Model(app_id='aB3k9QeL',
@@ -482,64 +515,25 @@ Model(app_id='N8zGyV5d',
       description='',
       created_at='1709310584',
       modified_at='1709310584')
-
-Model(app_id='W3yTx9Ra',
-      model_id='X8dLcN7b',
-      name='example_5',
-      model_type='Ai Match',
-      sub_model_type='Supervised',
-      description='',
-      created_at='1697572303',
-      modified_at='1697572333')
-
-Model(app_id='Cv0pJuMi',
-      model_id='Ee7QrYx1',
-      name='example_6',
-      model_type='Linear',
-      sub_model_type='Ridge',
-      description='',
-      created_at='1664471102',
-      modified_at='1664801084')
-
-Model(app_id='Mj6RvUq4',
-      model_id='Bs2pKzZx',
-      name='example_7',
-      model_type='Ai Match',
-      sub_model_type='Unsupervised',
-      description='',
-      created_at='1698114272',
-      modified_at='1698114509')
-
-Model(app_id='Az3FxYwN',
-      model_id='Yv9NmCe3',
-      name='example_8',
-      model_type='Decision Trees',
-      sub_model_type='Random Forest',
-      description='',
-      created_at='1653599611',
-      modified_at='1653599611')
-
-Model(app_id='Rt1WsGbK',
-      model_id='Qo5ZkLa8',
-      name='example_9',
-      model_type='Linear',
-      sub_model_type='Base',
-      description='',
-      created_at='1659531845',
-      modified_at='1659531845')
 ...
 ```
 
 ### Showing Details of a Model
 
-The example code snippet shows you how to retrieve the details of any existing
-model contained in a project app. The `app.models()` method retrieves the model
-object associated with the key `example_1`. This key is associated with the
-`name` variable of the `Model` object (see the [Listing All Models section](#listing-all-models))
+In the [Listing All Models](#listing-all-models) section, the code retrieves a
+list of all the models that are associated with a specific app object. Using the
+information provided in that list, you can retrieve more details about a
+specific model. The `describe()` method of the `Model` class uses a model's
+`name` or `description` attribute to retrieve the corresponding model instance
+and displays more details.
+
+The example Python code retrieves the model instance using its `description`
+argument and stores the model instance in the `model` variable. The model
+instance's `describe()` method is called to retrieve more details.
 
 ```py
 model = app.models()["example_1"]
-pprint(model.describe())
+print(model.describe())
 ```
 
 The example output displays the model details.
@@ -564,20 +558,26 @@ The example output displays the model details.
 
 ### Listing All Versions of a Model
 
-The Ikigai platform creates a snapshot of a model every time you last run a
-flow. The example snippet lists all versions of the model `example_1` that was
-previously stored in a variable named `model`. It calls the `versions()` method
-and uses a `for` loop to print all existing versions and the corresponding
-details of the model version.
+When you last run a flow, a snapshot of a model is created. This preserves all
+of the insights generated by the model and the parameters that generated those
+insights. See the [Flow Builder](#flowbuilder) and [Flows](#flows) section to
+learn more building a flow definition and creating a new flow.
+
+In the example code, the model instance is stored in the object named, `model`.
+Its `versions()` method is called and stored in a variable named `versions`.
+Then, a `for` loop is used to print every model version and its associated
+values.
 
 ```py
 versions = model.versions()
 for version in versions.values():
-    pprint(version)
+    print(version)
 ```
 
-The output displaying all versions of a model resembles the example below.
-In the example's case, there is only one version of the displayed model:
+The `for` loop displays all versions of the model instance. Notice that the
+output includes the `metrics` keyword that contains all of a model version's
+associated insights. In the example's case, there is only one existing version
+of the model instance.
 
 ```py
 ModelVersion(
@@ -618,16 +618,25 @@ ModelVersion(
 
 ### Showing Details of Model Version
 
-The example snippet calls the model version named `Demo` using the
-`model.versions()` method. The result is stored in the `model_version` variable.
-Then, the `.describe()` method is called and printed as output.
+Once you have identified the version of a model instance whose details you want
+to further inspect, you can use the `ModelVersion` class' `describe()` method to
+access the instance version's details.
+
+The Python snippet calls all of the versions associated with a model instance
+using `model.versions()`. Then, the value of the instance's `version` key is
+used to access a specific `ModelVersion` instance. In the example, the value of
+the `version` key is `Demo`.
+
+Once retrieved, the `ModelVersion` instance is stored in the `model_version`
+variable and its `describe()` method is called to access that version's details.
 
 ```py
 model_version = model.versions()["Demo"]
-pprint(model_version.describe())
+print(model_version.describe())
 ```
 
-The output displays the contents of the model version named `Demo`.
+When printed, the details returned by the `describe()` method resemble the
+example below:
 
 ```py
 {
@@ -663,24 +672,28 @@ The output displays the contents of the model version named `Demo`.
     'version': 'Demo',
     'version_id': 'Rt5HsJ2K'
 }
-
 ```
 
 ### Model Types
 
-The Ikigai platform offers several patented Large Language Models and general
-models for you to use. The example snippet shows you how to list all of the
-model types that are available on the platform. First, the snippet retrieves all
-of the model types using the `model_types` attribute. Next, it stores all the
-model types in the `model_types` variable. Then, it displays the results using
-the `pprint()` function.
+The Ikigai platform has several patented Large Language Models and general
+models that gather insights from a dataset. You can then perform actions on data
+based on the patterns recognized by these models. For example, aiMatch is used
+for data reconciliation, aiCast is used for forecasting, and aiPlan is used for
+scenario planning. When you are mapping out your app's requirements, it may be
+useful to view a list of all the model types that are available on the platform.
+
+In the code below, an instance of the Ikigai client is used to access the
+`model_types` object. The object is stored in a variable named `model_types`.
+The `types` attribute is accessed and returns a list of all the available model
+types.
 
 ```py
 model_types = ikigai.model_types
-pprint(model_types.types)
+print(model_types.types)
 ```
 
-The output resembles the example below:
+The `model_types`object returns a list of all of Ikigai's model types.
 
 ```py
 ['Ai Cast',
@@ -711,17 +724,28 @@ The output resembles the example below:
 
 #### Getting Help with Model Types
 
-Each available model has help text that lists and explains all of its settings
-and parameters. The example snippet retrieves the help text associated with
-every model type by calling the `model_types.help()` method.
+Each model supports a variety of different parameters and hyperparameters that
+affect its behavior and performance. These parameters allow you to control a
+model’s processing behavior, evaluation metrics, sub-model configuration, and
+fine-tuning process. You should consult a model's help text prior to creating a
+new model. The help text returns a model's parameters and hyperparameters along
+with their corresponding default values and type. The help text is accessible
+via the `ModelType` class.
+
+Continuing with the code snippet in the previous [Model Types](#model-types)
+section, the variable `model_types` stores an instance of the `ModelTypes`
+class. You are now able to use the object instance's `help()` method to access
+help text for all models.
 
 ```py
 # Help on all model types
 print(model_types.help())
 ```
-
-The output resembles the example displayed below. The example output only
-displays the help text for the aiCast model to maintain brevity.
+The example output displays the
+[aiCast model's](https://docs.ikigailabs.io/guides/aicast) help text.
+Ai Cast is used for automatic time series forecasting. Note that the `help()`
+method returns the help text for **all** models. The example output is clipped
+for brevity.
 
 ```py
 Ai_Cast = {
@@ -838,136 +862,146 @@ Ai_Cast = {
 ...
 ```
 
-The example snippet retrieves the help text for only the aiCast model using the
-`AI_CAST` object's `.help()` method.
+The previous code snippet retrieved the help text for all of the model types
+available on the platform. To retrieve a specific model's help text, access the
+model type as an attribute of a `ModelTypes` instance and call its `help()`
+method.
+
+The example snippet retrieves the help text for the aiCast model.
 
 ```py
 # Help for a specific model type
 print(model_types.AI_CAST.help())
 ```
 
-The output resembles the output displayed below:
+The code returns aiCast's help text including its associated keywords, sub-model
+types, settings, parameters, and hyperparameters.
 
 ```py
-keywords: ['AI', 'cast', 'time series', 'auto', 'ML', 'AiCast']
-sub-model types:
-  Base:
-    keywords: ['base']
-    metrics:
-      feature_importance: {}
-      performance: {
-        '0': {
-          'name': 'weighted_mean_absolute_percentage_error',
-          'parameters': {
+Ai Cast:
+    keywords: ['AI', 'cast', 'time series', 'auto', 'ML', 'AiCast']
+    sub-model types:
+      Base:
+        keywords: ['base']
+        metrics:
+          feature_importance: {}
+          performance: {
             '0': {
-              'default_value': 0.5,
-              'have_options': False,
-              'is_deprecated': False,
-              'is_hidden': False,
-              'is_list': False,
-              'name': 'overforecast_weight',
-              'options': [],
-              'parameter_type': 'NUMBER'
+              'name': 'weighted_mean_absolute_percentage_error',
+              'parameters': {
+                '0': {
+                  'default_value': 0.5,
+                  'have_options': False,
+                  'is_deprecated': False,
+                  'is_hidden': False,
+                  'is_list': False,
+                  'name': 'overforecast_weight',
+                  'options': [],
+                  'parameter_type': 'NUMBER'
+                }
+              },
+              'target_column_data_types': ['NUMERIC', 'TIME']
+            },
+            '1': {
+              'name': 'mean_absolute_percentage_error',
+              'parameters': {
+                '0': {
+                  'default_value': 0.5,
+                  'have_options': False,
+                  'is_deprecated': False,
+                  'is_hidden': False,
+                  'is_list': False,
+                  'name': 'overforecast_weight',
+                  'options': [],
+                  'parameter_type': 'NUMBER'
+                }
+              },
+              'target_column_data_types': ['NUMERIC', 'TIME']
+            },
+            '2': {
+              'name': 'mean_absolute_error',
+              'parameters': {
+                '0': {
+                  'default_value': 0.5,
+                  'have_options': False,
+                  'is_deprecated': False,
+                  'is_hidden': False,
+                  'is_list': False,
+                  'name': 'overforecast_weight',
+                  'options': [],
+                  'parameter_type': 'NUMBER'
+                }
+              },
+              'target_column_data_types': ['NUMERIC', 'TIME']
+            },
+            '3': {
+              'name': 'mean_squared_error',
+              'parameters': {
+                '0': {
+                  'default_value': 0.5,
+                  'have_options': False,
+                  'is_deprecated': False,
+                  'is_hidden': False,
+                  'is_list': False,
+                  'name': 'overforecast_weight',
+                  'options': [],
+                  'parameter_type': 'NUMBER'
+                }
+              },
+              'target_column_data_types': ['NUMERIC', 'TIME']
             }
-          },
-          'target_column_data_types': ['NUMERIC', 'TIME']
-        },
-        '1': {
-          'name': 'mean_absolute_percentage_error',
-          'parameters': {
-            '0': {
-              'default_value': 0.5,
-              'have_options': False,
-              'is_deprecated': False,
-              'is_hidden': False,
-              'is_list': False,
-              'name': 'overforecast_weight',
-              'options': [],
-              'parameter_type': 'NUMBER'
-            }
-          },
-          'target_column_data_types': ['NUMERIC', 'TIME']
-        },
-        '2': {
-          'name': 'mean_absolute_error',
-          'parameters': {
-            '0': {
-              'default_value': 0.5,
-              'have_options': False,
-              'is_deprecated': False,
-              'is_hidden': False,
-              'is_list': False,
-              'name': 'overforecast_weight',
-              'options': [],
-              'parameter_type': 'NUMBER'
-            }
-          },
-          'target_column_data_types': ['NUMERIC', 'TIME']
-        },
-        '3': {
-          'name': 'mean_squared_error',
-          'parameters': {
-            '0': {
-              'default_value': 0.5,
-              'have_options': False,
-              'is_deprecated': False,
-              'is_hidden': False,
-              'is_list': False,
-              'name': 'overforecast_weight',
-              'options': [],
-              'parameter_type': 'NUMBER'
-            }
-          },
-          'target_column_data_types': ['NUMERIC', 'TIME']
-        }
-      }
-    parameters:
-        time_column: TEXT
-        identifier_columns: list[TEXT]
-        value_column: TEXT
-        mode: TEXT = 'train'  options=[
-            train|fine_tune|inference|retrain_inference
-        ]
+          }
+        parameters:
+            time_column: TEXT
+            identifier_columns: list[TEXT]
+            value_column: TEXT
+            mode: TEXT = 'train'  options=[
+                train|fine_tune|inference|retrain_inference
+            ]
 
-    hyperparameters:
-        type: TEXT = 'base'  options=[base|hierarchical]
-        hierarchical_type: TEXT = 'bottom_up'  options=[
-            bottom_up|top_down|spatio_temporal_hierarchical|
-            spatio_temporal_grouped|spatio_hierarchical|spatio_grouped
-        ]
-        models_to_include: list[TEXT] = ['Additive', 'Lgmt1', 'Sma',
-                                         'Sarimax']  options=[
-            Additive|Sma|Deepar|Lgmt1|Last_Interval|Lgm-S|Lgbm|Random_Forest|
-            Lasso|Holt_Winters|Croston|Sarimax
-        ]
-        eval_method: TEXT = 'cv'  options=[cv|holdout]
-        time_budget: NUMBER = 100
-        computation_budget: NUMBER = 100
-        enable_parallel_processing: BOOLEAN = False
-        best_model_only: BOOLEAN = True
-        confidence: NUMBER = 0.7
-        fine_tune: list[MAP] = {
-            filter: list[TEXT] = ''
-        }
-        include_reals: BOOLEAN = True
-        nonnegative: BOOLEAN = False
-        interval_to_predict: NUMBER = 10
-        metric: TEXT = 'mean_absolute_percentage_error'  options=[
-            mean_absolute_percentage_error|mean_absolute_error|
-            mean_squared_error|weighted_mean_absolute_percentage_error
-        ]
+        hyperparameters:
+            type: TEXT = 'base'  options=[base|hierarchical]
+            hierarchical_type: TEXT = 'bottom_up'  options=[
+                bottom_up|top_down|spatio_temporal_hierarchical|
+                spatio_temporal_grouped|spatio_hierarchical|spatio_grouped
+            ]
+            models_to_include: list[TEXT] = ['Additive', 'Lgmt1', 'Sma',
+                                             'Sarimax']  options=[
+                Additive|Sma|Deepar|Lgmt1|Last_Interval|Lgm-S|Lgbm|Random_Forest|
+                Lasso|Holt_Winters|Croston|Sarimax
+            ]
+            eval_method: TEXT = 'cv'  options=[cv|holdout]
+            time_budget: NUMBER = 100
+            computation_budget: NUMBER = 100
+            enable_parallel_processing: BOOLEAN = False
+            best_model_only: BOOLEAN = True
+            confidence: NUMBER = 0.7
+            fine_tune: list[MAP] = {
+                filter: list[TEXT] = ''
+            }
+            include_reals: BOOLEAN = True
+            nonnegative: BOOLEAN = False
+            interval_to_predict: NUMBER = 10
+            metric: TEXT = 'mean_absolute_percentage_error'  options=[
+                mean_absolute_percentage_error|mean_absolute_error|
+                mean_squared_error|weighted_mean_absolute_percentage_error
+            ]
 ```
 
-The example snippet retrieves the help text for a sub-model type. The code calls
-the `.help()` method that belongs to the `Lasso` sub-model type of the `Linear`
-model type.
+Similarly, to the previous section, you may want to retrieve information about
+one of the sub-model's that is associated with a specific model. This
+information can help you further define the parameter settings for your specific
+use case.
+
+This code prints the help text for the `Lasso` sub-model of the `Linear` model
+type. It calls the `help()` method from the model_types object.
 
 ```py
 # Help for a specific sub-model type
 print(model_types.Linear.Lasso.help())
 ```
 
-The output resembles the example below:
+The code returns the help text associated with the `Lasso` sub-model.
 
 ```py
 Lasso:
@@ -1015,12 +1049,15 @@ Lasso:
 
 ### Creating a New Model
 
-To create a new model call the `.new()` method from an instance of the Model
-class and assign a value to the `name` attribute. The name used in the example
-is `Simple Linear Regression with Lasso`. Then, call `.model_type()` to
-designate the model that you want to use. In this example, the sub-model type
-`Lasso` from the `Linear` model type is used. Then, call its `.build()` method
-to create the model.
+Once you have reviewed a model's help text, you are ready to create and build
+the model. A model is instantiated via an instance of the `App` class.
+
+The example code, creates a new instance of the `ModelBuilder` class by calling
+its `new()` method and passing in an attribute for the object's `name`
+parameter. Next, using an instance of the `ModelTypes` class, the model type is
+set to `Linear.Lasso`. Finally, the ModelBuilder instance's `build()` method is
+called to create the model instance. The result of the `.build()` method is
+assigned to the variable `model`.
 
 ```py
 model = (
@@ -1032,35 +1069,51 @@ model = (
 
 ## FlowBuilder
 
-Flows are data automations that you build by connecting elements known as
-facets. Flows ingest data, transform data, and then output data. Flows can do
-anything from data cleaning to forecasting, scenario analysis, optimizing
-decisions, creating alerts, and more. This is where all of the data cleaning,
-prepping, and processing happens.
-
-The FlowBuilder Class provides access to all Ikigai facets and allows you to
-create a flow definition.
+The `FlowBuilder` class enables you to create a flow definition. The flow
+definition is where you add and configure the building blocks, or facets, that
+transform a dataset. The flow definition also includes any machine learning
+models that gather insights from a dataset. Once you have created a flow
+definition, you can add it to a [flow](#flows).
 
 ### Facet Types
 
-The example snippet creates a new instance of the `facet_types` object and
-stores it in the `facet_types` variable. Facets are broken up into three groups,
-`INPUT`, `MID`, and `OUTPUT`. The example code prints each
-group of facet types to display all available facets.
+The Ikigai Python Library offers several facets that can import and output a
+dataset and transform a dataset in a variety of ways.
 
-**Note**: If you want to add a model facet, see the
-[Adding and Configuring a Model Facet](#adding-and-configuring-a-model-facet)
-section.
+Facets that are related to importing a dataset are grouped by the `INPUT`
+attribute of an instance of the `FacetType` class. You can import a dataset from
+a variety of sources, like an external data source, or a dataset that you
+uploaded to the Ikigai platform (see the [Datasets](#datasets) section for more
+information).
+
+Facets that are related to transforming a dataset are grouped by the `MID`
+attribute of an instance of the `FacetType` class. For example, you may want to
+use a facet to join two tables of a dataset, drop missing values, or sample
+items from a table.
+
+Facets that are related to exporting a dataset are grouped by the `OUTPUT`
+attribute of an instance of the `FacetType` class. Similarly to the input
+facets, output facets can export a dataset to the Ikigai platform, an external
+dataset, and perform other operations.
+
+Before creating your flow definition, you may want to view a list of all the
+facet types that are available in each facet group. The example code shows you
+how to do this.
+
+The code gets a new instance of the `FacetTypes` class and stores it in the
+variable `facet_types`. Then, the code prints the available facet types for the
+three facet type groups, `INPUT`, `MID`, and `OUTPUT`.
 
 ```py
 facet_types = ikigai.facet_types
 
-pprint(facet_types.INPUT.types)
-pprint(facet_types.MID.types)
-pprint(facet_types.OUTPUT.types)
+print(facet_types.INPUT.types)
+print(facet_types.MID.types)
+print(facet_types.OUTPUT.types)
 ```
 
-The output resembles the following example:
+The code returns three lists containing the name attribute of each facet
+available on the Ikigai platform.
 
 ```py
 ['HANA', 'IMPORTED', 'LOAD', 'CUSTOM_FACET', 'INPUT_CONNECTOR', 'PYTHON', 'S3']
@@ -1088,7 +1141,33 @@ The output resembles the following example:
  'SUMMARY',
  'TEXT_SPLIT',
  'TRANSPOSE',
-...
+ 'ADD_CURRENT_TIME',
+ 'ADD_OR_SUBTRACT_TIME',
+ 'CHANGE_TIME_GRANULARITY',
+ 'FILTER_BY_TIME',
+ 'GET_TIME_UNIT',
+ 'ROLLING_WINDOW',
+ 'COLUMN_VALUE',
+ 'COPY',
+ 'JOIN',
+ 'SUBSTITUTE',
+ 'UNION',
+ 'AI_CAST',
+ 'AI_LLM',
+ 'AI_MATCH',
+ 'AI_PLAN',
+ 'AI_PREDICT',
+ 'PREDICT',
+ 'TIME_SERIES_ANALYSIS',
+ 'CONVERT',
+ 'EDA',
+ 'EDA_TIME_SERIES',
+ 'CUSTOM_FACET',
+ 'PYTHON']
+['HANA',
+ 'EXPORTED',
+ 'DUMP',
+ 'CUSTOM_FACET',
  'OUTPUT_CONNECTOR',
  'PYTHON',
  'S3',
@@ -1097,15 +1176,21 @@ The output resembles the following example:
 
 #### Getting Help with Facet Types
 
-The example snippet prints the help text for the facet type `Imported`.
-This facet type is part of the `Input` facet group.
+Each facet type accepts a set of arguments that define its behavior. Before
+building your flow definition, review the facet type’s help text to see its
+supported arguments, expected data types, and default values. You will need this
+information when configuring the facet type in your flow definition.
+
+The code prints the help text belonging to the facet type named `Imported` that
+belongs to the `INPUT` facet type group.
 
 ```py
 # Help for a specific facet type
 print(facet_types.INPUT.Imported.help())
 ```
 
-The example snippet resembles the following example.
+The code returns the help text for the Imported facet type, including a list of
+its supported arguments and their configurations.
 
 ```py
 Imported:
@@ -1131,25 +1216,48 @@ Imported:
 
 ### Building a Flow Definition
 
-[Intro Text]
+The flow definition is where you add and configure the building blocks, or
+facets, that transform a dataset. The flow definition also includes any machine
+learning models that gather insights from a dataset.
+
+At a high-level, the process for creating a flow definition is the following:
+
+1. Create a new instance of the `FlowBuilder` class.
+1. Add facets to the instance of the `FlowBuilder` class.
+1. Configure the facets.
+1. Build the flow definition.
+
+Chaining facets within your flow definition generates the sequence of steps
+followed by a flow. The output of one facet becomes the input to the next facet.
+Each facet performs a specific task within the flow, like importing or exporting
+data, transforming data, and modeling.
 
 #### Flow Builder & Facet Builder Objects
 
-The example Python code shows you how to create a flow definition. First, the
-code instantiates a new flow builder object and stores it in the `flow_builder`
-variable. Once you have an instance of `flow_builder`, you can begin adding
-facets to the flow builder. The order in which you add the facets is the order
-in which the facets are chained. When creating an instance of a facet you must
-include its argument settings.
+Both the `FlowBuilder` and `FacetBuilder` classes are involved in creating a
+flow definition. The example code demonstrates how to create a flow definition
+by adding facets, configuring each facet, chaining the facets, and finally,
+building the flow definition.
 
-The snippet below chains three different facets together, an `Imported` facet
-that imports an input dataset to the flow, a `COUNT` facet that groups items
-from one or more columns and counts the number of instances of each unique
-combination. Then, it adds an `EXPORTED` facet that will output a new dataset
-with all the transformations generated by the flow. Finally, the `build()`
-method is called to build the flow. To view the flow definition that has been
-created, the code prints the results of a call to the
-`flow_definition.model_dump()` method.
+In the code example, there are three different facets that are added to the flow
+builder instance. Each facet is configured by calling the facet type's
+`argument()` method and defining the relevant parameters.
+
+The first facet is an `Imported` facet that is part of the `INPUT` facet group.
+This facet imports a dataset that belongs to the app project. The output of this
+facet is the input to the second facet.
+
+The second facet is a `COUNT` facet that is part of the `MID` facet group. This
+facet receives the dataset from the previous facet and counts the number of
+instances of an item in a column of the input dataset. The output of the `COUNT`
+facet is the input to the third facet.
+
+The third facet is an `EXPORTED` facet that is part of the `Output` facet group.
+This facet receives the input from the `COUNT` facet and exports the data as a
+dataset in your app project.
+
+The flow definition is now complete and can be finalized by calling the
+`build()` method on the flow builder instance
 
 ```py
 flow_builder = (
@@ -1194,11 +1302,11 @@ flow_definition = (
     .build()
 )
 
-pprint(flow_definition.model_dump(), sort_dicts=False)
+print(flow_definition.model_dump(), sort_dicts=False)
 ```
 
-The example output displays the details of the facets used in the flow
-definition that was created.
+Calling the `model_dump()` method returns a dictionary representation of the
+flow definition that was built in the code example.
 
 ```py
 {'facets': [{'facet_id': 'e64b5624',
@@ -1229,17 +1337,26 @@ definition that was created.
 
 #### Adding and Configuring a Facet
 
-You can add and configure a facet by specifying a few of its arguments at a
-time. It does not need to be done all at once in your code. The example below
-demonstrates this method of adding a facet to a `flow_builder` instance.
+Once you have a flow builder instance, you can begin adding and configuring
+facets in the flow definition. You can configure a facet by specifying a few
+arguments at a time. The example code demonstrates this scenario.
 
-First, a new `flow_builder` instance is created and stored in a varable named
-`flow_builder`. Then, helpt text is printed for the `Imported` facet that will
-be added later. Doing this prior to adding a facet helps you check which facet
-arguments are supported. Then, the `Imported` facet is added the `flow_builder`
-instance and stored in a new variable named `imported_dataset_facet_builder`.
-Once the facet is stored in a variable, you can access it later to continue
-adding more argument settings, as demonstrated in the example code.
+The example code gets a new flow builder instance and stores it in the
+`flow_builder` variable.
+
+Notice that prior to creating the flow definition the code prints out the
+`Imported` facet's help text. The help text can be accessed by calling the
+`help()` method on a `FacetType` instance. Doing this prior to adding a facet to
+a flow definition helps you verify which facet arguments are supported.
+
+Next, the flow definition is stored in the `imported_dataset_facet_builder`
+variable. A facet of type `Imported` is added to the flow definition and
+configured by calling its `arguments()` method and specifying the required
+arguments.
+
+In the second instance of the `imported_dataset_facet_builder` flow definition,
+notice that the `Imported` facet's `arguments()` method is called twice. Each
+time a different set of facet arguments are configured.
 
 ```py
 flow_builder = (
@@ -1275,9 +1392,10 @@ imported_dataset_facet_builder = (
 )
 ```
 
-The example output shows the help text that was printed out with the
-`print(facet_types.INPUT.Imported.help())` code. It displays all of the Imported
-facet's supported arguments.
+The example output shows the help text that was printed with the
+`print(facet_types.INPUT.Imported.help())` code. The code returns all of the
+`Imported` facet's supported arguments which can help you determine what facet
+arguments need to be set.
 
 ```py
 Imported:
@@ -1303,23 +1421,38 @@ Imported:
 
 #### Chaining Facets
 
-The order in which you chain a flow's facets, is the order in which they are
-processed. The example code below demonstrates how to chain facets in a specific
-order.
+Chaining facets within your flow definition generates the sequence of steps
+followed by a flow. The output of one facet becomes the input to the next facet.
+Each facet performs a specific task within the flow, like importing or exporting
+data, transforming data, and modeling.
 
-The code creates a new `flow_builder` instance and stores it in the
-`flow_builder` variable. The example contains three different facets, `facet_1`,
-`faceet_2`, and `facet_3`. The first facet, `facet_1`, uses the facet class to
-create an `Imported` facet type and provides the required arguments.
+The code below demonstrates an alternative way to create a flow definition that
+incrementally chains one facet to another. This differs from previous examples
+that add, configure, and chain each facet all at once within a flow definition.
 
-Then, it creates `facet_2` by calling `facet_1` and adding a new facet type to
-`facet_1`. The new facet type is the `Count` facet. This chains `facet_2` to
-`facet_1`.  Next, it chains `facet_2` to `facet_3` by calling `facet_2` and
-adding a new facet type. The new facet type is an `EXPORTED` facet.
+First, the code gets a flow builder instance and stores it in the `flow_builder`
+variable.
 
-Once all the facet types are created and chained together, the code builds the
-flow definition by calling `flow_builder.build()`. The contents of the flow
-definition are printed using `flow_definition.model_dump()`.
+The first facet is created, configured, and stored in the variable `facet_1`.
+This facet is an `Imported` facet that is part of the `INPUT` facet group. This
+facet imports a dataset that belongs to the app project.
+
+Next, a `COUNT` facet is added and attached to the `Imported` facet that is
+stored in the `facet_1` variable. This new instance of the `FacetBuilder` class
+is stored in the `facet_2` variable. The `COUNT` facet receives the dataset from
+`facet_1` as input and counts the number of instances of an item in a column of
+the input dataset.
+
+Then, an `EXPORTED` facet is attached to the previous `COUNT` facet stored in,
+`facet_2`. This new instance of the `FacetBuilder` class is stored in the
+`facet_3` variable. This facet receives the input from the `COUNT` facet and
+exports the data as a dataset in your app project.
+
+Finally, the flow definition is created by calling the `build()` method on the
+flow builder instance.
+
+The contents of the flow definition are printed using
+`flow_definition.model_dump()`.
 
 ```py
 flow_builder = ikigai.builder
@@ -1355,10 +1488,11 @@ facet_3 = facet_2.facet(
 flow_definition = flow_builder.build()
 
 print("Flow Definition:")
-pprint(flow_definition.model_dump(), sort_dicts=False)
+print(flow_definition.model_dump(), sort_dicts=False)
 ```
 
-The example output displays the flow definition created by the code example.
+Calling the `model_dump()` method returns a dictionary representation of the
+flow definition that was built in the code example.
 
 ```py
 Flow Definition:
@@ -1391,19 +1525,43 @@ Flow Definition:
 #### Adding and Configuring a Model Facet
 
 Model facets include Ikigai's patented LGMs, like aiCast, aiMatch, aiPredict,
-and general models, like Clustering, Vectorizer, and Linear. The `model_facet`
-method is a part of `ModelFacetBuilder`, a subclass of `FacetBuilder`.
+and general models, like Clustering, Vectorizer, and Linear models. To create a
+flow definition that uses a model, call the `model_facet()`method. This method
+is part of `ModelFacetBuilder`, a subclass of the `FacetBuilder` class.
 
-The code below creates a facet definition with two standard facets and one model
-facet. A new `flow_builder` instance is created. Next, `facet_1` is created
-which imports the dataset to the flow. Then, a model facet is created named
-`model_facet` and is chained to `facet_1.` The model facet is a `PREDICT` facet.
-Finally, a new facet named `facet_3` is created and chained to the previous
-model facet, `model_facet`.
+You should familiarize yourself with the [Models](#models) section of the
+documentation prior to adding a Model facet to a flow definition. The Models
+section of the documentation covers how to
+[create a new model](#creating-a-new-model) in your app project. Once the model
+exists, you can add it to a flow definition in the same app project.
 
-Then, the flow definition is built by calling the `.build()` method on
-`facet_3`. The variable `flow_definition` stores the result of building the flow
-definition. Finally, the contents of the flow definition are printed by calling
+Similar to other facets, a model facet can receive input from a facet and
+generate output. The example code creates a flow definition that adds and
+configures a model facet that receives input from one facet and generates output
+that is received by another facet.
+
+Prior to creating a flow definition, you should consult the help text for each
+facet that you will use. Doing this prior to adding a facet to a flow definition
+helps you verify which facet arguments are supported.
+
+The code gets a flow builder instance and stores it in the `flow_builder` variable.
+
+Then, an `Imported` facet is created and its required arguments are configured. This `FacetBuilder` instance is stored in the `facet_1` variable.
+
+Next, the `model_facet()` method is called on the `FacetBuilder` instance, `facet_1`, to add a `Predict` model to the flow definition. The model is configured by calling its `arguments()`, `parameters()`, and `hyperparameters()` methods and defining values for the required parameters.
+
+Notice that in the model's `arguments()` method an existing model that belongs
+to the app project is called (`model_name="my-model-name"`). Also, a specific
+version of the model is called (`model_version="initial"`).
+
+Then, a new `Exported` facet is created by calling the `facet()` method of the
+model instance, `model_facet`. In this way, the output of the model instance is
+received by the `Exported` facet as input.
+
+Finally, the flow definition is built by calling the `build()` method on any of
+the instances of the `FacetBuilder` class.
+
+The contents of the flow definition are printed by calling
 `flow_definition.model_dump()`.
 
 ```py
@@ -1456,11 +1614,11 @@ facet_3 = model_facet.facet(
 flow_definition = facet_3.build()
 
 print("Flow Definition:")
-pprint(flow_definition.model_dump(), sort_dicts=False)
+print(flow_definition.model_dump(), sort_dicts=False)
 ```
 
-The example output displays the contents of the flow definition that was created
-in the example code.
+Calling the `model_dump()` method returns a dictionary representation of the
+flow definition that was built in the code example.
 
 ```py
 {
@@ -1523,24 +1681,28 @@ in the example code.
 
 #### Creating a Branch in the Flow
 
-To create more complex flows, you can use the `add_arrrow` method to create
-multiple inputs or branches that can connect facets together. The image below
-shows an example that uses two input facets that are chained to a Union facet.
-The result generated by the union facet is stored in an export facet. The
-example code will create the same flow definition using the Ikigai Python
-Library.
+To create more complex flows, you can use the `add_arrow()` method of the
+`FacetBuilder` class to create multiple inputs or branches that connect facets
+together. The image below shows an example that uses two input facets that are
+chained to a Union facet. The result generated by the union facet is stored in
+an export facet. The example code creates the same flow definition using the
+Ikigai Python Library.
 
 ![Add arrows example.](add_arrows_example.png)
 
-The code creates a new flow builder instance named, `flow_builder`. Two
-`Imported` facets are created named `import_1` and `import_2`. The facet
-`import_2` is chained to facet `import_1`. Next, a new `UNION` facet is created
-named `union_facet`. Notice that the `UNION` facet is not chained to the
-previous `Imported` facets, instead, the facet's `.add_arrow` method is used to
-add facets `import_1` and `import_2` as branched input. The argument
-`table_side` is used to order each facet in either the `top` or `bottom`
-position of the input branch. Finally, an `OUTPUT` facet is chained to the
-`UNION` facet and the `.build()` method is called to build the flow definition.
+First, the code creates a new flow builder instance named, `flow_builder`.
+
+Next, two `Imported` facets are added to the flow definition, named `import_1`
+and `import_2`. The facet `import_2` is chained to facet `import_1`. Next, a new
+`UNION` facet is created named `union_facet`. Notice that the `UNION` facet is
+not chained to the previous `Imported` facets, instead, the facet's
+`add_arrow()` method is used to add facets `import_1` and `import_2` as branched
+input. The argument `table_side` is used to order each facet in either the `top`
+or `bottom` position of the input branch.
+
+Finally, an `OUTPUT` facet is chained to the `UNION` facet and the `.build()`
+method is called to build the flow definition.
+
 The contents of the flow definition are printed by calling
 `flow_definition.model_dump()`.
 
@@ -1596,11 +1758,11 @@ flow_definition = (
 )
 
 print("Flow Definition")
-pprint(flow_definition.model_dump(), sort_dicts=False)
+print(flow_definition.model_dump(), sort_dicts=False)
 ```
 
-The example output displayes the contents of the flow definition that was
-created in the example code.
+Calling the `model_dump()` method returns a dictionary representation of the
+flow definition that was built in the code example.
 
 ```py
 Flow Definition
@@ -1659,7 +1821,7 @@ now = str(int(time.time()))[-3:]
 flow_name = f"Flow Definition Example {now}"
 
 flow = app1.flow.new(name=flow_name).definition(flow_definition).build()
-pprint(flow.model_dump(), sort_dicts=False)
+print(flow.model_dump(), sort_dicts=False)
 
 # Visit the flow on the platform
 ```
