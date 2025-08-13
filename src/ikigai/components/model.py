@@ -19,6 +19,43 @@ from ikigai.utils.named_mapping import NamedMapping
 logger = logging.getLogger("ikigai.components")
 
 
+class ModelBrowser:
+    __app_id: str
+    __client: Client
+
+    def __init__(self, app_id: str, client: Client) -> None:
+        self.__app_id = app_id
+        self.__client = client
+
+    def __call__(self) -> NamedMapping[Model]:
+        models = {
+            model["model_id"]: Model.from_dict(data=model, client=self.__client)
+            for model in self.__client.component.get_models_for_app(
+                app_id=self.__app_id
+            )
+        }
+
+        return NamedMapping(models)
+
+    def __getitem__(self, name: str) -> Model:
+        model_dict = self.__client.component.get_model_by_name(
+            app_id=self.__app_id, name=name
+        )
+        model = Model.from_dict(data=model_dict, client=self.__client)
+
+        return model
+
+    def search(self, query: str) -> NamedMapping[Model]:
+        matching_models = {
+            model["model_id"]: Model.from_dict(data=model, client=self.__client)
+            for model in self.__client.search.search_models_for_project(
+                app_id=self.__app_id, query=query
+            )
+        }
+
+        return NamedMapping(matching_models)
+
+
 class ModelBuilder:
     _app_id: str
     _name: str

@@ -527,11 +527,19 @@ class ComponentAPI:
         return resp["model_id"]
 
     def get_model(self, app_id: str, model_id: str) -> ModelDict:
-        resp = self.__session.get(
+        model = self.__session.get(
             path="/component/get-model",
             params={"project_id": app_id, "model_id": model_id},
-        ).json()
-        model = resp["model"]
+        ).json()["model"]
+
+        return cast(ModelDict, model)
+
+    def get_model_by_name(self, app_id: str, name: str) -> ModelDict:
+        model = self.__session.get(
+            path="/component/get-model",
+            params={"project_id": app_id, "name": name},
+        ).json()["model"]
+
         return cast(ModelDict, model)
 
     def get_models_for_app(
@@ -807,3 +815,15 @@ class SearchAPI:
             logger.warning(warning)
 
         return cast(list[FlowDict], flow_dict)
+
+    def search_models_for_project(self, app_id: str, query: str) -> list[ModelDict]:
+        response = self.__session.get(
+            path="/search/search-models-for-project",
+            params={"project_id": app_id, "query": query},
+        ).json()
+
+        model_dict = response["models"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[ModelDict], model_dict)

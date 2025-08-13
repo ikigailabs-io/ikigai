@@ -212,18 +212,9 @@ class App(BaseModel):
     def flow_directory(self) -> components.FlowDirectoryBuilder:
         return components.FlowDirectoryBuilder(client=self.__client, app_id=self.app_id)
 
-    def models(self) -> NamedMapping[components.Model]:
-        model_dicts = self.__client.component.get_models_for_app(app_id=self.app_id)
-
-        models = {
-            model.model_id: model
-            for model in (
-                components.Model.from_dict(data=model_dict, client=self.__client)
-                for model_dict in model_dicts
-            )
-        }
-
-        return NamedMapping(models)
+    @property
+    def models(self) -> ComponentBrowser[components.Model]:
+        return components.ModelBrowser(app_id=self.app_id, client=self.__client)
 
     @property
     def model(self) -> components.ModelBuilder:

@@ -21,6 +21,7 @@ from ikigai.components.flow import (
 from ikigai.components.flow_definition import FlowDefinitionBuilder
 from ikigai.components.model import (
     Model,
+    ModelBrowser,
     ModelBuilder,
     ModelDirectory,
     ModelDirectoryBuilder,
@@ -46,6 +47,7 @@ __all__ = [
     "FlowStatus",
     "FlowDirectory",
     "Model",
+    "ModelBrowser",
     "ModelBuilder",
     "ModelDirectory",
     "ModelDirectoryBuilder",
