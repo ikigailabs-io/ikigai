@@ -12,6 +12,7 @@ from ikigai.components.dataset import (
 )
 from ikigai.components.flow import (
     Flow,
+    FlowBrowser,
     FlowBuilder,
     FlowDirectory,
     FlowDirectoryBuilder,
@@ -38,6 +39,7 @@ __all__ = [
     "DatasetDirectoryBuilder",
     "FacetTypes",
     "Flow",
+    "FlowBrowser",
     "FlowBuilder",
     "FlowDefinitionBuilder",
     "FlowDirectoryBuilder",

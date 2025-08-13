@@ -397,6 +397,13 @@ class ComponentAPI:
 
         return cast(FlowDict, flow)
 
+    def get_flow_by_name(self, app_id: str, name: str) -> FlowDict:
+        flow = self.__session.get(
+            path="/component/get-pipeline", params={"project_id": app_id, "name": name}
+        ).json()["pipeline"]
+
+        return cast(FlowDict, flow)
+
     def get_flows_for_app(
         self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[FlowDict]:
@@ -788,3 +795,15 @@ class SearchAPI:
             logger.warning(warning)
 
         return cast(list[DatasetDict], dataset_dict)
+
+    def search_flows_for_project(self, app_id: str, query: str) -> list[FlowDict]:
+        response = self.__session.get(
+            path="/search/search-pipelines-for-project",
+            params={"project_id": app_id, "query": query},
+        ).json()
+
+        flow_dict = response["pipelines"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[FlowDict], flow_dict)

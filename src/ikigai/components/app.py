@@ -184,18 +184,9 @@ class App(BaseModel):
             client=self.__client, app_id=self.app_id
         )
 
-    def flows(self) -> NamedMapping[components.Flow]:
-        flow_dicts = self.__client.component.get_flows_for_app(app_id=self.app_id)
-
-        flows = {
-            flow.flow_id: flow
-            for flow in (
-                components.Flow.from_dict(data=flow_dict, client=self.__client)
-                for flow_dict in flow_dicts
-            )
-        }
-
-        return NamedMapping(flows)
+    @property
+    def flows(self) -> ComponentBrowser[components.Flow]:
+        return components.FlowBrowser(app_id=self.app_id, client=self.__client)
 
     @property
     def flow(self) -> components.FlowBuilder:
