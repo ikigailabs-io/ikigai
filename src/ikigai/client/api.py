@@ -32,8 +32,7 @@ from ikigai.typing.protocol import (
     ModelVersionDict,
 )
 from ikigai.typing.protocol.flow import FacetSpecsDict
-
-_UNSET: Any = object()
+from ikigai.utils.missing import MISSING, MissingType
 
 
 @dataclass
@@ -83,9 +82,9 @@ class ComponentAPI:
         return cast(AppDict, app_dict)
 
     def get_app_directories_for_user(
-        self, directory_id: str = _UNSET
+        self, directory_id: str | MissingType = MISSING
     ) -> list[DirectoryDict]:
-        if directory_id == _UNSET:
+        if directory_id is MISSING:
             directory_id = ""
 
         directory_dicts = self.__session.get(
@@ -95,15 +94,19 @@ class ComponentAPI:
 
         return cast(list[DirectoryDict], directory_dicts)
 
-    def get_apps_for_user(self, directory_id: str = _UNSET) -> list[AppDict]:
-        fetch_all = directory_id == _UNSET
-        if directory_id == _UNSET:
+    def get_apps_for_user(
+        self, directory_id: str | MissingType = MISSING
+    ) -> list[AppDict]:
+        fetch_all = directory_id is MISSING
+        if directory_id is MISSING:
             directory_id = ""
 
-        app_dicts = self.__session.get(
+        response: dict = self.__session.get(
             path="/component/get-projects-for-user",
             params={"fetch_all": fetch_all, "directory_id": directory_id},
-        ).json()["projects"]
+        ).json()
+
+        app_dicts = response["projects"]
 
         return cast(list[AppDict], app_dicts)
 
@@ -118,17 +121,17 @@ class ComponentAPI:
     def edit_app(
         self,
         app_id: str,
-        name: str = _UNSET,
-        directory: Directory = _UNSET,
-        description: str = _UNSET,
+        name: str | MissingType = MISSING,
+        directory: Directory | MissingType = MISSING,
+        description: str | MissingType = MISSING,
     ) -> str:
         app: dict[str, Any] = {"project_id": app_id}
 
-        if name != _UNSET:
+        if name is not MISSING:
             app["name"] = name
-        if directory != _UNSET:
+        if directory is not MISSING:
             app["directory"] = directory.to_dict()
-        if description != _UNSET:
+        if description is not MISSING:
             app["description"] = description
 
         resp = self.__session.post(
@@ -188,10 +191,10 @@ class ComponentAPI:
         return cast(DatasetDict, dataset)
 
     def get_datasets_for_app(
-        self, app_id: str, directory_id: str = _UNSET
+        self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[DatasetDict]:
         params = {"project_id": app_id}
-        if directory_id != _UNSET:
+        if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
         resp = self.__session.get(
@@ -243,17 +246,17 @@ class ComponentAPI:
         self,
         app_id: str,
         dataset_id: str,
-        name: str = _UNSET,
-        directory: Directory = _UNSET,
+        name: str | MissingType = MISSING,
+        directory: Directory | MissingType = MISSING,
     ) -> str:
         dataset: dict[str, Any] = {
             "project_id": app_id,
             "dataset_id": dataset_id,
         }
 
-        if name != _UNSET:
+        if name is not MISSING:
             dataset["name"] = name
-        if directory != _UNSET:
+        if directory is not MISSING:
             dataset["directory"] = directory.to_dict()
 
         resp = self.__session.post(
@@ -368,11 +371,11 @@ class ComponentAPI:
         return cast(FlowDict, flow)
 
     def get_flows_for_app(
-        self, app_id: str, directory_id: str = _UNSET
+        self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[FlowDict]:
         params = {"project_id": app_id}
 
-        if directory_id != _UNSET:
+        if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
         flows = self.__session.get(
@@ -495,10 +498,10 @@ class ComponentAPI:
         return cast(ModelDict, model)
 
     def get_models_for_app(
-        self, app_id: str, directory_id: str = _UNSET
+        self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[ModelDict]:
         params = {"project_id": app_id}
-        if directory_id != _UNSET:
+        if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
         resp = self.__session.get(
@@ -513,20 +516,20 @@ class ComponentAPI:
         self,
         app_id: str,
         model_id: str,
-        name: str = _UNSET,
-        directory: Directory = _UNSET,
-        description: str = _UNSET,
+        name: str | MissingType = MISSING,
+        directory: Directory | MissingType = MISSING,
+        description: str | MissingType = MISSING,
     ) -> str:
         model: dict[str, Any] = {
             "project_id": app_id,
             "model_id": model_id,
         }
 
-        if name != _UNSET:
+        if name is not MISSING:
             model["name"] = name
-        if directory != _UNSET:
+        if directory is not MISSING:
             model["directory"] = directory.to_dict()
-        if description != _UNSET:
+        if description is not MISSING:
             model["description"] = description
 
         resp = self.__session.post(
@@ -597,10 +600,10 @@ class ComponentAPI:
         return cast(DirectoryDict, directory)
 
     def get_dataset_directories_for_app(
-        self, app_id: str, parent: Directory = _UNSET
+        self, app_id: str, parent: Directory | MissingType = MISSING
     ) -> list[DirectoryDict]:
         params = {"project_id": app_id}
-        if parent != _UNSET:
+        if parent is not MISSING:
             params["directory_id"] = parent.directory_id
 
         resp = self.__session.get(
@@ -638,10 +641,10 @@ class ComponentAPI:
         return cast(DirectoryDict, directory)
 
     def get_flow_directories_for_app(
-        self, app_id: str, parent: Directory = _UNSET
+        self, app_id: str, parent: Directory | MissingType = MISSING
     ) -> list[DirectoryDict]:
         params = {"project_id": app_id}
-        if parent != _UNSET:
+        if parent is not MISSING:
             params["directory_id"] = parent.directory_id
 
         resp = self.__session.get(
@@ -679,10 +682,10 @@ class ComponentAPI:
         return cast(DirectoryDict, directory)
 
     def get_model_directories_for_app(
-        self, app_id: str, parent: Directory = _UNSET
+        self, app_id: str, parent: Directory | MissingType = MISSING
     ) -> list[DirectoryDict]:
         params = {"project_id": app_id}
-        if parent != _UNSET:
+        if parent is not MISSING:
             params["directory_id"] = parent.directory_id
 
         resp = self.__session.get(
