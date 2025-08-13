@@ -5,6 +5,7 @@
 from ikigai.components.app import App, AppBrowser, AppBuilder, AppDirectory
 from ikigai.components.dataset import (
     Dataset,
+    DatasetBrowser,
     DatasetBuilder,
     DatasetDirectory,
     DatasetDirectoryBuilder,
@@ -31,6 +32,7 @@ __all__ = [
     "AppBuilder",
     "AppDirectory",
     "Dataset",
+    "DatasetBrowser",
     "DatasetBuilder",
     "DatasetDirectory",
     "DatasetDirectoryBuilder",

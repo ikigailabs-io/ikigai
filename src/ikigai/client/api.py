@@ -206,6 +206,15 @@ class ComponentAPI:
 
         return cast(DatasetDict, dataset)
 
+    def get_dataset_by_name(self, app_id: str, name: str) -> DatasetDict:
+        resp = self.__session.get(
+            path="/component/get-dataset",
+            params={"project_id": app_id, "name": name},
+        ).json()
+        dataset = resp["dataset"]
+
+        return cast(DatasetDict, dataset)
+
     def get_datasets_for_app(
         self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[DatasetDict]:
@@ -767,3 +776,15 @@ class SearchAPI:
             logger.warning(warning)
 
         return cast(list[AppDict], app_dicts)
+
+    def search_datasets_for_project(self, app_id: str, query: str) -> list[DatasetDict]:
+        response = self.__session.get(
+            path="/search/search-datasets-for-project",
+            params={"project_id": app_id, "query": query},
+        ).json()
+
+        dataset_dict = response["datasets"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[DatasetDict], dataset_dict)

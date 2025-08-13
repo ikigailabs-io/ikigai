@@ -14,6 +14,7 @@ from ikigai import components
 from ikigai.client import Client
 from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
 from ikigai.utils.compatibility import Self
+from ikigai.utils.component_browser import ComponentBrowser
 from ikigai.utils.named_mapping import NamedMapping
 
 
@@ -153,17 +154,9 @@ class App(BaseModel):
     Access Components in the App
     """
 
-    def datasets(self) -> NamedMapping[components.Dataset]:
-        dataset_dicts = self.__client.component.get_datasets_for_app(app_id=self.app_id)
-        datasets = {
-            dataset.dataset_id: dataset
-            for dataset in (
-                components.Dataset.from_dict(data=dataset_dict, client=self.__client)
-                for dataset_dict in dataset_dicts
-            )
-        }
-
-        return NamedMapping(datasets)
+    @property
+    def datasets(self) -> ComponentBrowser[components.Dataset]:
+        return components.DatasetBrowser(app_id=self.app_id, client=self.__client)
 
     @property
     def dataset(self) -> components.DatasetBuilder:
