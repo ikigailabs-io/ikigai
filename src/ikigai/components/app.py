@@ -17,6 +17,35 @@ from ikigai.utils.compatibility import Self
 from ikigai.utils.named_mapping import NamedMapping
 
 
+class AppBrowser:
+    __client: Client
+
+    def __init__(self, client: Client) -> None:
+        self.__client = client
+
+    def __call__(self) -> NamedMapping[App]:
+        apps = {
+            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
+            for app in self.__client.component.get_apps_for_user()
+        }
+
+        return NamedMapping(apps)
+
+    def __getitem__(self, name: str) -> App:
+        app_dict = self.__client.component.get_app_by_name(name)
+        app = components.App.from_dict(data=app_dict, client=self.__client)
+
+        return app
+
+    def search(self, query: str) -> NamedMapping[App]:
+        matching_apps = {
+            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
+            for app in self.__client.search.search_projects_for_user(query=query)
+        }
+
+        return NamedMapping(matching_apps)
+
+
 class AppBuilder:
     _name: str
     _description: str

@@ -84,6 +84,13 @@ class ComponentAPI:
 
         return cast(AppDict, app_dict)
 
+    def get_app_by_name(self, name: str) -> AppDict:
+        app_dict = self.__session.get(
+            path="/component/get-project", params={"name": name}
+        ).json()["project"]
+
+        return cast(AppDict, app_dict)
+
     def get_app_directories_for_user(
         self, directory_id: str | MissingType = MISSING
     ) -> list[DirectoryDict]:
@@ -734,3 +741,29 @@ class ComponentAPI:
         model_specs = resp.values()
 
         return cast(list[ModelSpecDict], model_specs)
+
+
+@dataclass
+class SearchAPI:
+    # Init only vars
+    session: InitVar[Session]
+
+    __session: Session = Field(init=False)
+
+    def __post_init__(self, session: Session) -> None:
+        self.__session = session
+
+    """
+    Search APIs
+    """
+
+    def search_projects_for_user(self, query: str) -> list[AppDict]:
+        response = self.__session.get(
+            path="/search/search-projects-for-user", params={"query": query}
+        ).json()
+
+        app_dicts = response["projects"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[AppDict], app_dicts)

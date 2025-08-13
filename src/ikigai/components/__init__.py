@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.components.app import App, AppBuilder, AppDirectory
+from ikigai.components.app import App, AppBrowser, AppBuilder, AppDirectory
 from ikigai.components.dataset import (
     Dataset,
     DatasetBuilder,
@@ -27,6 +27,7 @@ from ikigai.components.specs import FacetTypes, ModelTypes
 
 __all__ = [
     "App",
+    "AppBrowser",
     "AppBuilder",
     "AppDirectory",
     "Dataset",

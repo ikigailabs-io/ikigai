@@ -7,6 +7,7 @@ from pydantic.dataclasses import dataclass
 
 from ikigai import components
 from ikigai.client import Client
+from ikigai.utils.component_browser import ComponentBrowser
 from ikigai.utils.named_mapping import NamedMapping
 
 
@@ -22,17 +23,9 @@ class Ikigai:
             user_email=self.user_email, api_key=self.api_key, base_url=self.base_url
         )
 
-    def apps(self) -> NamedMapping[components.App]:
-        app_dicts = self.__client.component.get_apps_for_user()
-        apps = {
-            app.app_id: app
-            for app in (
-                components.App.from_dict(data=app_dict, client=self.__client)
-                for app_dict in app_dicts
-            )
-        }
-
-        return NamedMapping(apps)
+    @property
+    def apps(self) -> ComponentBrowser[components.App]:
+        return components.AppBrowser(client=self.__client)
 
     @property
     def app(self) -> components.AppBuilder:
