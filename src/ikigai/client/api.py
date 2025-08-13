@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import InitVar
 from functools import cache
 from typing import Any, cast
@@ -33,6 +34,8 @@ from ikigai.typing.protocol import (
 )
 from ikigai.typing.protocol.flow import FacetSpecsDict
 from ikigai.utils.missing import MISSING, MissingType
+
+logger = logging.getLogger("ikigai.client.api")
 
 
 @dataclass
@@ -111,6 +114,8 @@ class ComponentAPI:
         ).json()
 
         app_dicts = response["projects"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[AppDict], app_dicts)
 
@@ -201,11 +206,13 @@ class ComponentAPI:
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
-        resp = self.__session.get(
+        response = self.__session.get(
             path="/component/get-datasets-for-project",
             params=params,
         ).json()
-        datasets = resp["datasets"]
+        datasets = response["datasets"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[DatasetDict], datasets)
 
@@ -381,10 +388,14 @@ class ComponentAPI:
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
-        flows = self.__session.get(
+        response = self.__session.get(
             path="/component/get-pipelines-for-project",
             params=params,
-        ).json()["pipelines"]
+        ).json()
+
+        flows = response["pipelines"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[FlowDict], flows)
 
@@ -507,11 +518,14 @@ class ComponentAPI:
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
-        resp = self.__session.get(
+        response = self.__session.get(
             path="/component/get-models-for-project",
             params=params,
         ).json()
-        models = resp["models"]
+
+        models = response["models"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[ModelDict], models)
 
