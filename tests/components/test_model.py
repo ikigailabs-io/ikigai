@@ -110,3 +110,45 @@ def test_model_describe(
     assert model_description is not None
     assert model_description["name"] == model.name
     assert model_description["description"] == model.description
+
+
+def test_model_browser_1(
+    ikigai: Ikigai, app_name: str, model_name: str, cleanup: ExitStack
+) -> None:
+    app = ikigai.app.new(name=app_name).description("Test to get model by name").build()
+    cleanup.callback(app.delete)
+
+    model_types = ikigai.model_types
+    model = (
+        app.model.new(name=model_name)
+        .model_type(model_type=model_types["Linear"]["Lasso"])
+        .build()
+    )
+    cleanup.callback(model.delete)
+
+    fetched_model = app.models[model_name]
+    assert fetched_model.model_id == model.model_id
+    assert fetched_model.name == model_name
+
+
+def test_model_browser_search_1(
+    ikigai: Ikigai, app_name: str, model_name: str, cleanup: ExitStack
+) -> None:
+    app = ikigai.app.new(name=app_name).description("Test to get model by name").build()
+    cleanup.callback(app.delete)
+
+    model_types = ikigai.model_types
+    model = (
+        app.model.new(name=model_name)
+        .model_type(model_type=model_types["Linear"]["Lasso"])
+        .build()
+    )
+    cleanup.callback(model.delete)
+
+    model_name_substr = model_name.split("-", maxsplit=1)[1]
+    fetched_models = app.models.search(model_name_substr)
+
+    assert model_name in fetched_models
+    fetched_model = fetched_models[model_name]
+
+    assert fetched_model.model_id

@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-from collections import abc
+from collections import Counter, abc
 from collections.abc import Mapping
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from ikigai.typing.protocol import Named
 
@@ -13,22 +13,31 @@ VT = TypeVar("VT", bound=Named)
 
 class NamedMapping(Generic[VT], Mapping[str, VT]):
     def __init__(self, mapping: Mapping[str, VT]) -> None:
-        self._mapping = dict(mapping)
+        self._names = Counter(item.name for item in self._mapping.values())
+        self._mapping: Mapping[str, VT] = mapping
 
     def __getitem__(self, key: str) -> VT:
-        matches = [item for item in self._mapping.values() if item.name == key]
-        if not matches:
+        count = self._names[key]
+        if count == 0:
             raise KeyError(key)
-        if len(matches) > 1:
+
+        matches = [item for item in self._mapping.values() if item.name == key]
+        if count > 1:
             error_msg = (
-                f'Multiple({len(matches)}) items with name: "{key}", '
-                f'use get_id(id="...") to disambiguiate between {matches}'
+                f'Multiple({count}) items with name: "{key}", '
+                f'use get_id(id="...") to disambiguiate between them'
             )
-            raise KeyError(error_msg)
+            raise KeyError(error_msg, matches)
+
         return matches[0]
 
+    def __contains__(self, key: Any) -> bool:
+        if name := getattr(key, "name", None):
+            key = name
+        return key in self._names
+
     def __iter__(self) -> abc.Iterator[str]:
-        return iter({item.name for item in self._mapping.values()})
+        return iter(self._names)
 
     def __len__(self) -> int:
         return len(self._mapping)
