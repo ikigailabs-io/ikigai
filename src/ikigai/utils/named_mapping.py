@@ -13,7 +13,7 @@ VT = TypeVar("VT", bound=Named)
 
 class NamedMapping(Generic[VT], Mapping[str, VT]):
     def __init__(self, mapping: Mapping[str, VT]) -> None:
-        self._names = Counter(item.name for item in self._mapping.values())
+        self._names = Counter(item.name for item in mapping.values())
         self._mapping: Mapping[str, VT] = mapping
 
     def __getitem__(self, key: str) -> VT:
