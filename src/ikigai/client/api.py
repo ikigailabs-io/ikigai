@@ -84,12 +84,17 @@ class ComponentAPI:
     def get_app_directories_for_user(
         self, directory_id: str | MissingType = MISSING
     ) -> list[DirectoryDict]:
-        if directory_id is MISSING:
-            directory_id = ""
+        """
+        NOTE: Platform should add a fetch_all field to distinguish between root
+            directory and no directory, in anticipation of this we just pass it in.
+        """
+        params: dict[str, Any] = {"fetch_all": directory_id is MISSING}
+        if directory_id is not MISSING:
+            params["directory_id"] = directory_id
 
         directory_dicts = self.__session.get(
             path="/component/get-project-directories-for-user",
-            params={"directory_id": directory_id},
+            params=params,
         ).json()["directories"]
 
         return cast(list[DirectoryDict], directory_dicts)
@@ -97,13 +102,12 @@ class ComponentAPI:
     def get_apps_for_user(
         self, directory_id: str | MissingType = MISSING
     ) -> list[AppDict]:
-        fetch_all = directory_id is MISSING
-        if directory_id is MISSING:
-            directory_id = ""
+        params: dict[str, Any] = {"fetch_all": directory_id is MISSING}
+        if directory_id is not MISSING:
+            params["directory_id"] = directory_id
 
         response: dict = self.__session.get(
-            path="/component/get-projects-for-user",
-            params={"fetch_all": fetch_all, "directory_id": directory_id},
+            path="/component/get-projects-for-user", params=params
         ).json()
 
         app_dicts = response["projects"]
@@ -193,7 +197,7 @@ class ComponentAPI:
     def get_datasets_for_app(
         self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[DatasetDict]:
-        params = {"project_id": app_id}
+        params = {"project_id": app_id, "fetch_all": directory_id is MISSING}
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
@@ -373,8 +377,7 @@ class ComponentAPI:
     def get_flows_for_app(
         self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[FlowDict]:
-        params = {"project_id": app_id}
-
+        params = {"project_id": app_id, "fetch_all": directory_id is MISSING}
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
@@ -500,7 +503,7 @@ class ComponentAPI:
     def get_models_for_app(
         self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[ModelDict]:
-        params = {"project_id": app_id}
+        params = {"project_id": app_id, "fetch_all": directory_id is MISSING}
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 

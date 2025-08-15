@@ -177,7 +177,7 @@ def test_iplt_7641_datasets(
 ) -> None:
     app = (
         ikigai.app.new(name=app_name)
-        .description("An app to test that app.flows gets all flows")
+        .description("To test that app.datasets gets all datasets")
         .build()
     )
     cleanup.callback(app.delete)
