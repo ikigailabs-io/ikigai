@@ -14,7 +14,37 @@ from ikigai import components
 from ikigai.client import Client
 from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
 from ikigai.utils.compatibility import Self
+from ikigai.utils.component_browser import ComponentBrowser
 from ikigai.utils.named_mapping import NamedMapping
+
+
+class AppBrowser:
+    __client: Client
+
+    def __init__(self, client: Client) -> None:
+        self.__client = client
+
+    def __call__(self) -> NamedMapping[App]:
+        apps = {
+            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
+            for app in self.__client.component.get_apps_for_user()
+        }
+
+        return NamedMapping(apps)
+
+    def __getitem__(self, name: str) -> App:
+        app_dict = self.__client.component.get_app_by_name(name)
+        app = components.App.from_dict(data=app_dict, client=self.__client)
+
+        return app
+
+    def search(self, query: str) -> NamedMapping[App]:
+        matching_apps = {
+            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
+            for app in self.__client.search.search_projects_for_user(query=query)
+        }
+
+        return NamedMapping(matching_apps)
 
 
 class AppBuilder:
@@ -124,17 +154,9 @@ class App(BaseModel):
     Access Components in the App
     """
 
-    def datasets(self) -> NamedMapping[components.Dataset]:
-        dataset_dicts = self.__client.component.get_datasets_for_app(app_id=self.app_id)
-        datasets = {
-            dataset.dataset_id: dataset
-            for dataset in (
-                components.Dataset.from_dict(data=dataset_dict, client=self.__client)
-                for dataset_dict in dataset_dicts
-            )
-        }
-
-        return NamedMapping(datasets)
+    @property
+    def datasets(self) -> ComponentBrowser[components.Dataset]:
+        return components.DatasetBrowser(app_id=self.app_id, client=self.__client)
 
     @property
     def dataset(self) -> components.DatasetBuilder:
@@ -162,18 +184,9 @@ class App(BaseModel):
             client=self.__client, app_id=self.app_id
         )
 
-    def flows(self) -> NamedMapping[components.Flow]:
-        flow_dicts = self.__client.component.get_flows_for_app(app_id=self.app_id)
-
-        flows = {
-            flow.flow_id: flow
-            for flow in (
-                components.Flow.from_dict(data=flow_dict, client=self.__client)
-                for flow_dict in flow_dicts
-            )
-        }
-
-        return NamedMapping(flows)
+    @property
+    def flows(self) -> ComponentBrowser[components.Flow]:
+        return components.FlowBrowser(app_id=self.app_id, client=self.__client)
 
     @property
     def flow(self) -> components.FlowBuilder:
@@ -199,18 +212,9 @@ class App(BaseModel):
     def flow_directory(self) -> components.FlowDirectoryBuilder:
         return components.FlowDirectoryBuilder(client=self.__client, app_id=self.app_id)
 
-    def models(self) -> NamedMapping[components.Model]:
-        model_dicts = self.__client.component.get_models_for_app(app_id=self.app_id)
-
-        models = {
-            model.model_id: model
-            for model in (
-                components.Model.from_dict(data=model_dict, client=self.__client)
-                for model_dict in model_dicts
-            )
-        }
-
-        return NamedMapping(models)
+    @property
+    def models(self) -> ComponentBrowser[components.Model]:
+        return components.ModelBrowser(app_id=self.app_id, client=self.__client)
 
     @property
     def model(self) -> components.ModelBuilder:

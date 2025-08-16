@@ -63,3 +63,28 @@ def test_app_directory(ikigai: Ikigai) -> None:
 
     # TODO: Update test when creating app directories is available
     assert len(app_directories) == 0
+
+
+def test_app_browser_1(ikigai: Ikigai, app_name: str, cleanup: ExitStack) -> None:
+    app = ikigai.app.new(name=app_name).description("Get by name").build()
+    cleanup.callback(app.delete)
+
+    fetched_app = ikigai.apps[app_name]
+    assert fetched_app.app_id == app.app_id
+    assert fetched_app.name == app_name
+
+
+def test_app_browser_search_1(
+    ikigai: Ikigai, app_name: str, cleanup: ExitStack
+) -> None:
+    app = ikigai.app.new(name=app_name).description("Get by name").build()
+    cleanup.callback(app.delete)
+
+    app_name_substr = app_name.split("-", maxsplit=1)[1]
+    fetched_apps = ikigai.apps.search(app_name_substr)
+
+    assert app_name in fetched_apps
+    fetched_app = fetched_apps[app_name]
+
+    assert fetched_app.app_id == app.app_id
+    assert fetched_app.name == app.name == app_name

@@ -301,6 +301,38 @@ def test_flow_directories_creation(
     assert len(flow_directory.flows()) == 0
 
 
+def test_flow_browser_1(
+    ikigai: Ikigai, app_name: str, flow_name: str, cleanup: ExitStack
+) -> None:
+    app = ikigai.app.new(name=app_name).description("Test to get flow by name").build()
+    cleanup.callback(app.delete)
+
+    flow = app.flow.new(name=flow_name).build()
+    cleanup.callback(flow.delete)
+
+    fetched_flow = app.flows[flow_name]
+    assert fetched_flow.flow_id == flow.flow_id
+    assert fetched_flow.name == flow_name
+
+
+def test_flow_browser_search_1(
+    ikigai: Ikigai, app_name: str, flow_name: str, cleanup: ExitStack
+) -> None:
+    app = ikigai.app.new(name=app_name).description("Test to get flow by name").build()
+    cleanup.callback(app.delete)
+
+    flow = app.flow.new(name=flow_name).build()
+    cleanup.callback(flow.delete)
+
+    flow_name_substr = flow_name.split("-", maxsplit=1)[1]
+    fetched_flows = app.flows.search(flow_name_substr)
+
+    assert flow_name in fetched_flows
+    fetched_flow = fetched_flows[flow_name]
+
+    assert fetched_flow.flow_id
+
+
 """
 Regression Testing
 

@@ -31,6 +31,41 @@ from ikigai.utils.shim import flow_versioning_shim
 logger = logging.getLogger("ikigai.components")
 
 
+class FlowBrowser:
+    __app_id: str
+    __client: Client
+
+    def __init__(self, app_id: str, client: Client) -> None:
+        self.__app_id = app_id
+        self.__client = client
+
+    def __call__(self) -> NamedMapping[Flow]:
+        flows = {
+            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
+            for flow in self.__client.component.get_flows_for_app(app_id=self.__app_id)
+        }
+
+        return NamedMapping(flows)
+
+    def __getitem__(self, name: str) -> Flow:
+        flow_dict = self.__client.component.get_flow_by_name(
+            app_id=self.__app_id, name=name
+        )
+        flow = Flow.from_dict(data=flow_dict, client=self.__client)
+
+        return flow
+
+    def search(self, query: str) -> NamedMapping[Flow]:
+        matched_flows = {
+            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
+            for flow in self.__client.search.search_flows_for_project(
+                app_id=self.__app_id, query=query
+            )
+        }
+
+        return NamedMapping(matched_flows)
+
+
 class FlowBuilder:
     _app_id: str
     _name: str

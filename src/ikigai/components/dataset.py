@@ -133,6 +133,43 @@ def _upload_data(
         raise RuntimeError(error_msg, dataset_logs)
 
 
+class DatasetBrowser:
+    __app_id: str
+    __client: Client
+
+    def __init__(self, app_id: str, client: Client) -> None:
+        self.__app_id = app_id
+        self.__client = client
+
+    def __call__(self) -> NamedMapping[Dataset]:
+        datasets = {
+            dataset["dataset_id"]: Dataset.from_dict(data=dataset, client=self.__client)
+            for dataset in self.__client.component.get_datasets_for_app(
+                app_id=self.__app_id
+            )
+        }
+
+        return NamedMapping(datasets)
+
+    def __getitem__(self, name: str) -> Dataset:
+        dataset_dict = self.__client.component.get_dataset_by_name(
+            app_id=self.__app_id, name=name
+        )
+        dataset = Dataset.from_dict(data=dataset_dict, client=self.__client)
+
+        return dataset
+
+    def search(self, query: str) -> NamedMapping[Dataset]:
+        matching_datasets = {
+            dataset["dataset_id"]: Dataset.from_dict(data=dataset, client=self.__client)
+            for dataset in self.__client.search.search_datasets_for_project(
+                app_id=self.__app_id, query=query
+            )
+        }
+
+        return NamedMapping(matching_datasets)
+
+
 class DatasetBuilder:
     _app_id: str
     _name: str

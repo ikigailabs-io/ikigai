@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import InitVar
 from functools import cache
 from typing import Any, cast
@@ -33,6 +34,8 @@ from ikigai.typing.protocol import (
 )
 from ikigai.typing.protocol.flow import FacetSpecsDict
 from ikigai.utils.missing import MISSING, MissingType
+
+logger = logging.getLogger("ikigai.client.api")
 
 
 @dataclass
@@ -81,6 +84,13 @@ class ComponentAPI:
 
         return cast(AppDict, app_dict)
 
+    def get_app_by_name(self, name: str) -> AppDict:
+        app_dict = self.__session.get(
+            path="/component/get-project", params={"name": name}
+        ).json()["project"]
+
+        return cast(AppDict, app_dict)
+
     def get_app_directories_for_user(
         self, directory_id: str | MissingType = MISSING
     ) -> list[DirectoryDict]:
@@ -111,6 +121,8 @@ class ComponentAPI:
         ).json()
 
         app_dicts = response["projects"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[AppDict], app_dicts)
 
@@ -194,6 +206,15 @@ class ComponentAPI:
 
         return cast(DatasetDict, dataset)
 
+    def get_dataset_by_name(self, app_id: str, name: str) -> DatasetDict:
+        resp = self.__session.get(
+            path="/component/get-dataset",
+            params={"project_id": app_id, "name": name},
+        ).json()
+        dataset = resp["dataset"]
+
+        return cast(DatasetDict, dataset)
+
     def get_datasets_for_app(
         self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[DatasetDict]:
@@ -201,11 +222,13 @@ class ComponentAPI:
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
-        resp = self.__session.get(
+        response = self.__session.get(
             path="/component/get-datasets-for-project",
             params=params,
         ).json()
-        datasets = resp["datasets"]
+        datasets = response["datasets"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[DatasetDict], datasets)
 
@@ -374,6 +397,13 @@ class ComponentAPI:
 
         return cast(FlowDict, flow)
 
+    def get_flow_by_name(self, app_id: str, name: str) -> FlowDict:
+        flow = self.__session.get(
+            path="/component/get-pipeline", params={"project_id": app_id, "name": name}
+        ).json()["pipeline"]
+
+        return cast(FlowDict, flow)
+
     def get_flows_for_app(
         self, app_id: str, directory_id: str | MissingType = MISSING
     ) -> list[FlowDict]:
@@ -381,10 +411,14 @@ class ComponentAPI:
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
-        flows = self.__session.get(
+        response = self.__session.get(
             path="/component/get-pipelines-for-project",
             params=params,
-        ).json()["pipelines"]
+        ).json()
+
+        flows = response["pipelines"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[FlowDict], flows)
 
@@ -493,11 +527,19 @@ class ComponentAPI:
         return resp["model_id"]
 
     def get_model(self, app_id: str, model_id: str) -> ModelDict:
-        resp = self.__session.get(
+        model = self.__session.get(
             path="/component/get-model",
             params={"project_id": app_id, "model_id": model_id},
-        ).json()
-        model = resp["model"]
+        ).json()["model"]
+
+        return cast(ModelDict, model)
+
+    def get_model_by_name(self, app_id: str, name: str) -> ModelDict:
+        model = self.__session.get(
+            path="/component/get-model",
+            params={"project_id": app_id, "name": name},
+        ).json()["model"]
+
         return cast(ModelDict, model)
 
     def get_models_for_app(
@@ -507,11 +549,14 @@ class ComponentAPI:
         if directory_id is not MISSING:
             params["directory_id"] = directory_id
 
-        resp = self.__session.get(
+        response = self.__session.get(
             path="/component/get-models-for-project",
             params=params,
         ).json()
-        models = resp["models"]
+
+        models = response["models"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
 
         return cast(list[ModelDict], models)
 
@@ -720,3 +765,65 @@ class ComponentAPI:
         model_specs = resp.values()
 
         return cast(list[ModelSpecDict], model_specs)
+
+
+@dataclass
+class SearchAPI:
+    # Init only vars
+    session: InitVar[Session]
+
+    __session: Session = Field(init=False)
+
+    def __post_init__(self, session: Session) -> None:
+        self.__session = session
+
+    """
+    Search APIs
+    """
+
+    def search_projects_for_user(self, query: str) -> list[AppDict]:
+        response = self.__session.get(
+            path="/search/search-projects-for-user", params={"query": query}
+        ).json()
+
+        app_dicts = response["projects"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[AppDict], app_dicts)
+
+    def search_datasets_for_project(self, app_id: str, query: str) -> list[DatasetDict]:
+        response = self.__session.get(
+            path="/search/search-datasets-for-project",
+            params={"project_id": app_id, "query": query},
+        ).json()
+
+        dataset_dict = response["datasets"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[DatasetDict], dataset_dict)
+
+    def search_flows_for_project(self, app_id: str, query: str) -> list[FlowDict]:
+        response = self.__session.get(
+            path="/search/search-pipelines-for-project",
+            params={"project_id": app_id, "query": query},
+        ).json()
+
+        flow_dict = response["pipelines"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[FlowDict], flow_dict)
+
+    def search_models_for_project(self, app_id: str, query: str) -> list[ModelDict]:
+        response = self.__session.get(
+            path="/search/search-models-for-project",
+            params={"project_id": app_id, "query": query},
+        ).json()
+
+        model_dict = response["models"]
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return cast(list[ModelDict], model_dict)

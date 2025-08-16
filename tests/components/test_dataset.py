@@ -159,6 +159,50 @@ def test_dataset_directories_creation(
     assert len(dataset_directory.datasets()) == 0
 
 
+def test_dataset_browser_1(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
+) -> None:
+    app = (
+        ikigai.app.new(name=app_name).description("Test to get dataset by name").build()
+    )
+    cleanup.callback(app.delete)
+
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
+    cleanup.callback(dataset.delete)
+
+    fetched_dataset = app.datasets[dataset_name]
+    assert fetched_dataset.dataset_id == dataset.dataset_id
+    assert fetched_dataset.name == dataset_name
+
+
+def test_dataset_browser_search_1(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
+) -> None:
+    app = (
+        ikigai.app.new(name=app_name).description("Test to get dataset by name").build()
+    )
+    cleanup.callback(app.delete)
+
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
+    cleanup.callback(dataset.delete)
+
+    dataset_name_substr = dataset_name.split("-", maxsplit=1)[1]
+    fetched_datasets = app.datasets.search(dataset_name_substr)
+
+    assert dataset_name in fetched_datasets
+    fetched_dataset = fetched_datasets[dataset_name]
+
+    assert fetched_dataset.dataset_id
+
+
 """
 Regression Testing
 
