@@ -55,4 +55,4 @@ jobs:
         TEST_ENV: ${{ secrets.TEST_ENV_TOML }}
       run: |
         printf "%s" "$TEST_ENV" > ./test-env.toml
-        hatch test --all --parallel --maxprocesses=5 -- -x
+        hatch test --all --parallel -n 5 --maxprocesses=5 -- -x
