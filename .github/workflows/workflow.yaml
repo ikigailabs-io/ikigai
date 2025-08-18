@@ -28,6 +28,12 @@ jobs:
         uses: pypa/hatch@install
         with:
           version: 1.13.0
+      - name: Run tests
+        env:
+          TEST_ENV: ${{ secrets.TEST_ENV_TOML }}
+        run: |
+          printf "%s" "$TEST_ENV" > ./test-env.toml
+          hatch test --all --parallel -n 8 -- -x
       - name: Build release distributions
         run: hatch build
       - name: Upload distributions
