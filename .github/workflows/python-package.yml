@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python Tests
+name: Checks
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  lint:
+  lint-python:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -24,6 +24,10 @@ jobs:
       run: hatch fmt --check
     - name: Type Check
       run: hatch run types:check
+
+  lint-docs:
+    runs-on: ubuntu-latest
+    steps:
     - name: Collect changed files
       uses: tj-actions/changed-files@v46
       id: changed-files
@@ -37,10 +41,10 @@ jobs:
         globs: ${{ steps.changed-files.outputs.all_changed_files }}
         separator: ","
 
-  test:
+  test-python:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
+    # strategy:
+      # fail-fast: false
 
     steps:
     - uses: actions/checkout@v4
@@ -55,4 +59,4 @@ jobs:
         TEST_ENV: ${{ secrets.TEST_ENV_TOML }}
       run: |
         printf "%s" "$TEST_ENV" > ./test-env.toml
-        hatch test --all --parallel -n 5 --maxprocesses=5 -- -x
+        hatch test --all --parallel -n 8 -- -x
