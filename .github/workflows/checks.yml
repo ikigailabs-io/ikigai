@@ -4,8 +4,6 @@
 name: Checks
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -28,18 +26,11 @@ jobs:
   lint-docs:
     runs-on: ubuntu-latest
     steps:
-    - name: Collect changed files
-      uses: tj-actions/changed-files@v46
-      id: changed-files
-      with:
-        files: '**/*.md'
-        separator: ","
+    - uses: actions/checkout@v4
     - name: Lint docs
       uses: DavidAnson/markdownlint-cli2-action@v20
-      if: steps.changed-files.outputs.any_changed == 'true'
       with:
-        globs: ${{ steps.changed-files.outputs.all_changed_files }}
-        separator: ","
+        globs: '**/*.md'
 
   test-python:
     runs-on: ubuntu-latest
@@ -54,7 +45,14 @@ jobs:
       uses: pypa/hatch@install
       with:
         version: 1.13.0
+    - name: Collect changed files (py)
+      uses: tj-actions/changed-files@v46
+      id: changed-files-py
+      with:
+        files: '**/*.py'
+        separator: ","
     - name: Run tests
+      if: steps.changed-files-py.outputs.any_changed == 'true'
       env:
         TEST_ENV: ${{ secrets.TEST_ENV_TOML }}
       run: |
