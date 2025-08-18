@@ -1,6 +1,6 @@
 # ikigai
 
-**Table of Contents**
+## Table of Contents
 
 - [Types of Contributions](#types-of-contributions)
 - [Getting Started](#getting-started)
@@ -19,24 +19,30 @@ If you are reporting a bug, please include:
 
 - Your installed ikigai package version, operating system name and version.
 - Any details about your local setup that might be helpful in troubleshooting.
-- Detailed steps to reproduce the bug including any relevant code snippets or setup on the ikigai platform.
+- Detailed steps to reproduce the bug including any relevant code snippets
+  or setup on the ikigai platform.
 - Any tracebacks that were encountered and the expected outcome.
 
 ### Submit Feedback
 
-If you would like to request some feature or QOL improvements to the library you can send us an email requesting the feature.
+If you would like to request some feature or QOL improvements to the library
+you can send us an email requesting the feature.
 
 When proposing a feature please:
 
-- Explain in detail how you would like it to work; what usecase does it enable or simplify?
-- Try to keep the scope as detailed and narrow as possible to improve turn-around times.
+- Explain in detail how you would like it to work;
+  what usecase does it enable or simplify?
+- Try to keep the scope as detailed and narrow as possible to improve
+  turn-around times.
 
 ## Getting Started
 
-Ready to contribute to the library? Here's the steps to get you started with developing the library and testing it locally.
-We use [hatch](https://hatch.pypa.io/latest/) as the project manager that handles the development environment, tests, and builds for the project.
+Ready to contribute to the library? Here's the steps to get you started with
+developing the library and testing it locally.
+We use [hatch][hatch] as the project manager that handles the development
+environment, tests, and builds for the project.
 
-To install hatch follow the instructions provided for your system [here](https://hatch.pypa.io/latest/install/).
+To install hatch follow the [instructions for your system][hatch-install].
 
 To verify that you have hatch install correctly run:
 
@@ -72,9 +78,10 @@ Let's get a quick run-down of the structure of the project:
     └── test_ikigai.py
 ```
 
-Now, let's setup the pre-commit hooks to automatically format the code and run linters when you commit changes.
-Install the pre-commit tool by following the [official instructions](https://pre-commit.com/#install).
-After installing pre-commit, run the following command to install the hooks:
+Now, let's setup the pre-commit hooks to automatically format the code
+and run linters when you commit changes. Install the pre-commit tool
+by following the [official instructions][pre-commit-install]. After installing
+pre-commit, run the following command to install the hooks:
 
 ```sh
 pre-commit install
@@ -82,7 +89,7 @@ pre-commit run --all-files
 ```
 
 Next let's setup your `test-env.toml`.
-Get your api key by logging in on [ikigai](https://app.ikigailabs.io) > Profile > Keys
+Get your api key by logging in on [ikigai][ikigai] > Profile > Keys
 Fill in your email id and api key into the following command and run it.
 
 ```sh
@@ -94,15 +101,16 @@ base_url="https://api.ikigailabs.io"
 /EOF
 ```
 
-With that you are set to contribute to this project.
-Let try to run the tests and see coverage statistics to validate that setup was a success.
+With that you are set to contribute to this project. Let try to run the tests
+and see coverage statistics to validate that setup was a success.
 
 ```sh
 hatch test --cover
 ```
 
 It might take some time when you first run this command,
-hatch will setup the testing environment and install any required dependencies as specified in the `pyproject.toml` file.
+hatch will setup the testing environment and install any required dependencies
+as specified in the `pyproject.toml` file.
 
 If everything went well, you will see something like:
 
@@ -147,7 +155,8 @@ TOTAL                                 475     46     36     10    87%
 
 ### Releasing new version
 
-To release new version first and foremost you need to bump the version. `hatch` makes it quite smooth.
+To release new version first and foremost you need to bump the version.
+`hatch` makes it quite smooth.
 
 ```sh
 $ hatch version micro
@@ -155,8 +164,9 @@ Old: 0.0.2
 New: 0.0.3
 ```
 
-After this commit any files hatch changed when updating the version. Create a tag to go along with the commit.
-For consistency use the following template for commit message and tag:
+After this commit any files hatch changed when updating the version.
+Create a tag to go along with the commit. For consistency use the following
+template for commit message and tag:
 
 ```txt
 $ git commit -m "Bump version to v$(hatch version)"
@@ -172,14 +182,14 @@ Push the commit and tag
 git push && git push --tags
 ```
 
-Then create a new release on
-[github-releases](https://github.com/ikigailabs-io/ikigai/releases/new) using the tag you just created.
+Then create a new release on [github-releases][github-releases] using the tag
+you just created.
 
 ### Profiling tests
 
 We bundle the command `test-prof` to profile the execution of the tests.
 To vizualize the results of profiling we use `graphviz`, install it by
-following the official [graphviz page](https://graphviz.org/download/).
+following the official [graphviz page][graphviz-page].
 
 Then run:
 
@@ -187,4 +197,12 @@ Then run:
 hatch test --profile --profile-svg
 ```
 
-If you don't want to install graphviz then drop the `--profile-svg` flag from the command.
+If you don't want to install graphviz then drop the `--profile-svg` flag
+from the command.
+
+[hatch]: https://hatch.pypa.io/latest/
+[hatch-install]: https://hatch.pypa.io/latest/install/
+[pre-commit-install]: https://pre-commit.com/#install
+[ikigai]: https://app.ikigailabs.io
+[github-releases]: https://github.com/ikigailabs-io/ikigai/releases/new
+[graphviz-page]: https://graphviz.org/download/
