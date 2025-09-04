@@ -28,7 +28,7 @@
 - [Listing All Models](#listing-all-models)
 - [Showing Details of a Model](#showing-details-of-a-model)
 - [Listing All Versions of a Model](#listing-all-versions-of-a-model)
-- [Showing Details of a Model Version](#showing-details-of-model-version)
+- [Showing Details of a Model Version](#showing-details-of-a-model-version)
 - [Model Types](#model-types)
 - [Getting Help with Model Types](#getting-help-with-model-types)
 - [Creating a New Model](#creating-a-new-model)
@@ -644,7 +644,8 @@ model version.
 ### Model Types
 
 Before creating a new model, you may want to view a list of all available
-models. Use the `types` property of `model_types` to see the names of the available models.
+models. Use the `types` property of `model_types` to see the names of the
+available models.
 
 ```py
 model_types = ikigai.model_types
@@ -1026,8 +1027,11 @@ After you've built the model it is ready to be used in flows.
 
 ## Flows
 
-A *Flow* is a component in an app that enables you to perform analysis or computation. Each Flow contains a *Flow Definition* that specifies the
-sequence of *Facet Types* that perform actions like ingesting data, transforming data, machine learning with models, and outputting data. When you have assembled your flow definition, use the `FlowBuilder` class to build it. After building,
+A *Flow* is a component in an app that enables you to perform analysis or
+computation. Each Flow contains a *Flow Definition* that specifies the
+sequence of *Facet Types* that perform actions like ingesting data, transforming
+data, machine learning with models, and outputting data. When you have assembled
+your flow definition, use the `FlowBuilder` class to build it. After building,
 you attach the flow definition to a Flow and run it to execute all of the
 defined actions.
 
@@ -1083,7 +1087,8 @@ available on the Ikigai platform.
 
 ### Getting Help with Facet Types
 
-Before building a flow definition, you may want to review the help text for the facet types that you plan to use. The help text displays a facet type's
+Before building a flow definition, you may want to review the help text for the
+facet types that you plan to use. The help text displays a facet type's
 supported arguments, expected data types, and default values.
 
 In the example, the `.help()` method is called to display the help text for the
@@ -1517,7 +1522,9 @@ to another single facet. The image below shows an example of branching.
 ![Add arrows example.](add_arrows_example.png)
 
 The example code recreates the flow definition shown in the image using the
-the Ikigai Python library. Notice that the `.add_arrow()` method's `table_side` argument determines the position of a facet. Explicit facet chaining is required when a flow includes branching.
+the Ikigai Python library. Notice that the `.add_arrow()` method's `table_side`
+argument determines the position of a facet. Explicit facet chaining is required
+when a flow includes branching.
 
 ```py
 flow_builder = ikigai.builder
@@ -1752,4 +1759,3 @@ Others Python interpreters:
 
 - `ikigai` is distributed under the terms of the
   [MIT](https://spdx.org/licenses/MIT.html) license.
-
