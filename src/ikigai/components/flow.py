@@ -264,9 +264,10 @@ class Flow(BaseModel):
 
             # Wait while pipeline is running
             running_states = (
-                FlowStatus.RUNNING,
-                FlowStatus.STOPPING,
-                FlowStatus.UNKNOWN,
+                FlowStatus.RUNNING,  # Flow is running
+                FlowStatus.STOPPING,  # Flow is in the process of stopping
+                FlowStatus.SCHEDULED,  # Flow is scheduled (again), likely a retry
+                FlowStatus.UNKNOWN,  # Flow status is unknown, but known was running
             )
             while status_report.status in running_states:
                 time.sleep(1)
