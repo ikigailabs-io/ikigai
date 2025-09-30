@@ -2,25 +2,36 @@
 #
 # SPDX-License-Identifier: MIT
 
+from __future__ import annotations
+
+from dataclasses import InitVar
+
 from pydantic import AnyUrl, EmailStr, Field
 from pydantic.dataclasses import dataclass
 
 from ikigai import components
 from ikigai.client import Client
 from ikigai.utils.component_browser import ComponentBrowser
+from ikigai.utils.config import SSLConfig
+from ikigai.utils.missing import MISSING, MissingType
 from ikigai.utils.named_mapping import NamedMapping
 
 
 @dataclass
 class Ikigai:
     user_email: EmailStr
-    api_key: str = Field(repr=False)
+    api_key: InitVar[str]
     base_url: AnyUrl = Field(default=AnyUrl("https://api.ikigailabs.io"))
+    ssl: InitVar[SSLConfig | MissingType] = MISSING
     __client: Client = Field(init=False)
 
-    def __post_init__(self) -> None:
+    def __post_init__(
+        self, api_key: str, ssl: SSLConfig | MissingType = MISSING
+    ) -> None:
+        if ssl is MISSING:
+            ssl = True
         self.__client = Client(
-            user_email=self.user_email, api_key=self.api_key, base_url=self.base_url
+            user_email=self.user_email, api_key=api_key, base_url=self.base_url, ssl=ssl
         )
 
     @property
