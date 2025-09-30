@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import sys
 
+# Multiple python version compatible import for deprecated decorator
 if sys.version_info >= (3, 13):
     from warnings import deprecated  # noqa: F401
 else:
