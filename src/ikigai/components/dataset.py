@@ -25,7 +25,7 @@ from ikigai.typing.protocol import (
     DirectoryType,
     NamedDirectoryDict,
 )
-from ikigai.utils.compatibility import Self
+from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.named_mapping import NamedMapping
 
 logger = logging.getLogger("ikigai.components")
@@ -141,6 +141,7 @@ class DatasetBrowser:
         self.__app_id = app_id
         self.__client = client
 
+    @deprecated("Prefer directly loading by name:\n\tapp.datasets['dataset_name']")
     def __call__(self) -> NamedMapping[Dataset]:
         datasets = {
             dataset["dataset_id"]: Dataset.from_dict(data=dataset, client=self.__client)

@@ -13,7 +13,7 @@ from pydantic import AliasChoices, BaseModel, Field
 from ikigai.client.client import Client
 from ikigai.components.specs import SubModelSpec
 from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
-from ikigai.utils.compatibility import Self
+from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.named_mapping import NamedMapping
 
 logger = logging.getLogger("ikigai.components")
@@ -27,6 +27,7 @@ class ModelBrowser:
         self.__app_id = app_id
         self.__client = client
 
+    @deprecated("Prefer directly loading by name:\n\tapp.models['model_name']")
     def __call__(self) -> NamedMapping[Model]:
         models = {
             model["model_id"]: Model.from_dict(data=model, client=self.__client)

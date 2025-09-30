@@ -23,7 +23,7 @@ from ikigai.typing.protocol import (
     FlowDict,
     NamedDirectoryDict,
 )
-from ikigai.utils.compatibility import UTC, Self
+from ikigai.utils.compatibility import UTC, Self, deprecated
 from ikigai.utils.custom_validators import OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.shim import flow_versioning_shim
@@ -39,6 +39,7 @@ class FlowBrowser:
         self.__app_id = app_id
         self.__client = client
 
+    @deprecated("Prefer directly loading by name:\n\tapp.flows['flow_name']")
     def __call__(self) -> NamedMapping[Flow]:
         flows = {
             flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
