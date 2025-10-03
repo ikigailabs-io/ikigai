@@ -15,6 +15,7 @@ from pydantic.dataclasses import dataclass
 from requests import Response
 
 from ikigai.utils.compatibility import HTTPMethod
+from ikigai.utils.config import SSLConfig
 
 logger = logging.getLogger("ikigai.client")
 
@@ -24,12 +25,17 @@ class Session:
     # Init only vars
     user_email: InitVar[EmailStr]
     api_key: InitVar[str]
+    ssl: InitVar[SSLConfig]
 
     base_url: AnyUrl
     __session: requests.Session = Field(init=False)
 
-    def __post_init__(self, user_email: EmailStr, api_key: str) -> None:
+    def __post_init__(self, user_email: EmailStr, api_key: str, ssl: SSLConfig) -> None:
         self.__session = requests.Session()
+        if isinstance(ssl, bool):
+            self.__session.verify = ssl
+        else:
+            self.__session.cert = ssl
         self.__session.headers.update({"user": user_email, "api-key": api_key})
 
     def request(

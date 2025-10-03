@@ -15,6 +15,7 @@ from requests import Response
 from ikigai.client.api import ComponentAPI, SearchAPI
 from ikigai.client.session import Session
 from ikigai.utils.compatibility import HTTPMethod
+from ikigai.utils.config import SSLConfig
 
 logger = logging.getLogger("ikigai.client")
 
@@ -25,16 +26,17 @@ class Client:
     user_email: InitVar[EmailStr]
     api_key: InitVar[str]
     base_url: InitVar[AnyUrl]
+    ssl: InitVar[SSLConfig]
 
     __session: Session = Field(init=False)
     __component_api: ComponentAPI = Field(init=False)
     __search_api: SearchAPI = Field(init=False)
 
     def __post_init__(
-        self, user_email: EmailStr, api_key: str, base_url: AnyUrl
+        self, user_email: EmailStr, api_key: str, base_url: AnyUrl, ssl: SSLConfig
     ) -> None:
         self.__session = Session(
-            user_email=user_email, api_key=api_key, base_url=base_url
+            user_email=user_email, api_key=api_key, base_url=base_url, ssl=ssl
         )
         self.__component_api = ComponentAPI(session=self.__session)
         self.__search_api = SearchAPI(session=self.__session)
