@@ -71,8 +71,12 @@ class Session:
                     "response": resp.text,
                 },
             )
-            todo = "TODO: Add error reporting"
-            raise NotImplementedError(todo)
+            message = (
+                f"[{resp.status_code}] Server rejected the request. "
+                "Check the request and try again.\n"
+                f"Response: {resp.text}"
+            )
+            raise RuntimeError(message)
         else:
             # A 5XX error happened
             logger.error(
@@ -92,9 +96,12 @@ class Session:
                     "response": resp.text,
                 },
             )
-            todo = "TODO: Add error reporting"
-            raise NotImplementedError(todo)
-        return resp
+            message = (
+                f"[{resp.status_code}] The server encountered an error. "
+                "Try again later, if problem persists report an issue.\n"
+                f"Response: {resp.text}"
+            )
+            raise RuntimeError(message)
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Response:
         return self.request(method=HTTPMethod.GET, path=path, params=params)
