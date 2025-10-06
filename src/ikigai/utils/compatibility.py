@@ -6,6 +6,12 @@ from __future__ import annotations
 
 import sys
 
+# Multiple python version compatible import for deprecated decorator
+if sys.version_info >= (3, 13):
+    from warnings import deprecated  # noqa: F401
+else:
+    from deprecated import deprecated  # noqa: F401
+
 # Multiple python version compatible import for typing.override
 if sys.version_info >= (3, 12):
     from typing import override  # noqa: F401

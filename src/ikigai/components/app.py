@@ -13,7 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 from ikigai import components
 from ikigai.client import Client
 from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
-from ikigai.utils.compatibility import Self
+from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.component_browser import ComponentBrowser
 from ikigai.utils.named_mapping import NamedMapping
 
@@ -24,6 +24,7 @@ class AppBrowser:
     def __init__(self, client: Client) -> None:
         self.__client = client
 
+    @deprecated("Prefer directly loading by name:\n\tikigai.apps['app_name']")
     def __call__(self) -> NamedMapping[App]:
         apps = {
             app["project_id"]: components.App.from_dict(data=app, client=self.__client)
