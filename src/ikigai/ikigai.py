@@ -22,11 +22,23 @@ class Ikigai:
     """
     Main Ikigai class to interact with the Ikigai platform
 
-    Args:
-        user_email: Email of the user
-        api_key: API key for authentication
-        base_url: Base URL of the Ikigai API (default: "https://api.ikigailabs.io")
-        ssl: SSL configuration see `ikigai.utils.config` for more details
+    Parameters
+    ----------
+    user_email: str
+        Email of the user
+
+    api_key: str
+        API key for authentication
+
+    base_url: str
+        Base URL of the Ikigai API endpoints, by default it is set to:
+        "https://api.ikigailabs.io"
+
+    ssl: bool or str or tuple
+        SSL configuration see `ikigai.utils.config` for more details
+        Set to `False` to disable SSL verification (unsafe) or provide
+        custom SSL certificate by providing path to certificate (.pem) file or
+        a tuple of (certificate, key).
     """
 
     user_email: EmailStr
@@ -47,10 +59,15 @@ class Ikigai:
     @property
     def apps(self) -> ComponentBrowser[components.App]:
         """
-        Browser to interact with Apps
+        Browser object to interact with Apps
 
-        Returns:
-            ComponentBrowser[components.App]: Browser for Apps
+        It helps to list, get and search for Apps accessible to the user in the
+        Ikigai platform.
+
+        Returns
+        -------
+        ComponentBrowser[components.App]
+            Browser for Apps
         """
         return components.AppBrowser(client=self.__client)
 
@@ -59,8 +76,10 @@ class Ikigai:
         """
         Builder to create a new App
 
-        Returns:
-            components.AppBuilder: A new App builder object
+        Returns
+        -------
+        components.AppBuilder
+            A new App builder object
         """
         return components.AppBuilder(client=self.__client)
 
@@ -68,8 +87,10 @@ class Ikigai:
         """
         Get all App Directories for the user
 
-        Returns:
-            NamedMapping[components.AppDirectory]: Mapping of names to Directories
+        Returns
+        -------
+        NamedMapping[components.AppDirectory]
+            Mapping of names to Directories
         """
         directory_dicts = self.__client.component.get_app_directories_for_user()
         directories = {
@@ -89,8 +110,10 @@ class Ikigai:
         """
         Builder to create a new Flow Definition
 
-        Returns:
-            components.FlowDefinitionBuilder: A new Flow Definition builder object
+        Returns
+        -------
+        components.FlowDefinitionBuilder
+            A new Flow Definition builder object
         """
         return components.FlowDefinitionBuilder()
 
@@ -99,8 +122,10 @@ class Ikigai:
         """
         Available facet types in the Ikigai platform
 
-        Returns:
-            components.FacetTypes: Available facet types
+        Returns
+        -------
+        components.FacetTypes
+            Available facet types
         """
         return components.FacetTypes.from_dict(
             data=self.__client.component.get_facet_specs()
@@ -111,8 +136,10 @@ class Ikigai:
         """
         Available model types in the Ikigai platform
 
-        Returns:
-            components.ModelTypes: Available model types
+        Returns
+        -------
+        components.ModelTypes
+            Available model types
         """
         return components.ModelTypes.from_list(
             data=self.__client.component.get_model_specs()

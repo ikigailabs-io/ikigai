@@ -22,6 +22,20 @@ def _create_table_generator(fake: Faker, k: int) -> _TableGenerator:
     """
     Return a table generator that generates a table with randomly selected columns
     where, k <= number of columns <= 2k
+
+    Parameters
+    ----------
+    fake: Faker
+        The Faker instance to use for generating fake data
+
+    k: int
+        The number of column generator selections to make
+
+    Returns
+    -------
+    _TableGenerator
+        The table generator consisting of column names and their corresponding
+        generator functions
     """
     available_column_generators: list[list[tuple[str, _ColumnGenerator]]] = [
         [("name", fake.name), ("age", lambda: random.randint(20, 90))],
@@ -83,6 +97,18 @@ def df2(faker: Faker) -> pd.DataFrame:
 def df_ml_regression1(faker: Faker) -> pd.DataFrame:
     """
     Generate a DataFrame suitable for ML regression tasks
+
+    Parameters
+    ----------
+    faker: Faker
+        The Faker instance to use for generating fake data
+
+    Returns
+    -------
+    pd.DataFrame
+        The generated DataFrame suitable for regression tasks.
+        The DataFrame contains a target column with continuous values drawn
+        from a uniform distribution between 0 and 100.
     """
     num_generator_selections = random.randint(3, 10)
     num_rows = math.ceil(random.triangular(100, 1000))
@@ -100,6 +126,18 @@ def df_ml_regression1(faker: Faker) -> pd.DataFrame:
 def df_ml_classification1(faker: Faker) -> pd.DataFrame:
     """
     Generate a DataFrame suitable for ML classification tasks
+
+    Parameters
+    ----------
+    faker: Faker
+        The Faker instance to use for generating fake data
+
+    Returns
+    -------
+    pd.DataFrame
+        The generated DataFrame suitable for classification tasks.
+        The DataFrame contains a target column with categorical class labels,
+        where the number of classes is randomly chosen between 2 and (num_rows / 3).
     """
     num_generator_selections = random.randint(3, 10)
     num_rows = math.ceil(random.triangular(100, 1000))
