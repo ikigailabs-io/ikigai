@@ -8,6 +8,13 @@ from collections.abc import Mapping
 from typing import Any, TypedDict
 
 
+class _RunFlowRequestRunVariable(TypedDict):
+    value: Any
+
+
+RunFlowRequestRunVariables = dict[str, _RunFlowRequestRunVariable]
+
+
 class GetDatasetMultipartUploadUrlsResponse(TypedDict):
     upload_id: str
     content_type: str

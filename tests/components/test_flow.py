@@ -260,6 +260,53 @@ def test_flow_run_fail_1(
     assert log.data, log
 
 
+def test_flow_run_with_variables(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("App to test flow run").build()
+    cleanup.callback(app.delete)
+
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
+    cleanup.callback(dataset.delete)
+
+    facet_types = ikigai.facet_types
+    flow_definition = (
+        ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED, name=dataset.name)
+        .arguments(
+            dataset_id=dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(
+            dataset_name=f"output-{flow_name}",
+            file_type="csv",
+            header=True,
+        )
+        .add_variable(variable_name="dataset_name", target_argument_name="dataset_name")
+        .build()
+    )
+
+    flow = app.flow.new(name=flow_name).definition(definition=flow_definition).build()
+    cleanup.callback(flow.delete)
+
+    run_var_dataset_name = f"var-output-{flow_name}"
+    log = flow.run(dataset_name=run_var_dataset_name)
+    assert log.status == FlowStatus.SUCCESS, log.data
+    assert log.erroneous_facet_id is None, log
+    assert not log.data
+
+    # Verify that the output dataset was created with the name passed via variable
+    output_dataset = app.datasets[run_var_dataset_name]
+    assert output_dataset
+
+
 def test_flow_directories_creation(
     ikigai: Ikigai,
     app_name: str,

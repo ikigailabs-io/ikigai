@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 from collections import ChainMap
 from collections.abc import Generator, Mapping
+from functools import cached_property
 from typing import Any
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, RootModel
@@ -81,6 +82,15 @@ class FacetType(BaseModel, Helpful):
     out_arrow_arguments: list[ArgumentSpec]
 
     model_config = ConfigDict(frozen=True)
+
+    @cached_property
+    def _facet_arguments(self) -> dict[str, ArgumentSpec]:
+        return {argument.name: argument for argument in self.facet_arguments}
+
+    def get_facet_argument(self, name: str) -> ArgumentSpec | None:
+        if name not in self._facet_arguments:
+            return None
+        return self._facet_arguments[name]
 
     @override
     def _help(self) -> Generator[str]:
