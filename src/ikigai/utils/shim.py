@@ -10,14 +10,21 @@ from ikigai.typing.protocol.flow import FacetDict, FlowDict
 def flow_versioning_shim(flow: FlowDict, facet_specs: dict) -> FlowDict:
     """
     Shim to improve compatibility with older Flow Definitions
-    and migrate them to the latest format
+    and migrate them to the latest format.
 
-    Args:
-        flow (FlowDict): The flow to shim
-        facet_specs (dict): The facet specifications to use for shimming
+    Parameters
+    ----------
+    flow: FlowDict
+        The flow dict to shim for improved compatibility with
+        latest flow definition format
 
-    Returns:
-        FlowDict: The shimed flow
+    facet_specs: dict
+        The facet specifications dict to use as reference for flow definition format
+
+    Returns
+    -------
+    FlowDict
+        The shimed flow dict
     """
     facets = flow["definition"].get("facets", [])
     flow["definition"]["facets"] = [
@@ -35,11 +42,15 @@ def _flow_facet_shim(facet: FacetDict, facet_spec: dict | None) -> FacetDict:
     Shim to improve compatibility with older Flow Definitions
     Fix the facet structure to match the expected format
 
-    Args:
-        facet (FacetDict): The facet to shim
+    Parameters
+    ----------
+    facet: FacetDict
+        The facet dict to shim for improved compatibility
 
-    Returns:
-        FacetDict: The shimed facet
+    Returns
+    -------
+    FacetDict
+        The shimed facet dict
     """
     # Initial cleaning of facet args
     facet_args = facet.get("arguments", {})
@@ -88,12 +99,18 @@ def __search_facet_spec(facet_specs: dict, facet_uid: str) -> dict | None:
     """
     Search for a facet specification by facet UID
 
-    Args:
-        facet_specs (dict): The facet specifications to search
-        facet_uid (str): The UID of the facet to search for
+    Parameters
+    ----------
+    facet_specs: dict
+        The facet specifications dict to search in
 
-    Returns:
-        dict | None: The facet specification if found, otherwise None
+    facet_uid: str
+        The UID of the facet to search for
+
+    Returns
+    -------
+        dict or None
+            The facet specification dict if found, otherwise None
     """
     for chain_group in facet_specs.values():
         for facet_group in chain_group.values():
