@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-present Harsh Parekh <harsh@ikigailabs.io>
+# SPDX-FileCopyrightText: 2025-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
 
