@@ -8,27 +8,27 @@ import sys
 
 # Multiple python version compatible import for deprecated decorator
 if sys.version_info >= (3, 13):
-    from warnings import deprecated  # noqa: F401
+    from warnings import deprecated  # noqa: F401, RUF100
 else:
-    from deprecated import deprecated  # noqa: F401
+    from deprecated import deprecated  # noqa: F401, RUF100
 
 # Multiple python version compatible import for typing.override
 if sys.version_info >= (3, 12):
-    from typing import override  # noqa: F401
+    from typing import override  # noqa: F401, RUF100
 else:
-    from typing_extensions import override  # noqa: F401
+    from typing_extensions import override  # noqa: F401, RUF100
 
 # Multiple python version compatible import for Self
 if sys.version_info >= (3, 11):
-    from typing import Self  # noqa: F401
+    from typing import Self  # noqa: F401, RUF100
 else:
-    from typing_extensions import Self  # noqa: F401
+    from typing_extensions import Self  # noqa: F401, RUF100
 
 # Multiple python version compatible import for StrEnum
 if sys.version_info >= (3, 11):
-    from enum import StrEnum  # noqa: F401
+    from enum import StrEnum  # noqa: F401, RUF100
 else:
-    from backports.strenum import StrEnum  # noqa: F401
+    from backports.strenum import StrEnum  # noqa: F401, RUF100
 
 # Multiple python version compatible import for HTTPMethod
 if sys.version_info >= (3, 11):
@@ -49,14 +49,14 @@ else:
 
 # Multiple python version compatible import for datetime.UTC
 if sys.version_info >= (3, 11):
-    from datetime import UTC  # noqa: F401
+    from datetime import UTC  # noqa: F401, RUF100
 else:
     from datetime import timezone
 
-    UTC = timezone.utc  # noqa: F401
+    UTC = timezone.utc  # noqa: F401, RUF100
 
 # Multiple python version compatible import for typing.NotRequired
 if sys.version_info >= (3, 11):
-    from typing import NotRequired  # noqa: F401
+    from typing import NotRequired  # noqa: F401, RUF100
 else:
-    from typing_extensions import NotRequired  # noqa: F401
+    from typing_extensions import NotRequired  # noqa: F401, RUF100
