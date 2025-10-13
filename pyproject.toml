@@ -96,7 +96,7 @@ check = "mypy --install-types --non-interactive {args:src/ikigai tests}"
 
 ## Configure pytest settings
 [tool.pytest.ini_options]
-log_format = "%(asctime)s %(levelname)s \"%(pathname)s:%(lineno)d\" %(message)s"
+log_format = "%(asctime)s %(levelname)s \"%(filename)s:%(lineno)d\" %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 
 log_cli = true
