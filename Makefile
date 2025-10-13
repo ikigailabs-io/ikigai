@@ -38,8 +38,7 @@ format: .init
 .PHONY: check
 check:			## Run Linter and Type-Checker
 check: .init
-	hatch fmt --check
-	hatch run types:check
+	hatch run check
 
 .PHONY: clean
 clean:			## Clean the workspace
