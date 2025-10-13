@@ -35,9 +35,7 @@ class AppBrowser:
 
     def __getitem__(self, name: str) -> App:
         app_dict = self.__client.component.get_app_by_name(name)
-        app = components.App.from_dict(data=app_dict, client=self.__client)
-
-        return app
+        return components.App.from_dict(data=app_dict, client=self.__client)
 
     def search(self, query: str) -> NamedMapping[App]:
         matching_apps = {
@@ -83,8 +81,7 @@ class AppBuilder:
             directory=self._directory,
         )
         app_dict = self.__client.component.get_app(app_id=app_id)
-        app = App.from_dict(data=app_dict, client=self.__client)
-        return app
+        return App.from_dict(data=app_dict, client=self.__client)
 
 
 class App(BaseModel):
@@ -144,12 +141,10 @@ class App(BaseModel):
         components = self.__client.component.get_components_for_app(app_id=self.app_id)
 
         # Combine components information with app info
-        return_value = {
+        return {
             "app": self.to_dict(),
             "components": components,
         }
-
-        return return_value
 
     """
     Access Components in the App

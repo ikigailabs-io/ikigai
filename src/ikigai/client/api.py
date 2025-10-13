@@ -262,7 +262,7 @@ class ComponentAPI:
             params={"dataset_id": dataset_id, "project_id": app_id, "limit": limit},
         ).json()["dataset_log"]
 
-        return dataset_log
+        return cast(list[DatasetLogDict], dataset_log)
 
     def edit_dataset(
         self,
@@ -429,7 +429,7 @@ class ComponentAPI:
             },
         ).json()["pipeline_log"]
 
-        return log_dicts
+        return cast(list[FlowLogDict], log_dicts)
 
     def edit_flow(
         self,

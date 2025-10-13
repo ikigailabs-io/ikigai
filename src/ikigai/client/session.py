@@ -58,7 +58,7 @@ class Session:
         )
         if resp.status_code < HTTPStatus.BAD_REQUEST:
             return resp
-        elif resp.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
+        if resp.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
             # A 4XX error happened
             logger.error(
                 "Request"
@@ -83,31 +83,31 @@ class Session:
                 f"Response: {resp.text}"
             )
             raise RuntimeError(message)
-        else:
-            # A 5XX error happened
-            logger.error(
-                "Request"
-                "[%(method)s] %(path)s %(params)s\n"
-                "%(request)s\n\n"
-                "Response [%(status)s]"
-                "headers: %(response_headers)s\n"
-                "%(response)s\n\n",
-                {
-                    "method": method,
-                    "path": path,
-                    "params": params,
-                    "request": resp.request.body,
-                    "status": resp.status_code,
-                    "response_headers": resp.headers,
-                    "response": resp.text,
-                },
-            )
-            message = (
-                f"[{resp.status_code}] The server encountered an error. "
-                "Try again later, if problem persists report an issue.\n"
-                f"Response: {resp.text}"
-            )
-            raise RuntimeError(message)
+
+        # A 5XX error happened
+        logger.error(
+            "Request"
+            "[%(method)s] %(path)s %(params)s\n"
+            "%(request)s\n\n"
+            "Response [%(status)s]"
+            "headers: %(response_headers)s\n"
+            "%(response)s\n\n",
+            {
+                "method": method,
+                "path": path,
+                "params": params,
+                "request": resp.request.body,
+                "status": resp.status_code,
+                "response_headers": resp.headers,
+                "response": resp.text,
+            },
+        )
+        message = (
+            f"[{resp.status_code}] The server encountered an error. "
+            "Try again later, if problem persists report an issue.\n"
+            f"Response: {resp.text}"
+        )
+        raise RuntimeError(message)
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Response:
         return self.request(method=HTTPMethod.GET, path=path, params=params)

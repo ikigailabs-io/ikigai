@@ -42,9 +42,8 @@ class ModelBrowser:
         model_dict = self.__client.component.get_model_by_name(
             app_id=self.__app_id, name=name
         )
-        model = Model.from_dict(data=model_dict, client=self.__client)
 
-        return model
+        return Model.from_dict(data=model_dict, client=self.__client)
 
     def search(self, query: str) -> NamedMapping[Model]:
         matching_models = {
@@ -105,8 +104,8 @@ class ModelBuilder:
         model_dict = self.__client.component.get_model(
             app_id=self._app_id, model_id=model_id
         )
-        model = Model.from_dict(data=model_dict, client=self.__client)
-        return model
+
+        return Model.from_dict(data=model_dict, client=self.__client)
 
 
 class Model(BaseModel):
@@ -168,10 +167,9 @@ class Model(BaseModel):
         return NamedMapping(versions)
 
     def describe(self) -> Mapping[str, Any]:
-        model = self.__client.component.get_model(
+        return self.__client.component.get_model(
             app_id=self.app_id, model_id=self.model_id
         )
-        return model
 
 
 class ModelVersion(BaseModel):
@@ -198,10 +196,9 @@ class ModelVersion(BaseModel):
         return self
 
     def describe(self) -> Mapping[str, Any]:
-        model_version = self.__client.component.get_model_version(
+        return self.__client.component.get_model_version(
             app_id=self.app_id, version_id=self.version_id
         )
-        return model_version
 
 
 class ModelDirectoryBuilder:
@@ -231,8 +228,8 @@ class ModelDirectoryBuilder:
         directory_dict = self.__client.component.get_model_directory(
             app_id=self._app_id, directory_id=directory_id
         )
-        directory = ModelDirectory.from_dict(data=directory_dict, client=self.__client)
-        return directory
+
+        return ModelDirectory.from_dict(data=directory_dict, client=self.__client)
 
 
 class ModelDirectory(BaseModel):

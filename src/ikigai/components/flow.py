@@ -52,9 +52,8 @@ class FlowBrowser:
         flow_dict = self.__client.component.get_flow_by_name(
             app_id=self.__app_id, name=name
         )
-        flow = Flow.from_dict(data=flow_dict, client=self.__client)
 
-        return flow
+        return Flow.from_dict(data=flow_dict, client=self.__client)
 
     def search(self, query: str) -> NamedMapping[Flow]:
         matched_flows = {
@@ -128,8 +127,8 @@ class FlowBuilder:
 
         # Populate Flow object
         flow_dict = self.__client.component.get_flow(flow_id=flow_id)
-        flow = Flow.from_dict(data=flow_dict, client=self.__client)
-        return flow
+
+        return Flow.from_dict(data=flow_dict, client=self.__client)
 
 
 class FlowStatus(str, Enum):
@@ -153,8 +152,7 @@ class FlowStatusReport(BaseModel):
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
-        self = cls.model_validate(data)
-        return self
+        return cls.model_validate(data)
 
 
 class RunLog(BaseModel):
@@ -167,8 +165,7 @@ class RunLog(BaseModel):
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
-        self = cls.model_validate(data)
-        return self
+        return cls.model_validate(data)
 
 
 class Flow(BaseModel):
@@ -243,8 +240,9 @@ class Flow(BaseModel):
         facet_specs = self.__client.get(
             path="/component/get-facet-specs",
         ).json()
+        # shim is a hack so better to keep it explicit
         shimed_flow = flow_versioning_shim(flow=flow, facet_specs=facet_specs)
-        return shimed_flow
+        return shimed_flow  # noqa: RET504
 
     def __await_run(self) -> RunLog:
         start_time = datetime.now(UTC)
@@ -327,8 +325,7 @@ class FlowDirectoryBuilder:
             app_id=self._app_id, directory_id=directory_id
         )
 
-        directory = FlowDirectory.from_dict(data=directory_dict, client=self.__client)
-        return directory
+        return FlowDirectory.from_dict(data=directory_dict, client=self.__client)
 
 
 class FlowDirectory(BaseModel):
