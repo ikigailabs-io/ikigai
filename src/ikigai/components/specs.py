@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-present Harsh Parekh <harsh@ikigailabs.io>
+# SPDX-FileCopyrightText: 2025-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
 
@@ -198,9 +198,8 @@ class FacetTypes(BaseModel, Helpful):
             "MID": ChainMap(*data["MID"].values()),
             "OUTPUT": ChainMap(*data["OUTPUT"].values()),
         }
-        self = cls.model_validate(flattened_data)
 
-        return self
+        return cls.model_validate(flattened_data)
 
     @override
     def _help(self) -> Generator[str]:
@@ -232,8 +231,7 @@ class ModelMetricsSpec(RootModel, Helpful):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
-        self = cls.model_validate({key.lower(): value for key, value in data.items()})
-        return self
+        return cls.model_validate({key.lower(): value for key, value in data.items()})
 
     @override
     def _help(self) -> Generator[str]:
@@ -302,7 +300,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             for requirement in data.get("sub_hyperparameter_requirements", [])
         }
 
-        self = cls(
+        return cls(
             name=data["name"],
             default_value=data.get("default_value"),
             have_options=data["have_options"],
@@ -316,7 +314,6 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             options=data.get("options"),
             sub_hyperparameter_requirements=sub_hyperparameter_requirements,
         )
-        return self
 
     @override
     def _help(self) -> Generator[str]:
@@ -371,8 +368,8 @@ class SubModelSpec(BaseModel, Helpful):
             ],
             "model_type": model_type,
         }
-        self = cls.model_validate(data_dict)
-        return self
+
+        return cls.model_validate(data_dict)
 
     @override
     def _help(self) -> Generator[str]:
@@ -440,7 +437,8 @@ class ModelSpec(BaseModel, Helpful):
                 for sub_model_spec in data["sub_model_types"]
             },
         )
-        return self
+
+        return self  # noqa: RET504 -- seperating construction and return for clarity
 
     def __contains__(self, sub_model_type: str) -> bool:
         key = sub_model_type.lower().replace("_", "").replace(" ", "")
@@ -497,7 +495,7 @@ class ModelTypes(RootModel, Helpful):
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
-        self = cls(
+        return cls(
             {
                 model_name.lower()
                 .replace("_", "")
@@ -505,7 +503,6 @@ class ModelTypes(RootModel, Helpful):
                 for model_name, model_spec in data.items()
             }
         )
-        return self
 
     def __len__(self) -> int:
         return len(self.root)

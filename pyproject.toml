@@ -73,8 +73,12 @@ dependencies = [
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
-### Setup scripts for testing and coverage reporting
 [tool.hatch.envs.default.scripts]
+
+### Setup convinience script for linting and type checking
+check = ["hatch fmt --check", "hatch run types:check"]
+
+### Setup scripts for testing and coverage reporting
 test = "pytest {args:tests}"
 test-prof = ["pytest --profile --profile-svg {args:tests}", "open prof/combined.svg || xgd-open prof/combined.svg"]
 test-cov = "coverage run -m pytest {args:tests}"
@@ -128,6 +132,10 @@ select = [
   "SIM",
   "TID",
   "PTH",
+  "TCH",
+  "RET",
+  # Flake8 - bandit (sec/stability)
+  "S",
   # Flake8 - Logging
   "LOG",
   "G",
@@ -147,10 +155,25 @@ select = [
   "FLY",
   # Performance
   "PERF",
+  # Pytest
+  "PT",
+  # Ruff
+  "RUF",
 ]
 ignore = [
   "PLR1711",  # It's better to have explicit return even if it may be useless
+  "RET501",   # It's better to have explicit return even if it may be useless
+  "RET502",   # It's better to have explicit return even if it may be useless
   "PLR0913",  # Some functions require many args to effectively use ikigai's api
+  "TCH001",   # Conflicts with pydantic usage
+  "TCH002",   # Conflicts with pydantic usage
+  "TCH003",   # Conflicts with pydantic usage
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = [
+  "S101",     # asserts are ok in tests
+  "S311",     # crypt random is not necessary in tests
 ]
 
 

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-present Harsh Parekh <harsh@ikigailabs.io>
+# SPDX-FileCopyrightText: 2025-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
 
@@ -71,10 +71,10 @@ class FacetBuilder:
     ) -> FacetBuilder:
         if arrow_args is None:
             arrow_args = {}
-        facet = self._builder.facet(
+
+        return self._builder.facet(
             facet_type=facet_type, name=name, args=args
         ).add_arrow(self, **arrow_args)
-        return facet
 
     def model_facet(
         self,
@@ -87,10 +87,9 @@ class FacetBuilder:
         if arrow_args is None:
             arrow_args = {}
 
-        facet = self._builder.model_facet(
+        return self._builder.model_facet(
             facet_type=facet_type, model_type=model_type, name=name, args=args
         ).add_arrow(self, **arrow_args)
-        return facet
 
     def arguments(self, **arguments: Any) -> Self:
         self.__arguments.update(arguments)
@@ -104,14 +103,19 @@ class FacetBuilder:
 
     def _build(self) -> tuple[Facet, list[Arrow]]:
         if self.__facet is not None:
-            assert self.__arrows is not None, "Arrows should've been initialized"
+            if self.__arrows is None:
+                error_msg = (
+                    "Facet built but arrows missing, this should not happen. "
+                    "Please report a bug."
+                )
+                raise RuntimeError(error_msg)
             return self.__facet, self.__arrows
 
         # Check if the facet spec is satisfied
         self._facet_type.check_arguments(arguments=self.__arguments)
 
         self.__facet = Facet(
-            facet_id=randbytes(4).hex(),
+            facet_id=randbytes(4).hex(),  # noqa: S311 -- Not security relevant
             facet_uid=self._facet_type.facet_uid,
             name=self.__name,
             arguments=self.__arguments,
@@ -238,14 +242,14 @@ class FlowDefinitionBuilder:
             facet, in_arrows = facet_builder._build()
             facets.append(facet)
             arrows.extend(in_arrows)
-        flow_definition = FlowDefinition(
+
+        return FlowDefinition(
             facets=facets,
             arrows=arrows,
             arguments={},
             variables={},
             model_variables={},
         )
-        return flow_definition
 
 
 class Facet(BaseModel):

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024-present Harsh Parekh <harsh@ikigailabs.io>
+# SPDX-FileCopyrightText: 2024-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
 
@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 
 from ikigai.client import Client
 from ikigai.typing.protocol import (
+    DatasetDict,
     Directory,
     DirectoryType,
     NamedDirectoryDict,
@@ -63,7 +64,13 @@ def __upload_data(
                 chunk_start, chunk_end = (idx * chunk_size, (idx + 1) * chunk_size)
                 chunk = data[chunk_start : min(chunk_end, file_size)]
                 resp = request.put(url=upload_url, data=chunk)
-                assert resp.status_code == HTTPStatus.OK
+                if resp.status_code != HTTPStatus.OK:
+                    error_msg = (
+                        f"Failed to upload chunk {chunk_idx:02d} of {num_chunks:02d} "
+                        "received response:\n"
+                        f"[{resp.status_code}] {resp.text}"
+                    )
+                    raise RuntimeError(error_msg)
 
                 # Get etags from response header
                 etags[chunk_idx] = resp.headers["ETag"]
@@ -89,7 +96,10 @@ def __upload_data(
 def _upload_data(
     client: Client, app_id: str, dataset_id: str, name: str, data: bytes
 ) -> None:
-    assert data is not None
+    if not data:
+        error_msg = "Dataset is empty"
+        raise ValueError(error_msg)
+
     filename = f"{name}.csv"
 
     __upload_data(
@@ -156,9 +166,8 @@ class DatasetBrowser:
         dataset_dict = self.__client.component.get_dataset_by_name(
             app_id=self.__app_id, name=name
         )
-        dataset = Dataset.from_dict(data=dataset_dict, client=self.__client)
 
-        return dataset
+        return Dataset.from_dict(data=dataset_dict, client=self.__client)
 
     def search(self, query: str) -> NamedMapping[Dataset]:
         matching_datasets = {
@@ -234,8 +243,8 @@ class DatasetBuilder:
         dataset_dict = self.__client.component.get_dataset(
             app_id=self._app_id, dataset_id=dataset_id
         )
-        dataset = Dataset.from_dict(data=dataset_dict, client=self.__client)
-        return dataset
+
+        return Dataset.from_dict(data=dataset_dict, client=self.__client)
 
 
 class DataType(str, Enum):
@@ -322,11 +331,10 @@ class Dataset(BaseModel):
             data=buffer.getvalue(),
         )
 
-    def describe(self) -> Mapping[str, Any]:
-        dataset = self.__client.component.get_dataset(
+    def describe(self) -> DatasetDict:
+        return self.__client.component.get_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )
-        return dataset
 
 
 class DatasetDirectoryBuilder:
@@ -357,10 +365,7 @@ class DatasetDirectoryBuilder:
             app_id=self._app_id, directory_id=directory_id
         )
 
-        directory = DatasetDirectory.from_dict(
-            data=directory_dict, client=self.__client
-        )
-        return directory
+        return DatasetDirectory.from_dict(data=directory_dict, client=self.__client)
 
 
 class DatasetDirectory(BaseModel):

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024-present Harsh Parekh <harsh@ikigailabs.io>
+# SPDX-FileCopyrightText: 2024-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
 
@@ -47,12 +47,12 @@ def _create_table_generator(fake: Faker, k: int) -> _TableGenerator:
     return table_column_names, table_column_generators
 
 
-@pytest.fixture
+@pytest.fixture()
 def ikigai(cred: dict[str, Any]) -> Ikigai:
     return Ikigai(**cred)
 
 
-@pytest.fixture
+@pytest.fixture()
 def app_name(random_name: str) -> str:
     return f"proj-{random_name}"
 
@@ -63,7 +63,7 @@ def _generate_df(table_generator: _TableGenerator, num_rows: int) -> pd.DataFram
     return pd.DataFrame(data=rows, columns=column_names)
 
 
-@pytest.fixture
+@pytest.fixture()
 def df1(faker: Faker) -> pd.DataFrame:
     num_generator_selections = random.randint(1, 10)
     num_rows = math.ceil(random.triangular(1, 100))
@@ -71,7 +71,7 @@ def df1(faker: Faker) -> pd.DataFrame:
     return _generate_df(table_generator=table_generator, num_rows=num_rows)
 
 
-@pytest.fixture
+@pytest.fixture()
 def df2(faker: Faker) -> pd.DataFrame:
     num_generator_selections = random.randint(1, 10)
     num_rows = math.ceil(random.triangular(1, 100))
@@ -79,7 +79,7 @@ def df2(faker: Faker) -> pd.DataFrame:
     return _generate_df(table_generator=table_generator, num_rows=num_rows)
 
 
-@pytest.fixture
+@pytest.fixture()
 def df_ml_regression1(faker: Faker) -> pd.DataFrame:
     """
     Generate a DataFrame suitable for ML regression tasks
@@ -96,7 +96,7 @@ def df_ml_regression1(faker: Faker) -> pd.DataFrame:
     return generated_df
 
 
-@pytest.fixture
+@pytest.fixture()
 def df_ml_classification1(faker: Faker) -> pd.DataFrame:
     """
     Generate a DataFrame suitable for ML classification tasks
@@ -115,36 +115,36 @@ def df_ml_classification1(faker: Faker) -> pd.DataFrame:
     return generated_df
 
 
-@pytest.fixture
+@pytest.fixture()
 def dataset_name(random_name: str) -> str:
     return f"dats-{random_name}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def dataset_directory_name_1(random_name: str) -> str:
     return f"dats-dir-1-{random_name}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def dataset_directory_name_2(random_name: str) -> str:
     return f"dats-dir-2-{random_name}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def flow_name(random_name: str) -> str:
     return f"flow-{random_name}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def flow_directory_name_1(random_name: str) -> str:
     return f"flow-dir-1-{random_name}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def flow_directory_name_2(random_name: str) -> str:
     return f"flow-dir-2-{random_name}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def model_name(random_name: str) -> str:
     return f"model-{random_name}"

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024-present Harsh Parekh <harsh@ikigailabs.io>
+# SPDX-FileCopyrightText: 2024-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
 
@@ -32,7 +32,7 @@ def cred(request: FixtureRequest) -> dict[str, str]:
     return cast(dict[str, str], request.param)
 
 
-@pytest.fixture
+@pytest.fixture()
 def logger() -> logging.Logger:
     return logging.getLogger("test")
 
@@ -40,13 +40,13 @@ def logger() -> logging.Logger:
 _ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789-"
 
 
-@pytest.fixture
+@pytest.fixture()
 def random_name() -> str:
     name_length = int(random.triangular(low=5, high=20, mode=20))
     return "".join(random.choices(_ALPHABET, k=name_length))
 
 
-@pytest.fixture
+@pytest.fixture()
 def cleanup() -> Generator[ExitStack, None, None]:
     exit_stack = ExitStack()
     try:
