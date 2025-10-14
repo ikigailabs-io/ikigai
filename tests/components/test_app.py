@@ -44,24 +44,34 @@ def test_app_describe_1(ikigai: Ikigai, app_name: str, cleanup: ExitStack) -> No
 
     description = app.describe()
     assert description is not None
+
     assert "app" in description
     assert description["app"]["name"] == app_name
+
     assert "components" in description
     components = description["components"]
+
     assert "charts" in components
     assert components["charts"] == []
+
     assert "connectors" in components
     assert components["connectors"] == []
+
     assert "dashboards" in components
     assert components["dashboards"] == []
+
     assert "datasets" in components
     assert components["datasets"] == []
+
     assert "databases" in components
     assert components["databases"] == []
+
     assert "pipelines" in components
     assert components["pipelines"] == []
+
     assert "models" in components
     assert components["models"] == []
+
     assert "external_resources" in components
     assert components["external_resources"] == []
 
