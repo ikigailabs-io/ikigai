@@ -1685,7 +1685,7 @@ Additionally, you can use the `since` parameter to filter logs by a specific
 
 The example snippet returns the flow object's most recent log:
 
-```
+```py
 flows = app.flows()         # Get all flows in the app
 flow = flows["new flow"]    # Get flow named "new flow"
 print(flow.run_logs())      # Returns the most recent log.
@@ -1693,7 +1693,7 @@ print(flow.run_logs())      # Returns the most recent log.
 
 The output resembles the code below:
 
-```
+```py
 [
     RunLog(
         log_id='34NgLJ8V7CFSyHOG5OD5r',
@@ -1709,14 +1709,14 @@ The output resembles the code below:
 The example code below uses the `max_count` parameter to view the flow object's
 three most recent logs.
 
-```
+```py
 flow = flows["New Flow"]
 print(flow.run_logs(max_count=3))
 ```
 
 The output returns the three most recent logs:
 
-```
+```py
 [
     RunLog(
         log_id='34NgLJ8V7CFSyHOG5OD5r',
