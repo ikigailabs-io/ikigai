@@ -9,7 +9,7 @@ from collections import ChainMap
 from collections.abc import Generator, Mapping
 from typing import Any
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, RootModel
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, RootModel, model_validator
 
 from ikigai.typing.protocol import (
     FacetSpecsDict,
@@ -140,11 +140,13 @@ class FacetTypes(BaseModel, Helpful):
     class ChainGroup(RootModel, Helpful):
         root: dict[LowercaseStr, FacetType]
 
-        def __post_init__(self) -> None:
+        @model_validator(mode="after")
+        def validate_lowercase_keys(self) -> Self:
             self.root = {
-                facet_type.lower().replace("_", "").replace(" ", ""): facet_spec
-                for facet_type, facet_spec in self.root.items()
+                key.lower().replace("_", "").replace(" ", ""): value
+                for key, value in self.root.items()
             }
+            return self
 
         def __contains__(self, name: str) -> bool:
             key = name.lower().replace("_", "").replace(" ", "")
@@ -217,8 +219,10 @@ class FacetTypes(BaseModel, Helpful):
 class ModelMetricsSpec(RootModel, Helpful):
     root: dict[LowercaseStr, Any]
 
-    def __post_init__(self) -> None:
+    @model_validator(mode="after")
+    def validate_lowercase_keys(self) -> Self:
         self.root = {metric.lower(): value for metric, value in self.root.items()}
+        return self
 
     def __contains__(self, name: str) -> bool:
         return name.lower() in self.root
