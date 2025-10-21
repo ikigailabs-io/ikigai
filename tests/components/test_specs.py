@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024-present ikigailabs.io <harsh@ikigailabs.io>
+# SPDX-FileCopyrightText: 2025-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
 
@@ -32,8 +32,18 @@ def test_iplt_10504_multi_word_facet_type_access(ikigai: Ikigai) -> None:
     assert "custom_facet" in facet_types.INPUT
     assert "CUSTOM_FACET" in facet_types.INPUT
 
+    assert facet_types.INPUT.CUSTOM_FACET
+    assert facet_types.INPUT.custom_facet
+    assert facet_types.INPUT.CustomFacet
+    assert facet_types.INPUT["Custom Facet"]
+
     # Check that various casings and formats for Drop Columns work
     assert "Drop Columns" in facet_types.MID
     assert "DROP COLUMNS" in facet_types.MID
     assert "drop_columns" in facet_types.MID
     assert "DROP_COLUMNS" in facet_types.MID
+
+    assert facet_types.MID.DROP_COLUMNS
+    assert facet_types.MID.drop_columns
+    assert facet_types.MID.DropColumns
+    assert facet_types.MID["Drop Columns"]
