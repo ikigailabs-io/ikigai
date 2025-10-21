@@ -43,6 +43,7 @@
 - [Creating a Branch in the Flow](#creating-a-branch-in-the-flow)
 - [Creating a New Flow](#creating-a-new-flow)
 - [Running a Flow](#running-a-flow)
+- [Viewing a Flow's Logs](#viewing-a-flows-logs)
 - [Finding a Flow from an App](#finding-a-flow-from-an-app)
 - [Getting the Status of a Flow](#getting-the-status-of-a-flow)
 - [License](#license)
