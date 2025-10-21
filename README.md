@@ -1749,7 +1749,7 @@ The example snippet uses the `since` parameter to filter the flow object's logs
 by the datetime stored in the `filter` variable. Notice that the example uses
 the `pytz` package to perform a timezone conversion.
 
-```
+```py
 from datetime import datetime, timedelta
 import pytz
 
@@ -1760,7 +1760,7 @@ print(flow.run_logs(max_count=3, since=filter))
 
 The example returns any log after the datetime passed to the `since` parameter.
 
-```
+```py
 [
     RunLog(
         log_id='34NgLJ8V7CFSyHOG5OD5r',
