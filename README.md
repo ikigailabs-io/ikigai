@@ -44,7 +44,6 @@
 - [Creating a New Flow](#creating-a-new-flow)
 - [Running a Flow](#running-a-flow)
 - [Finding a Flow from an App](#finding-a-flow-from-an-app)
-- [Running a Flow](#running-a-flow)
 - [Getting the Status of a Flow](#getting-the-status-of-a-flow)
 - [License](#license)
 
