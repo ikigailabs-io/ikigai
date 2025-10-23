@@ -209,6 +209,17 @@ class Flow(BaseModel):
         )
         return self
 
+    def update_definition(
+        self, definition: FlowDefinition | FlowDefinitionDict
+    ) -> Self:
+        if isinstance(definition, FlowDefinition):
+            definition = definition.to_dict()
+
+        self.__client.component.edit_flow(
+            app_id=self.app_id, flow_id=self.flow_id, flow_definition=definition
+        )
+        return self
+
     def status(self) -> FlowStatusReport:
         resp = self.__client.component.is_flow_runing(
             app_id=self.app_id, flow_id=self.flow_id
