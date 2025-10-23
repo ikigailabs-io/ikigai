@@ -1680,8 +1680,6 @@ Whenever a flow runs, a log is created that stores the run’s details. You can
 view a flow object's run logs by calling the `.run_logs()` method. By default,
 this method returns the flow object’s most recent log. To view additional logs,
 use the `max_count` parameter to specify the number of logs you want to view.
-Additionally, you can use the `since` parameter to filter logs by a specific
-`datetime`.
 
 The example snippet returns the flow object's most recent log:
 
@@ -1741,42 +1739,6 @@ The output returns the three most recent logs:
        erroneous_facet_id=None,
        data='',
        timestamp=datetime.datetime(2024, 5, 21, 23, 24, 2, tzinfo=TzInfo(0))
-   )
-]
-```
-
-The example snippet uses the `since` parameter to filter the flow object's logs
-by the datetime stored in the `filter` variable. Notice that the example uses
-the `pytz` package to perform a timezone conversion.
-
-```py
-from datetime import datetime, timedelta
-import pytz
-
-filter = datetime(2024, 5, 21, 23, 24, 2, tzinfo=pytz.UTC)
-
-print(flow.run_logs(max_count=3, since=filter))
-```
-
-The example returns any log after the datetime passed to the `since` parameter.
-
-```py
-[
-    RunLog(
-        log_id='34NgLJ8V7CFSyHOG5OD5r',
-        status=SUCCESS,
-        user='example@ikigailabs.io',
-        erroneous_facet_id=None,
-        data='',
-        timestamp=datetime.datetime(2024, 10, 21, 15, 9, 45, tzinfo=TzInfo(0))
-   ),
-    RunLog(
-        log_id='34NgEhi20augfDV23U',
-        status=SUCCESS,
-        user='example@ikigailabs.io',
-        erroneous_facet_id=None,
-        data='',
-        timestamp=datetime.datetime(2024, 10, 21, 15, 8, 53, tzinfo=TzInfo(0))
    )
 ]
 ```
