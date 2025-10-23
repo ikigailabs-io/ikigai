@@ -43,8 +43,8 @@
 - [Creating a Branch in the Flow](#creating-a-branch-in-the-flow)
 - [Creating a New Flow](#creating-a-new-flow)
 - [Running a Flow](#running-a-flow)
+- [Viewing a Flow's Logs](#viewing-a-flows-logs)
 - [Finding a Flow from an App](#finding-a-flow-from-an-app)
-- [Running a Flow](#running-a-flow)
 - [Getting the Status of a Flow](#getting-the-status-of-a-flow)
 - [License](#license)
 
@@ -1672,6 +1672,75 @@ RunLog(
     data='',
     timestamp=datetime.datetime(2025, 1, 1, 11, 0, 5, tzinfo=TzInfo(UTC))
 )
+```
+
+### Viewing a Flow's Logs
+
+Whenever a flow runs, a log is created that stores the run’s details. You can
+view a flow object's run logs by calling the `.run_logs()` method. By default,
+this method returns the flow object’s most recent log. To view additional logs,
+use the `max_count` parameter to specify the number of logs you want to view.
+
+The example snippet returns the flow object's most recent log:
+
+```py
+flows = app.flows()         # Get all flows in the app
+flow = flows["new flow"]    # Get flow named "new flow"
+print(flow.run_logs())      # Returns the most recent log.
+```
+
+The output resembles the code below:
+
+```py
+[
+    RunLog(
+        log_id='34NgLJ8V7CFSyHOG5OD5r',
+         status=SUCCESS,
+         user='example@ikigailabs.io',
+         erroneous_facet_id=None,
+         data='',
+         timestamp=datetime.datetime(2024, 10, 21, 15, 9, 45, tzinfo=TzInfo(0))
+   )
+]
+```
+
+The example code below uses the `max_count` parameter to view the flow object's
+three most recent logs.
+
+```py
+flow = flows["New Flow"]
+print(flow.run_logs(max_count=3))
+```
+
+The output returns the three most recent logs:
+
+```py
+[
+    RunLog(
+        log_id='34NgLJ8V7CFSyHOG5OD5r',
+         status=SUCCESS,
+         user='example@ikigailabs.io',
+         erroneous_facet_id=None,
+         data='',
+         timestamp=datetime.datetime(2024, 10, 21, 15, 9, 45, tzinfo=TzInfo(0))
+   ),
+   RunLog(
+       log_id='34NgEhi20augfDV23U',
+       status=SUCCESS,
+       user='example@ikigailabs.io',
+       erroneous_facet_id=None,
+       data='',
+       timestamp=datetime.datetime(2024, 10, 21, 15, 8, 53, tzinfo=TzInfo(0))
+   ),
+   RunLog(
+       log_id='yxzOTxbmFDllTHej2',
+       status=SUCCESS,
+       user='example@ikigailabs.io',
+       erroneous_facet_id=None,
+       data='',
+       timestamp=datetime.datetime(2024, 5, 21, 23, 24, 2, tzinfo=TzInfo(0))
+   )
+]
 ```
 
 ### Finding a Flow from an App
