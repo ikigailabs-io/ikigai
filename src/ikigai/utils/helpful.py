@@ -7,11 +7,20 @@ from collections.abc import Generator
 
 
 class Helpful(abc.ABC):
-    """Base class for Classes that provide help methods"""
+    """
+    Abstract base class for Classes that provide help methods.
+    """
 
     @abc.abstractmethod
     def _help(self) -> Generator[str]: ...
 
     def help(self) -> str:
-        """Returns a formatted string of the help documentation."""
+        """
+        Get formatted string of the help documentation.
+
+        Returns
+        -------
+        str
+            Formatted help documentation.
+        """
         return "\n".join(list(self._help()))

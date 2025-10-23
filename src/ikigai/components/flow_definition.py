@@ -18,7 +18,15 @@ logger = logging.getLogger("ikigai.components")
 
 
 class KnownModelFacetUIDS(StrEnum):
-    """Known facet UIDs used for ml facets."""
+    """
+    Known facet UIDs used for ml facets.
+
+    List of known facet UIDs that are associated with ml facets. It is used to
+    validate model facets in FlowDefinitionBuilder.
+
+    Currently it is maintained manually, but in future it can be fetched from the
+    Facet specs API based on the facet group "MACHINE_LEARNING".
+    """
 
     AiCast = "M_039"
     AiLLM = "M_041"
@@ -29,7 +37,14 @@ class KnownModelFacetUIDS(StrEnum):
 
     @classmethod
     def values(cls) -> list[str]:
-        """Get all known model facet UIDs."""
+        """
+        Get all known model facet UIDs.
+
+        Returns
+        -------
+        list[str]
+            List of known model facet UIDs.
+        """
         return [member.value for member in cls.__members__.values()]
 
 
