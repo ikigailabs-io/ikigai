@@ -40,7 +40,7 @@ def test_flow_creation(
     assert flow.flow_id not in flows_after_deletion
 
 
-def test_flow_editing(
+def test_flow_renaming(
     ikigai: Ikigai,
     app_name: str,
     flow_name: str,
@@ -58,6 +58,64 @@ def test_flow_editing(
 
     assert flow_after_edit.name == flow.name
     assert flow_after_edit.name == f"updated {flow_name}"
+
+
+def test_flow_definition_update(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("A test app").build()
+    cleanup.callback(app.delete)
+
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
+    cleanup.callback(dataset.delete)
+
+    facet_types = ikigai.facet_types
+
+    # Not a complete flow definition, should fail when run
+    initial_flow_definition = (
+        ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED, name=dataset.name)
+        .arguments(
+            dataset_id=dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .build()
+    )
+
+    flow = app.flow.new(name=flow_name).definition(initial_flow_definition).build()
+    cleanup.callback(flow.delete)
+
+    failure_log = flow.run()
+    assert failure_log.status == FlowStatus.FAILED, failure_log.data
+
+    # A complete flow definition, should succeed when run
+    updated_flow_definition = (
+        ikigai.builder.facet(facet_type=facet_types.INPUT.IMPORTED, name=dataset.name)
+        .arguments(
+            dataset_id=dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(
+            dataset_name=f"output-{flow_name}",
+            file_type="csv",
+            header=True,
+        )
+        .build()
+    )
+
+    flow.update_definition(updated_flow_definition)
+
+    success_log = flow.run()
+    assert success_log.status == FlowStatus.SUCCESS, success_log.data
 
 
 def test_flow_status(
