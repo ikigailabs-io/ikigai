@@ -228,6 +228,17 @@ class Flow(BaseModel):
         return run_logs
 
     def run(self) -> RunLog:
+        """
+        Run the flow
+
+        Run the flow and wait for it to complete execution.
+        This is a blocking call.
+
+        Returns
+        -------
+        RunLog
+            The final run log of the flow after completion
+        """
         # Start running pipeline
         self.__client.component.run_flow(app_id=self.app_id, flow_id=self.flow_id)
 
