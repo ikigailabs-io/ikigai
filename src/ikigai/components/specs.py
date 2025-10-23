@@ -9,7 +9,7 @@ from collections import ChainMap
 from collections.abc import Generator, Mapping
 from typing import Any
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, RootModel, model_validator
+from pydantic import BaseModel, ConfigDict, RootModel, model_validator
 
 from ikigai.typing.protocol import (
     FacetSpecsDict,
@@ -70,9 +70,14 @@ class ArgumentSpec(BaseModel, Helpful):
             yield end_brackets
 
 
+class FacetInfo(BaseModel):
+    facet_uid: str
+    facet_type: str
+    facet_group: str
+
+
 class FacetType(BaseModel, Helpful):
-    facet_uid: str = Field(validation_alias=AliasPath("facet_info", "facet_uid"))
-    name: str = Field(validation_alias=AliasPath("facet_info", "facet_type"))
+    facet_info: FacetInfo
     is_deprecated: bool
     is_hidden: bool
     facet_requirement: FacetRequirementSpec
@@ -81,6 +86,14 @@ class FacetType(BaseModel, Helpful):
     out_arrow_arguments: list[ArgumentSpec]
 
     model_config = ConfigDict(frozen=True)
+
+    @property
+    def facet_uid(self) -> str:
+        return self.facet_info.facet_uid
+
+    @property
+    def name(self) -> str:
+        return self.facet_info.facet_type
 
     @override
     def _help(self) -> Generator[str]:
@@ -129,6 +142,9 @@ class FacetType(BaseModel, Helpful):
                 yield from (
                     f"    {argument_help}" for argument_help in argument._help()
                 )
+
+    def is_ml_facet(self) -> bool:
+        return self.facet_info.facet_group.upper() == "MACHINE_LEARNING"
 
     def check_arguments(self, arguments: dict) -> None:
         # TODO: Add facet spec checking here,

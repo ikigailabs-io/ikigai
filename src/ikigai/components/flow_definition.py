@@ -12,40 +12,9 @@ from pydantic import BaseModel, Field
 
 from ikigai.components.specs import FacetType
 from ikigai.typing.protocol import FlowDefinitionDict, ModelType
-from ikigai.utils.compatibility import Self, StrEnum
+from ikigai.utils.compatibility import Self
 
 logger = logging.getLogger("ikigai.components")
-
-
-class KnownModelFacetUIDS(StrEnum):
-    """
-    Known facet UIDs used for ml facets.
-
-    List of known facet UIDs that are associated with ml facets. It is used to
-    validate model facets in FlowDefinitionBuilder.
-
-    Currently it is maintained manually, but in future it can be fetched from the
-    Facet specs API based on the facet group "MACHINE_LEARNING".
-    """
-
-    AiCast = "M_039"
-    AiLLM = "M_041"
-    AiMatch = "M_015"
-    AiPlan = "M_036"
-    AiPredict = "M_049"
-    Predict = "M_016"
-
-    @classmethod
-    def values(cls) -> list[str]:
-        """
-        Get all known model facet UIDs.
-
-        Returns
-        -------
-        list[str]
-            List of known model facet UIDs.
-        """
-        return [member.value for member in cls.__members__.values()]
 
 
 class FacetBuilder:
@@ -239,9 +208,10 @@ class FlowDefinitionBuilder:
         name: str = "",
         args: dict[str, Any] | None = None,
     ) -> ModelFacetBuilder:
-        if facet_type.facet_uid not in KnownModelFacetUIDS.values():
+        if not facet_type.is_ml_facet():
             error_msg = f"{facet_type.name.title()} is not a known Model Facet"
             raise ValueError(error_msg)
+
         if args is None:
             args = {}
         facet_builder = ModelFacetBuilder(
