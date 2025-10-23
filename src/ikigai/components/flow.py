@@ -212,6 +212,23 @@ class Flow(BaseModel):
     def update_definition(
         self, definition: FlowDefinition | FlowDefinitionDict
     ) -> Self:
+        """
+        Update the flow definition.
+
+        Replaces the existing flow definition with the provided one.
+
+        Parameters
+        ----------
+        definition : FlowDefinition | FlowDefinitionDict
+            The new flow definition to set. Can be provided as a FlowDefinition
+            object or as a dictionary.
+
+        Returns
+        -------
+        Self
+            The updated Flow object.
+
+        """
         if isinstance(definition, FlowDefinition):
             definition = definition.to_dict()
 
