@@ -367,6 +367,7 @@ class ComponentAPI:
         app_id: str,
         name: str,
         directory: Directory | None,
+        high_volume_preference: bool,
         flow_definition: FlowDefinitionDict,
     ) -> str:
         directory_dict = (
@@ -379,6 +380,7 @@ class ComponentAPI:
                     "project_id": app_id,
                     "name": name,
                     "directory": directory_dict,
+                    "high_volume_preference": high_volume_preference,
                     "definition": flow_definition,
                 },
             },
@@ -437,6 +439,7 @@ class ComponentAPI:
         flow_id: str,
         name: str | None = None,
         directory: Directory | None = None,
+        high_volume_preference: bool | None = None,
         flow_definition: FlowDefinitionDict | None = None,
     ) -> str:
         pipeline: dict[str, Any] = {
@@ -448,6 +451,8 @@ class ComponentAPI:
             pipeline["name"] = name
         if directory is not None:
             pipeline["directory"] = directory.to_dict()
+        if high_volume_preference is not None:
+            pipeline["high_volume_preference"] = high_volume_preference
         if flow_definition is not None:
             pipeline["definition"] = flow_definition
 

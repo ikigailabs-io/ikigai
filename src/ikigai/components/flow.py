@@ -70,14 +70,36 @@ class FlowBuilder:
     _app_id: str
     _name: str
     _directory: Directory | None
+    _high_volume_preference: bool
     _flow_definition: FlowDefinitionDict
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
+        """
+        Initialize the FlowBuilder
+
+        Note
+        ----
+        The FlowBuilder initialization should only happen internally via
+        the App object.
+
+        Parameters
+        ----------
+        client : Client
+            The Ikigai client to use for API interactions
+
+        app_id : str
+            The ID of the App to which the flow will belong
+
+        Returns
+        -------
+        None
+        """
         self.__client = client
         self._app_id = app_id
         self._name = ""
         self._directory = None
+        self._high_volume_preference = False
         self._flow_definition = FlowDefinition().to_dict()
 
     def new(self, name: str) -> Self:
@@ -117,11 +139,42 @@ class FlowBuilder:
         self._directory = directory
         return self
 
+    def high_volume_preference(self, high_volume_preference: bool) -> Self:
+        """
+        Set the high volume preference flag for the flow.
+
+        Parameters
+        ----------
+        high_volume_preference : bool
+            The high volume preference to set for the flow.
+            True if the flow should be optimized for high volume data processing,
+            False otherwise.
+
+        Returns
+        -------
+        Self
+            The FlowBuilder instance with high volume preference set.
+        """
+        self._high_volume_preference = high_volume_preference
+        return self
+
     def build(self) -> Flow:
+        """
+        Build the Flow object
+
+        Creates the flow in the Ikigai platform using the provided
+        parameters and returns the corresponding Flow object.
+
+        Returns
+        -------
+        Flow
+            The created Flow object
+        """
         flow_id = self.__client.component.create_flow(
             app_id=self._app_id,
             name=self._name,
             directory=self._directory,
+            high_volume_preference=self._high_volume_preference,
             flow_definition=self._flow_definition,
         )
 
@@ -206,6 +259,29 @@ class Flow(BaseModel):
     def move(self, directory: Directory) -> Self:
         self.__client.component.edit_flow(
             app_id=self.app_id, flow_id=self.flow_id, directory=directory
+        )
+        return self
+
+    def update_high_volume_preference(self, high_volume_preference: bool) -> Self:
+        """
+        Update the high volume preference of the flow.
+
+        Parameters
+        ----------
+        high_volume_preference : bool
+            The new high volume preference to set for the flow.
+            True if the flow should be optimized for high volume data processing,
+            False otherwise.
+
+        Returns
+        -------
+        Self
+            The updated Flow object.
+        """
+        self.__client.component.edit_flow(
+            app_id=self.app_id,
+            flow_id=self.flow_id,
+            high_volume_preference=high_volume_preference,
         )
         return self
 
