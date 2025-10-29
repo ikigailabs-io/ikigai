@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any
 
 from pydantic import AliasChoices, BaseModel, Field
@@ -115,8 +116,8 @@ class Model(BaseModel):
     model_type: str
     sub_model_type: str
     description: str
-    created_at: str
-    modified_at: str
+    created_at: datetime
+    modified_at: datetime
     __client: Client
 
     @classmethod
@@ -179,8 +180,8 @@ class ModelVersion(BaseModel):
     version: str
     hyperparameters: dict[str, Any]
     metrics: dict[str, Any]
-    created_at: str
-    modified_at: str
+    created_at: datetime
+    modified_at: datetime
     __client: Client
 
     @property
