@@ -139,13 +139,13 @@ class FlowBuilder:
         self._directory = directory
         return self
 
-    def high_volume_preference(self, high_volume_preference: bool) -> Self:
+    def high_volume_preference(self, optimize: bool) -> Self:
         """
         Set the high volume preference flag for the flow.
 
         Parameters
         ----------
-        high_volume_preference : bool
+        optimize : bool
             The high volume preference to set for the flow.
             True if the flow should be optimized for high volume data processing,
             False otherwise.
@@ -155,7 +155,7 @@ class FlowBuilder:
         Self
             The FlowBuilder instance with high volume preference set.
         """
-        self._high_volume_preference = high_volume_preference
+        self._high_volume_preference = optimize
         return self
 
     def build(self) -> Flow:
@@ -262,13 +262,13 @@ class Flow(BaseModel):
         )
         return self
 
-    def update_high_volume_preference(self, high_volume_preference: bool) -> Self:
+    def update_high_volume_preference(self, optimize: bool) -> Self:
         """
         Update the high volume preference of the flow.
 
         Parameters
         ----------
-        high_volume_preference : bool
+        optimize : bool
             The new high volume preference to set for the flow.
             True if the flow should be optimized for high volume data processing,
             False otherwise.
@@ -281,7 +281,7 @@ class Flow(BaseModel):
         self.__client.component.edit_flow(
             app_id=self.app_id,
             flow_id=self.flow_id,
-            high_volume_preference=high_volume_preference,
+            high_volume_preference=optimize,
         )
         return self
 

@@ -400,7 +400,7 @@ def test_flow_high_volume_preference(
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
 
-    flow = app.flow.new(name=flow_name).high_volume_preference(True).build()
+    flow = app.flow.new(name=flow_name).high_volume_preference(optimize=True).build()
     cleanup.callback(flow.delete)
 
     # Verify that the high volume preference is set correctly
@@ -434,7 +434,7 @@ def test_flow_high_volume_preference_update(
     flow = (
         app.flow.new(name=flow_name)
         .definition(flow_definition)
-        .high_volume_preference(False)
+        .high_volume_preference(optimize=False)
         .build()
     )
 
@@ -443,7 +443,7 @@ def test_flow_high_volume_preference_update(
     assert flow_details["definition"]["facets"], flow_details["definition"]
 
     # Update the high volume preference
-    flow.update_high_volume_preference(True)
+    flow.update_high_volume_preference(optimize=True)
 
     updated_flow_details = flow.describe()
     assert updated_flow_details["high_volume_preference"] is True, updated_flow_details
