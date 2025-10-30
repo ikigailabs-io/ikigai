@@ -452,6 +452,13 @@ def test_flow_high_volume_preference_update(
     ]
     assert updated_flow_details["definition"] == flow_details["definition"]
 
+    # Check that high volume preference persists after updating the definition
+    new_flow_definition = ikigai.builder.build()
+    flow.update_definition(definition=new_flow_definition)
+    final_flow_details = flow.describe()
+
+    assert final_flow_details["high_volume_preference"] is True, final_flow_details
+
 
 """
 Regression Testing
