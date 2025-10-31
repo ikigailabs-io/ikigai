@@ -391,6 +391,75 @@ def test_flow_browser_search_1(
     assert fetched_flow.flow_id
 
 
+def test_flow_high_volume_preference(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("A test app").build()
+    cleanup.callback(app.delete)
+
+    flow = app.flow.new(name=flow_name).high_volume_preference(optimize=True).build()
+    cleanup.callback(flow.delete)
+
+    # Verify that the high volume preference is set correctly
+    flow_details = flow.describe()
+    assert flow_details["high_volume_preference"] is True, flow_details
+
+
+def test_flow_high_volume_preference_update(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("App to test flow run").build()
+    cleanup.callback(app.delete)
+
+    facet_types = ikigai.facet_types
+    flow_definition = (
+        ikigai.builder.facet(facet_types.MID.Python)
+        .arguments(
+            script=(
+                "import pandas as pd\n"
+                "df = data\n"
+                "raise ValueError('Expected Error')\n"
+                "result = df\n"
+            )
+        )
+        .build()
+    )
+
+    flow = (
+        app.flow.new(name=flow_name)
+        .definition(flow_definition)
+        .high_volume_preference(optimize=False)
+        .build()
+    )
+
+    flow_details = flow.describe()
+    assert flow_details["high_volume_preference"] is False, flow_details
+    assert flow_details["definition"]["facets"], flow_details["definition"]
+
+    # Update the high volume preference
+    flow.update_high_volume_preference(optimize=True)
+
+    updated_flow_details = flow.describe()
+    assert updated_flow_details["high_volume_preference"] is True, updated_flow_details
+    assert updated_flow_details["definition"]["facets"], updated_flow_details[
+        "definition"
+    ]
+    assert updated_flow_details["definition"] == flow_details["definition"]
+
+    # Check that high volume preference persists after updating the definition
+    new_flow_definition = ikigai.builder.build()
+    flow.update_definition(definition=new_flow_definition)
+    final_flow_details = flow.describe()
+
+    assert final_flow_details["high_volume_preference"] is True, final_flow_details
+
+
 """
 Regression Testing
 
