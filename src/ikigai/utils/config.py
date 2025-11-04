@@ -4,11 +4,9 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Union
+from typing import Annotated, TypeAlias
 
-from typing_extensions import TypeAlias
-
-PemFilepath: TypeAlias = Annotated[
+PEMfilePath: TypeAlias = Annotated[
     str, "Path to a PEM file containing SSL certificates"
 ]
 CertKeyPair: TypeAlias = Annotated[
@@ -16,4 +14,4 @@ CertKeyPair: TypeAlias = Annotated[
 ]
 
 # Define a type alias for SSL configuration
-SSLConfig: TypeAlias = Union[bool, PemFilepath, CertKeyPair]
+SSLConfig: TypeAlias = bool | PEMfilePath | CertKeyPair
