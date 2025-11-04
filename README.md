@@ -94,9 +94,9 @@ API key to use Ikigai's Python client library in the next sections.
 ## Requirements
 
 You should have the latest stable version of Python installed in your
-environment (~3.12) to use Ikigai's Python client library. Ikigai will
-support Python version 3.9 until it's
-[EOL (October 31, 2025)](https://endoflife.date/python).
+environment (~3.13) to use Ikigai's Python client library. Ikigai will
+support Python version 3.10 until it's
+[EOL (October 31, 2026)](https://endoflife.date/python).
 
 ## Installation
 
