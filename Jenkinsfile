@@ -44,5 +44,33 @@ pipeline {
                 }
             }
         }
+
+        stage('Lint') {
+            steps {
+                script {
+                    // Define the linting jobs
+                    def lintJobs = [:]
+
+                    lintJobs['python-lint'] = {
+                        sh '''
+                        set +x
+                        hatch fmt --check
+                        '''
+                    }
+                    lintJobs['python-typecheck'] = {
+                        sh '''
+                        set +x
+                        hatch run types:check
+                        '''
+                    }
+                    lintJobs['docs-lint'] = {
+                        echo 'TODO: Setup markdown lint'
+                    }
+
+                    // Execute Linting jobs in parallel
+                    parallel lintJobs
+                }
+            }
+        }
     }
 }
