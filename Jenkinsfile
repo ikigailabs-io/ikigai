@@ -72,6 +72,30 @@ pipeline {
                 }
             }
         }
+
+        stage('Test') {
+            matrix {
+                axes {
+                    axis {
+                        name 'PYTHON_VERSION'
+                        values '3.10', '3.11', '3.12', '3.13'
+                    }
+                }
+                stages {
+                    stage('Run Tests') {
+                        steps{
+                            withCredentials([file(credentialsId: 'PCL-test-env-dev', variable: 'TEST_ENV_FILE_PATH')]) {
+                                sh "mv ${TEST_ENV_FILE_PATH} test-env.toml"
+
+                                sh """
+                                hatch test --randomize --python=${PYTHON_VERSION} -- -x
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     post{
