@@ -84,12 +84,21 @@ pipeline {
                 stages {
                     stage('Run Tests') {
                         steps{
-                            withCredentials([file(credentialsId: 'PCL-test-env-dev', variable: 'TEST_ENV_FILE_PATH')]) {
-                                sh "mv ${TEST_ENV_FILE_PATH} test-env.toml"
+                            script {
+                                def REPORTS_DIRECTORY = "reports/${PYTHON_VERSION}"
+                                sh "mkdir -p ${REPORTS_DIRECTORY}"
+                                withCredentials([file(credentialsId: 'PCL-test-env-dev', variable: 'TEST_ENV_FILE_PATH')]) {
+                                    sh "mv ${TEST_ENV_FILE_PATH} test-env.toml"
 
-                                sh """
-                                hatch test --parallel -n 8 --randomize --python=${PYTHON_VERSION} -- -x
-                                """
+                                    sh """
+                                    hatch test \
+                                        --python=${PYTHON_VERSION} \
+                                        --junitxml=${REPORTS_DIRECTORY}/report.xml \
+                                        --randomize \
+                                        --parallel -n 8 \
+                                        -- -x
+                                    """
+                                }
                             }
                         }
                     }
@@ -100,6 +109,7 @@ pipeline {
 
     post{
         always {
+            junit 'reports/**/*.xml'
             cleanWs()
         }
     }
