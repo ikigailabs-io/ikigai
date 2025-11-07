@@ -88,7 +88,7 @@ pipeline {
                                 sh "mv ${TEST_ENV_FILE_PATH} test-env.toml"
 
                                 sh """
-                                hatch test --randomize --python=${PYTHON_VERSION} -- -x
+                                hatch test --parallel -n 8 --randomize --python=${PYTHON_VERSION} -- -x
                                 """
                             }
                         }
