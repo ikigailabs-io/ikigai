@@ -12,7 +12,7 @@ pipeline {
                 script{
                     def hatch_download_url = 'https://github.com/pypa/hatch/releases/latest/download/hatch-x86_64-unknown-linux-gnu.tar.gz'
                     // In future when this file is a bit stable then pass in cacheValidityDecidingFile
-                    cache(
+                    jobcacher(
                         caches: [[
                             $class: 'ArbitraryFileCache',
                             path: '/tmp/hatch',
@@ -71,6 +71,12 @@ pipeline {
                     parallel lintJobs
                 }
             }
+        }
+    }
+
+    post{
+        always {
+            cleanWs()
         }
     }
 }
