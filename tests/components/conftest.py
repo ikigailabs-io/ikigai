@@ -71,6 +71,11 @@ def app_name(random_name: str) -> str:
     return f"proj-{random_name}"
 
 
+@pytest.fixture()
+def app_directory_name(random_name: str) -> str:
+    return f"app-dir-{random_name}"
+
+
 def _generate_df(table_generator: _TableGenerator, num_rows: int) -> pd.DataFrame:
     column_names, column_generators = table_generator
     rows = [[gen() for gen in column_generators] for _ in range(num_rows)]
