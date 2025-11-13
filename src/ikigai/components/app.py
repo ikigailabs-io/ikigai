@@ -270,8 +270,6 @@ class AppDirectoryBuilder:
 class AppDirectory(BaseModel):
     directory_id: str
     name: str
-    created_at: datetime
-    modified_at: datetime
     __client: Client
 
     @property
