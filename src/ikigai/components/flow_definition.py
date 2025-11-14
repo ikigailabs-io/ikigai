@@ -11,16 +11,18 @@ from typing import Any, ClassVar, cast
 
 from pydantic import BaseModel, Field
 
-from ikigai.components.specs import FacetType, SubModelSpec
-from ikigai.typing.protocol import FlowDefinitionDict
+from ikigai.components.specs import FacetType
+from ikigai.components.specs import SubModelSpec as ModelType
+from ikigai.typing.protocol import FlowDefinitionDict, ModelHyperParameterGroupType
 from ikigai.utils.compatibility import Self
+from ikigai.utils.data_structures import merge
 
 logger = logging.getLogger("ikigai.components")
 
 
 class FacetBuilder:
     __name: str
-    __arguments: dict[str, Any]
+    _arguments: dict[str, Any]
     __arrow_builders: list[ArrowBuilder]
     __facet: Facet | None
     __arrows: list[Arrow] | None
@@ -33,7 +35,7 @@ class FacetBuilder:
         self._builder = builder
         self._facet_type = facet_type
         self.__name = name
-        self.__arguments = {}
+        self._arguments = {}
         self.__arrow_builders = []
         self.__facet = None
         self.__arrows = None
@@ -64,7 +66,7 @@ class FacetBuilder:
     def model_facet(
         self,
         facet_type: FacetType,
-        model_type: SubModelSpec,
+        model_type: ModelType,
         name: str = "",
         args: dict[str, Any] | None = None,
         arrow_args: dict[str, Any] | None = None,
@@ -77,7 +79,7 @@ class FacetBuilder:
         ).add_arrow(self, **arrow_args)
 
     def arguments(self, **arguments: Any) -> Self:
-        self.__arguments.update(arguments)
+        self._arguments = merge(self._arguments, arguments)
         return self
 
     def add_arrow(self, parent: FacetBuilder, /, **args) -> Self:
@@ -97,13 +99,13 @@ class FacetBuilder:
             return self.__facet, self.__arrows
 
         # Check if the facet spec is satisfied
-        self._facet_type.check_arguments(arguments=self.__arguments)
+        self._facet_type.check_arguments(arguments=self._arguments)
 
         self.__facet = Facet(
             facet_id=randbytes(4).hex(),  # noqa: S311 -- Not security relevant
             facet_uid=self._facet_type.facet_uid,
             name=self.__name,
-            arguments=self.__arguments,
+            arguments=self._arguments,
         )
 
         self.__arrows = [
@@ -118,9 +120,10 @@ class FacetBuilder:
 
 
 class ModelFacetBuilder(FacetBuilder):
-    __model_type: SubModelSpec
+    __model_type: ModelType
     __parameters: dict[str, Any] | None = None
     __hyperparameters: dict[str, Any] | None = None
+    # TODO: @harsh-at-ikigailabs to make this dynamic
     __hyperparameter_aliases: ClassVar[set[str]] = {
         "hyperparameters",
         "model_selection",
@@ -133,7 +136,7 @@ class ModelFacetBuilder(FacetBuilder):
         self,
         builder: FlowDefinitionBuilder,
         facet_type: FacetType,
-        model_type: SubModelSpec,
+        model_type: ModelType,
         name: str = "",
     ) -> None:
         super().__init__(builder=builder, facet_type=facet_type, name=name)
@@ -144,6 +147,7 @@ class ModelFacetBuilder(FacetBuilder):
         # TODO: Add check that model_type is compatible with the facet type
         self.__model_type = model_type
 
+        # TODO: @harsh-at-ikigailabs make this dynamic based on facet type
         if any(
             arg.name in self.__hyperparameter_aliases
             for arg in facet_type.facet_arguments
@@ -157,35 +161,46 @@ class ModelFacetBuilder(FacetBuilder):
         if self.__hyperparameters is None:
             error_msg = "Facet type does not support hyperparameters"
             raise RuntimeError(error_msg)
-        self.__hyperparameters.update(hyperparameters)
+        # Check if hyperparameter groups are needed for this model type
+        hyperparameter_contains_groups = (
+            hyperparameter.hyperparameter_group is not None
+            for hyperparameter in self.__model_type.hyperparameters
+        )
+        if any(hyperparameter_contains_groups):
+            hyperparameter_groups: ModelHyperParameterGroupType = defaultdict(dict)
+            for hyperparameter in hyperparameters:
+                group = self.__model_type._hyperparameter_groups[hyperparameter]
+                hyperparameter_group = hyperparameter_groups[group]
+                # Type narrowing for mypy
+                if isinstance(hyperparameter_group, dict):
+                    hyperparameter_group[hyperparameter] = hyperparameters[
+                        hyperparameter
+                    ]
+                else:
+                    message = "Unexpected hyperparameter group type"
+                    raise RuntimeError(message)
+            # Handle the facet spec arguments - Respect is_list from Facet Spec
+            for group_name, group_params in hyperparameter_groups.items():
+                facet_argument = next(
+                    facet_argument
+                    for facet_argument in self._facet_type.facet_arguments
+                    if facet_argument.name == group_name
+                )
+                if facet_argument.is_list:
+                    hyperparameter_groups[group_name] = cast(
+                        list[dict[str, Any]], [group_params]
+                    )
+            self.arguments(**hyperparameter_groups)
+        else:
+            self.arguments(hyperparameters=hyperparameters)
         return self
 
     def parameters(self, **parameters: Any) -> Self:
         if self.__parameters is None:
             error_msg = "Facet type does not support parameters"
             raise RuntimeError(error_msg)
-        self.__parameters.update(parameters)
+        self.arguments(parameters=parameters)
         return self
-
-    def _build(self) -> tuple[Facet, list[Arrow]]:
-        if self.__hyperparameters is not None:
-            # Check if hyperparameter groups are needed for this model type
-            if any(
-                hyperparameter.hyperparameter_group is not None
-                for hyperparameter in self.__model_type.hyperparameters
-            ):
-                hyperparameter_groups: dict[str, dict[str, Any]] = defaultdict(dict)
-                for hyperparameter in self.__hyperparameters:
-                    group = self.__model_type._hyperparameter_groups[hyperparameter]
-                    hyperparameter_groups[group][hyperparameter] = (
-                        self.__hyperparameters[hyperparameter]
-                    )
-                self.arguments(**hyperparameter_groups)
-            else:
-                self.arguments(hyperparameters=self.__hyperparameters)
-        if self.__parameters is not None:
-            self.arguments(parameters=self.__parameters)
-        return super()._build()
 
 
 class ArrowBuilder:
@@ -228,7 +243,7 @@ class FlowDefinitionBuilder:
     def model_facet(
         self,
         facet_type: FacetType,
-        model_type: SubModelSpec,
+        model_type: ModelType,
         name: str = "",
         args: dict[str, Any] | None = None,
     ) -> ModelFacetBuilder:
