@@ -76,11 +76,18 @@ def test_app_describe_1(ikigai: Ikigai, app_name: str, cleanup: ExitStack) -> No
     assert components["external_resources"] == []
 
 
-def test_app_directory(ikigai: Ikigai) -> None:
+def test_app_directory(
+    ikigai: Ikigai, app_directory_name: str, cleanup: ExitStack
+) -> None:
+    app_directory = ikigai.app_directory.new(name=app_directory_name).build()
+    cleanup.callback(app_directory.delete)
+
     app_directories = ikigai.directories()
 
-    # TODO: Update test when creating app directories is available
-    assert len(app_directories) == 0
+    assert len(app_directories) >= 1
+    assert app_directory_name in app_directories
+    fetched_app_directory = app_directories[app_directory_name]
+    assert fetched_app_directory.directory_id == app_directory.directory_id
 
 
 def test_app_browser_1(ikigai: Ikigai, app_name: str, cleanup: ExitStack) -> None:

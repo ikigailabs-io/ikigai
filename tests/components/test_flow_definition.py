@@ -45,7 +45,9 @@ def test_flow_definition_empty(
     assert len(flows) == 0
 
     flow = app.flow.new(name=flow_name).definition(ikigai.builder.build()).build()
-    cleanup.callback(flow.delete)
+
+    assert flow.flow_id
+    assert flow.name == flow_name
 
 
 def test_flow_definition_simple(
@@ -60,7 +62,6 @@ def test_flow_definition_simple(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     r"""
     Flow:
@@ -86,7 +87,6 @@ def test_flow_definition_simple(
         .build()
     )
     flow = app.flow.new(name=flow_name).definition(flow_definition).build()
-    cleanup.callback(flow.delete)
 
     log = flow.run()
     assert log.status == FlowStatus.SUCCESS, log.data
@@ -105,10 +105,8 @@ def test_flow_definition_multiple_parent_facets(
     cleanup.callback(app.delete)
 
     dataset1 = app.dataset.new(name=f"{dataset_name}-1").df(df1).build()
-    cleanup.callback(dataset1.delete)
 
     dataset2 = app.dataset.new(name=f"{dataset_name}-2").df(df2).build()
-    cleanup.callback(dataset2.delete)
 
     r"""
     Flow:
@@ -144,7 +142,6 @@ def test_flow_definition_multiple_parent_facets(
         .build()
     )
     flow = app.flow.new(name=flow_name).definition(flow_definition).build()
-    cleanup.callback(flow.delete)
 
     log = flow.run()
     assert log.status == FlowStatus.SUCCESS, log.data
@@ -162,7 +159,6 @@ def test_flow_definition_multiple_child_facets(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     r"""
     Flow:
@@ -196,7 +192,6 @@ def test_flow_definition_multiple_child_facets(
 
     flow_definition = builder.build()
     flow = app.flow.new(name=flow_name).definition(flow_definition).build()
-    cleanup.callback(flow.delete)
 
     log = flow.run()
     assert log.status == FlowStatus.SUCCESS, log.data
@@ -215,7 +210,6 @@ def test_flow_definition_simple_ml_facet(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df_ml_regression1).build()
-    cleanup.callback(dataset.delete)
 
     model_types = ikigai.model_types
     model = (
@@ -223,7 +217,6 @@ def test_flow_definition_simple_ml_facet(
         .model_type(model_type=model_types["Linear"]["Lasso"])
         .build()
     )
-    cleanup.callback(model.delete)
 
     facet_types = ikigai.facet_types
     flow_definition = (
@@ -251,7 +244,6 @@ def test_flow_definition_simple_ml_facet(
         .build()
     )
     flow = app.flow.new(name=flow_name).definition(flow_definition).build()
-    cleanup.callback(flow.delete)
 
     log = flow.run()
     assert log.status == FlowStatus.SUCCESS, log.data

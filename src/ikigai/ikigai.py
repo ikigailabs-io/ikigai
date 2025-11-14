@@ -11,6 +11,7 @@ from pydantic.dataclasses import dataclass
 
 from ikigai import components
 from ikigai.client import Client
+from ikigai.utils.compatibility import deprecated
 from ikigai.utils.component_browser import ComponentBrowser
 from ikigai.utils.config import SSLConfig
 from ikigai.utils.missing import MISSING, MissingType
@@ -83,7 +84,11 @@ class Ikigai:
         """
         return components.AppBuilder(client=self.__client)
 
+    @deprecated("Use ikigai.app_directories() instead")
     def directories(self) -> NamedMapping[components.AppDirectory]:
+        return self.app_directories()
+
+    def app_directories(self) -> NamedMapping[components.AppDirectory]:
         """
         Get all App Directories for the user
 
@@ -104,6 +109,18 @@ class Ikigai:
         }
 
         return NamedMapping(directories)
+
+    @property
+    def app_directory(self) -> components.AppDirectoryBuilder:
+        """
+        Builder to create a new App Directory
+
+        Returns
+        -------
+        components.AppDirectoryBuilder
+            A new App Directory builder object
+        """
+        return components.AppDirectoryBuilder(client=self.__client)
 
     @property
     def builder(self) -> components.FlowDefinitionBuilder:
