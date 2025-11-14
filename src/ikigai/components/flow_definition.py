@@ -5,13 +5,14 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from random import randbytes
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 from pydantic import BaseModel, Field
 
-from ikigai.components.specs import FacetType
-from ikigai.typing.protocol import FlowDefinitionDict, ModelType
+from ikigai.components.specs import FacetType, SubModelSpec
+from ikigai.typing.protocol import FlowDefinitionDict
 from ikigai.utils.compatibility import Self
 
 logger = logging.getLogger("ikigai.components")
@@ -63,7 +64,7 @@ class FacetBuilder:
     def model_facet(
         self,
         facet_type: FacetType,
-        model_type: ModelType,
+        model_type: SubModelSpec,
         name: str = "",
         args: dict[str, Any] | None = None,
         arrow_args: dict[str, Any] | None = None,
@@ -117,15 +118,22 @@ class FacetBuilder:
 
 
 class ModelFacetBuilder(FacetBuilder):
-    __model_type: ModelType
+    __model_type: SubModelSpec
     __parameters: dict[str, Any] | None = None
     __hyperparameters: dict[str, Any] | None = None
+    __hyperparameter_aliases: ClassVar[set[str]] = {
+        "hyperparameters",
+        "model_selection",
+        "processing",
+        "metrics",
+        "fine_tuning",
+    }
 
     def __init__(
         self,
         builder: FlowDefinitionBuilder,
         facet_type: FacetType,
-        model_type: ModelType,
+        model_type: SubModelSpec,
         name: str = "",
     ) -> None:
         super().__init__(builder=builder, facet_type=facet_type, name=name)
@@ -136,7 +144,10 @@ class ModelFacetBuilder(FacetBuilder):
         # TODO: Add check that model_type is compatible with the facet type
         self.__model_type = model_type
 
-        if any(arg.name == "hyperparameters" for arg in facet_type.facet_arguments):
+        if any(
+            arg.name in self.__hyperparameter_aliases
+            for arg in facet_type.facet_arguments
+        ):
             self.__hyperparameters = {}
 
         if any(arg.name == "parameters" for arg in facet_type.facet_arguments):
@@ -158,7 +169,20 @@ class ModelFacetBuilder(FacetBuilder):
 
     def _build(self) -> tuple[Facet, list[Arrow]]:
         if self.__hyperparameters is not None:
-            self.arguments(hyperparameters=self.__hyperparameters)
+            # Check if hyperparameter groups are needed for this model type
+            if any(
+                hyperparameter.hyperparameter_group is not None
+                for hyperparameter in self.__model_type.hyperparameters
+            ):
+                hyperparameter_groups: dict[str, dict[str, Any]] = defaultdict(dict)
+                for hyperparameter in self.__hyperparameters:
+                    group = self.__model_type._hyperparameter_groups[hyperparameter]
+                    hyperparameter_groups[group][hyperparameter] = (
+                        self.__hyperparameters[hyperparameter]
+                    )
+                self.arguments(**hyperparameter_groups)
+            else:
+                self.arguments(hyperparameters=self.__hyperparameters)
         if self.__parameters is not None:
             self.arguments(parameters=self.__parameters)
         return super()._build()
@@ -204,7 +228,7 @@ class FlowDefinitionBuilder:
     def model_facet(
         self,
         facet_type: FacetType,
-        model_type: ModelType,
+        model_type: SubModelSpec,
         name: str = "",
         args: dict[str, Any] | None = None,
     ) -> ModelFacetBuilder:
