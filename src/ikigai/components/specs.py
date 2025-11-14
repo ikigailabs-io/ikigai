@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 from collections import ChainMap
 from collections.abc import Generator, Mapping
+from functools import cached_property
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, RootModel, model_validator
@@ -390,6 +391,31 @@ class SubModelSpec(BaseModel, Helpful):
         }
 
         return cls.model_validate(data_dict)
+
+    @cached_property
+    def _hyperparameter_groups(self) -> dict[str, str]:
+        # If one hyperparameter has a group, then all hyperparameters must have groups
+        has_any_groups = any(
+            hyperparameter.hyperparameter_group is not None
+            for hyperparameter in self.hyperparameters
+        )
+        has_all_groups = all(
+            hyperparameter.hyperparameter_group is not None
+            for hyperparameter in self.hyperparameters
+        )
+
+        if has_any_groups and not has_all_groups:
+            message = "Inconsistent hyperparameter groups:"
+            "Some hyperparameters have groups while others do not."
+            raise ValueError(message)
+        # Create a mapping between hyperparameter name to its group
+        groups: dict[str, str] = {}
+        for hyperparameter in self.hyperparameters:
+            group = hyperparameter.hyperparameter_group
+            if not group:
+                continue
+            groups[hyperparameter.name] = group
+        return groups
 
     @override
     def _help(self) -> Generator[str]:
