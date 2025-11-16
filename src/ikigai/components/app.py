@@ -239,11 +239,37 @@ class App(BaseModel):
         )
 
 
+class AppDirectoryBuilder:
+    _name: str
+    _parent: Directory | None
+    __client: Client
+
+    def __init__(self, client: Client) -> None:
+        self.__client = client
+        self._name = ""
+        self._parent = None
+
+    def new(self, name: str) -> Self:
+        self._name = name
+        return self
+
+    def parent(self, parent: Directory) -> Self:
+        self._parent = parent
+        return self
+
+    def build(self) -> AppDirectory:
+        directory_id = self.__client.component.create_app_directory(
+            name=self._name, parent=self._parent
+        )
+        directory_dict = self.__client.component.get_app_directory(
+            directory_id=directory_id
+        )
+        return AppDirectory.from_dict(data=directory_dict, client=self.__client)
+
+
 class AppDirectory(BaseModel):
     directory_id: str
     name: str
-    created_at: datetime
-    modified_at: datetime
     __client: Client
 
     @property
@@ -258,6 +284,10 @@ class AppDirectory(BaseModel):
 
     def to_dict(self) -> NamedDirectoryDict:
         return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
+
+    def delete(self) -> None:
+        self.__client.component.delete_app_directory(directory_id=self.directory_id)
+        return None
 
     def directories(self) -> NamedMapping[Self]:
         directory_dicts = self.__client.component.get_app_directories_for_user(

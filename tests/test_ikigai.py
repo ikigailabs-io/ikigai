@@ -19,11 +19,11 @@ def test_client_apps(cred: dict[str, Any]) -> None:
     assert len(apps) > 0
 
 
-def test_client_app_get_item(cred: dict[str, Any]) -> None:
+def test_client_app_get_item(cred: dict[str, Any], random_name: str) -> None:
     ikigai = Ikigai(**cred)
     apps = ikigai.apps()
     with pytest.raises(KeyError):
-        apps["Testing"]
+        apps[random_name]
 
 
 """
