@@ -2,7 +2,13 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.components.app import App, AppBrowser, AppBuilder, AppDirectory
+from ikigai.components.app import (
+    App,
+    AppBrowser,
+    AppBuilder,
+    AppDirectory,
+    AppDirectoryBuilder,
+)
 from ikigai.components.dataset import (
     Dataset,
     DatasetBrowser,
@@ -33,6 +39,7 @@ __all__ = [
     "AppBrowser",
     "AppBuilder",
     "AppDirectory",
+    "AppDirectoryBuilder",
     "Dataset",
     "DatasetBrowser",
     "DatasetBuilder",

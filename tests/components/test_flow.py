@@ -50,7 +50,6 @@ def test_flow_renaming(
     cleanup.callback(app.delete)
 
     flow = app.flow.new(name=flow_name).build()
-    cleanup.callback(flow.delete)
 
     flow.rename(f"updated {flow_name}")
 
@@ -72,7 +71,6 @@ def test_flow_definition_update(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     facet_types = ikigai.facet_types
 
@@ -89,7 +87,6 @@ def test_flow_definition_update(
     )
 
     flow = app.flow.new(name=flow_name).definition(initial_flow_definition).build()
-    cleanup.callback(flow.delete)
 
     failure_log = flow.run()
     assert failure_log.status == FlowStatus.FAILED, failure_log.data
@@ -128,7 +125,6 @@ def test_flow_status(
     cleanup.callback(app.delete)
 
     flow = app.flow.new(name=flow_name).build()
-    cleanup.callback(flow.delete)
 
     status_report = flow.status()
     assert status_report.status == FlowStatus.IDLE
@@ -148,7 +144,6 @@ def test_flow_clone(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     # TODO: Update test once we can nicely create pipelines
     flow = (
@@ -204,12 +199,10 @@ def test_flow_clone(
         )
         .build()
     )
-    cleanup.callback(flow.delete)
 
     cloned_flow = (
         app.flow.new(name=f"clone of {flow_name}").definition(definition=flow).build()
     )
-    cleanup.callback(cloned_flow.delete)
 
     flows = app.flows()
 
@@ -230,7 +223,6 @@ def test_flow_run_success_1(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     facet_types = ikigai.facet_types
     flow_definition = (
@@ -253,7 +245,6 @@ def test_flow_run_success_1(
     )
 
     flow = app.flow.new(name=flow_name).definition(definition=flow_definition).build()
-    cleanup.callback(flow.delete)
 
     log = flow.run()
     assert log.status == FlowStatus.SUCCESS, log.data
@@ -273,7 +264,6 @@ def test_flow_run_fail_1(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     facet_types = ikigai.facet_types
     flow_definition = (
@@ -303,7 +293,6 @@ def test_flow_run_fail_1(
     )
 
     flow = app.flow.new(name=flow_name).definition(definition=flow_definition).build()
-    cleanup.callback(flow.delete)
 
     log = flow.run()
     assert log.status == FlowStatus.FAILED, log.data
@@ -354,8 +343,11 @@ def test_flow_directories_creation(
     flow = (
         app.flow.new(name=flow_name).directory(directory=nested_flow_directory).build()
     )
-    cleanup.callback(flow.delete)
-    assert len(nested_flow_directory.flows()) == 1
+    nested_directory_flows = nested_flow_directory.flows()
+    assert len(nested_directory_flows) == 1
+    assert flow_name in nested_directory_flows
+    assert nested_directory_flows[flow_name].flow_id == flow.flow_id
+
     assert len(flow_directory.flows()) == 0
 
 
@@ -366,7 +358,6 @@ def test_flow_browser_1(
     cleanup.callback(app.delete)
 
     flow = app.flow.new(name=flow_name).build()
-    cleanup.callback(flow.delete)
 
     fetched_flow = app.flows[flow_name]
     assert fetched_flow.flow_id == flow.flow_id
@@ -380,7 +371,6 @@ def test_flow_browser_search_1(
     cleanup.callback(app.delete)
 
     flow = app.flow.new(name=flow_name).build()
-    cleanup.callback(flow.delete)
 
     flow_name_substr = flow_name.split("-", maxsplit=1)[1]
     fetched_flows = app.flows.search(flow_name_substr)
@@ -388,7 +378,7 @@ def test_flow_browser_search_1(
     assert flow_name in fetched_flows
     fetched_flow = fetched_flows[flow_name]
 
-    assert fetched_flow.flow_id
+    assert fetched_flow.flow_id == flow.flow_id
 
 
 def test_flow_high_volume_preference(
@@ -401,7 +391,6 @@ def test_flow_high_volume_preference(
     cleanup.callback(app.delete)
 
     flow = app.flow.new(name=flow_name).high_volume_preference(optimize=True).build()
-    cleanup.callback(flow.delete)
 
     # Verify that the high volume preference is set correctly
     flow_details = flow.describe()
@@ -483,7 +472,6 @@ def test_iplt_7641_flows(
     cleanup.callback(app.delete)
 
     flow = app.flow.new(name=flow_name).build()
-    cleanup.callback(flow.delete)
 
     flow_directory = app.flow_directory.new(name=flow_directory_name_1).build()
     cloned_flow = (
@@ -492,7 +480,6 @@ def test_iplt_7641_flows(
         .definition(flow)
         .build()
     )
-    cleanup.callback(cloned_flow.delete)
 
     flows = app.flows()
     directory_flows = flow_directory.flows()
