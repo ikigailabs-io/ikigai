@@ -85,6 +85,29 @@ class AppBuilder:
 
 
 class App(BaseModel):
+    """
+    Represents an App in the Ikigai platform.
+
+    Apps are the basic organizational units in Ikigai.
+
+    Attributes
+    ----------
+    app_id : str
+        Unique identifier of the app (aliased from 'project_id').
+    name : str
+        Name of the App.
+    owner : EmailStr
+        Email address of the app owner.
+    description : str
+        Description of the app.
+    created_at : datetime
+        Timestamp when the app was created.
+    modified_at : datetime
+        Timestamp when the app was last modified.
+    last_used_at : datetime
+        Timestamp when the app was last used.
+    """
+
     app_id: str = Field(validation_alias="project_id")
     name: str
     owner: EmailStr
@@ -105,6 +128,14 @@ class App(BaseModel):
     """
 
     def to_dict(self) -> dict:
+        """
+        Convert the App instance to a dictionary representation.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the App instance attributes.
+        """
         return {
             "app_id": self.app_id,
             "name": self.name,
@@ -116,20 +147,66 @@ class App(BaseModel):
         }
 
     def delete(self) -> None:
+        """
+        Delete the App instance using the API client.
+
+        Returns
+        -------
+        None
+        """
         self.__client.component.delete_app(app_id=self.app_id)
         return None
 
     def rename(self, name: str) -> Self:
+        """
+        Rename the App instance.
+
+        Parameters
+        ----------
+        name : str
+            New name for the App instance.
+
+        Returns
+        -------
+        Self
+            Updated App instance.
+        """
         _ = self.__client.component.edit_app(app_id=self.app_id, name=name)
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
         return self
 
     def move(self, directory: Directory) -> Self:
+        """
+        Move the App to the target directory.
+
+        Parameters
+        ----------
+        directory : Directory
+            Target directory.
+
+        Returns
+        -------
+        Self
+            Updated App instance.
+        """
         _ = self.__client.component.edit_app(app_id=self.app_id, directory=directory)
         return self
 
     def update_description(self, description: str) -> Self:
+        """
+        Update the App's description.
+
+        Parameters
+        ----------
+        description : str
+            The new description for the App.
+
+        Returns
+        -------
+        Self
+            The updated App instance with the new description.
+        """
         _ = self.__client.component.edit_app(
             app_id=self.app_id, description=description
         )
@@ -138,6 +215,15 @@ class App(BaseModel):
         return self
 
     def describe(self) -> dict[str, Any]:
+        """
+        Get details about the App instance including its components.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing App instance details and its associated 
+            components.
+        """
         components = self.__client.component.get_components_for_app(app_id=self.app_id)
 
         # Combine components information with app info
@@ -152,6 +238,25 @@ class App(BaseModel):
 
     @property
     def datasets(self) -> ComponentBrowser[components.Dataset]:
+        """
+        Access the datasets associated with the App.
+    
+        This property returns a `DatasetBrowser` object that provides access
+        to the App's datasets. To find datasets use `search()`, which returns 
+        datasets matching a query string. Individual datasets can also be 
+        accessed by name using indexing (`dataset['dataset_name']`).
+    
+        Returns
+        -------
+        DatasetBrowser
+            Browser object for interacting with the App's datasets.
+    
+        Notes
+        -----
+        - Use `search(query: str)` to retrieve datasets matching a query.
+        - Access a dataset by name using indexing:
+          `datasets['my_dataset']`.
+        """
         return components.DatasetBrowser(app_id=self.app_id, client=self.__client)
 
     @property
@@ -182,6 +287,24 @@ class App(BaseModel):
 
     @property
     def flows(self) -> ComponentBrowser[components.Flow]:
+        """
+        Access the flows associated with the App.
+    
+        This property returns a `FlowBrowser` object for `Flow` components
+        in the App. Users can access flows by name using indexing, or search
+        for flows using the `search()` method.
+    
+        Returns
+        -------
+        FlowBrowser
+            Browser object for interacting with the App's flows.
+    
+        Notes
+        -----
+        - Use `search(query: str)` to retrieve flows matching a query.
+        - Access a flow by name using indexing:
+          `flows['flow_name']`.
+        """
         return components.FlowBrowser(app_id=self.app_id, client=self.__client)
 
     @property
@@ -210,6 +333,22 @@ class App(BaseModel):
 
     @property
     def models(self) -> ComponentBrowser[components.Model]:
+        """
+        Access the models associated with the App.
+    
+        This property returns a `ModelBrowser` object for `Model` components
+        in the App. Users can access models by name using indexing.
+    
+        Returns
+        -------
+        ModelBrowser
+            Browser object for interacting with the App's models.
+    
+        Notes
+        -----
+        - Access a model by name using indexing:
+          `models['model_name']`.
+        """
         return components.ModelBrowser(app_id=self.app_id, client=self.__client)
 
     @property
