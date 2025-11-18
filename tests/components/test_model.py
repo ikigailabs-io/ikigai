@@ -73,7 +73,6 @@ def test_model_editing(
         .model_type(model_type=model_types["Linear"]["Lasso"])
         .build()
     )
-    cleanup.callback(model.delete)
 
     model.rename(f"updated {model_name}")
     model.update_description("updated description")
@@ -104,7 +103,6 @@ def test_model_describe(
         .model_type(model_type=model_types["Linear"]["Lasso"])
         .build()
     )
-    cleanup.callback(model.delete)
 
     model_description = model.describe()
     assert model_description is not None
@@ -124,7 +122,6 @@ def test_model_browser_1(
         .model_type(model_type=model_types["Linear"]["Lasso"])
         .build()
     )
-    cleanup.callback(model.delete)
 
     fetched_model = app.models[model_name]
     assert fetched_model.model_id == model.model_id
@@ -143,7 +140,6 @@ def test_model_browser_search_1(
         .model_type(model_type=model_types["Linear"]["Lasso"])
         .build()
     )
-    cleanup.callback(model.delete)
 
     model_name_substr = model_name.split("-", maxsplit=1)[1]
     fetched_models = app.models.search(model_name_substr)
@@ -151,7 +147,7 @@ def test_model_browser_search_1(
     assert model_name in fetched_models
     fetched_model = fetched_models[model_name]
 
-    assert fetched_model.model_id
+    assert fetched_model.model_id == model.model_id
 
 
 def test_model_builder_hyperparameter_groups(
