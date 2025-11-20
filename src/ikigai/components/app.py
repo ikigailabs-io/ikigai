@@ -93,17 +93,23 @@ class App(BaseModel):
     Attributes
     ----------
     app_id : str
-        Unique identifier of the app (aliased from 'project_id').
+        Unique identifier of the app.
+
     name : str
         Name of the App.
+
     owner : EmailStr
         Email address of the app owner.
+
     description : str
         Description of the app.
+
     created_at : datetime
         Timestamp when the app was created.
+
     modified_at : datetime
         Timestamp when the app was last modified.
+
     last_used_at : datetime
         Timestamp when the app was last used.
     """
@@ -129,12 +135,12 @@ class App(BaseModel):
 
     def to_dict(self) -> dict:
         """
-        Convert the App instance to a dictionary representation.
+        Convert the App to a dictionary representation.
 
         Returns
         -------
         dict
-            Dictionary containing the App instance attributes.
+            Dictionary containing the App attributes.
         """
         return {
             "app_id": self.app_id,
@@ -148,7 +154,7 @@ class App(BaseModel):
 
     def delete(self) -> None:
         """
-        Delete the App instance using the API client.
+        Delete the App.
 
         Returns
         -------
@@ -159,17 +165,17 @@ class App(BaseModel):
 
     def rename(self, name: str) -> Self:
         """
-        Rename the App instance.
+        Rename the App.
 
         Parameters
         ----------
         name : str
-            New name for the App instance.
+            New name for the App.
 
         Returns
         -------
         Self
-            Updated App instance.
+            Updated App.
         """
         _ = self.__client.component.edit_app(app_id=self.app_id, name=name)
         # TODO: handle error case, currently it is a raise NotImplemented from Session
@@ -188,7 +194,7 @@ class App(BaseModel):
         Returns
         -------
         Self
-            Updated App instance.
+            Updated App.
         """
         _ = self.__client.component.edit_app(app_id=self.app_id, directory=directory)
         return self
@@ -205,7 +211,7 @@ class App(BaseModel):
         Returns
         -------
         Self
-            The updated App instance with the new description.
+            The updated App with the new description.
         """
         _ = self.__client.component.edit_app(
             app_id=self.app_id, description=description
@@ -216,12 +222,12 @@ class App(BaseModel):
 
     def describe(self) -> dict[str, Any]:
         """
-        Get details about the App instance including its components.
+        Get details about the App including its components.
 
         Returns
         -------
         dict[str, Any]
-            Dictionary containing App instance details and its associated 
+            Dictionary containing App details and its associated
             components.
         """
         components = self.__client.component.get_components_for_app(app_id=self.app_id)
@@ -240,22 +246,27 @@ class App(BaseModel):
     def datasets(self) -> ComponentBrowser[components.Dataset]:
         """
         Access the datasets associated with the App.
-    
+
         This property returns a `DatasetBrowser` object that provides access
-        to the App's datasets. To find datasets use `search()`, which returns 
-        datasets matching a query string. Individual datasets can also be 
-        accessed by name using indexing (`dataset['dataset_name']`).
-    
+        to the App's datasets.
+
         Returns
         -------
         DatasetBrowser
             Browser object for interacting with the App's datasets.
-    
-        Notes
-        -----
-        - Use `search(query: str)` to retrieve datasets matching a query.
-        - Access a dataset by name using indexing:
-          `datasets['my_dataset']`.
+
+        Examples
+        --------
+        Use `search(query: str)`, which returns datasets matching a query
+        string.
+
+        >>> datasets = app.datasets
+        >>> dataset = datasets.search("Examp")
+
+        Individual datasets can also be accessed by name using indexing.
+
+        >>> datasets = app.datasets
+        >>> dataset = datasets['Example Dataset']
         """
         return components.DatasetBrowser(app_id=self.app_id, client=self.__client)
 
@@ -289,21 +300,26 @@ class App(BaseModel):
     def flows(self) -> ComponentBrowser[components.Flow]:
         """
         Access the flows associated with the App.
-    
+
         This property returns a `FlowBrowser` object for `Flow` components
-        in the App. Users can access flows by name using indexing, or search
-        for flows using the `search()` method.
-    
+        in the App.
+
         Returns
         -------
         FlowBrowser
             Browser object for interacting with the App's flows.
-    
-        Notes
-        -----
-        - Use `search(query: str)` to retrieve flows matching a query.
-        - Access a flow by name using indexing:
-          `flows['flow_name']`.
+
+        Examples
+        --------
+        Use `search(query: str)` to retrieve flows matching a query.
+
+        >>> flows = app.flows
+        >>> flow = flows.search("Examp")
+
+        Access a flow by name using indexing.
+
+        >>> flows = app.flows
+        >>> flow = flows['Example Flow']
         """
         return components.FlowBrowser(app_id=self.app_id, client=self.__client)
 
@@ -335,19 +351,26 @@ class App(BaseModel):
     def models(self) -> ComponentBrowser[components.Model]:
         """
         Access the models associated with the App.
-    
+
         This property returns a `ModelBrowser` object for `Model` components
-        in the App. Users can access models by name using indexing.
-    
+        in the App.
+
         Returns
         -------
         ModelBrowser
             Browser object for interacting with the App's models.
-    
-        Notes
-        -----
-        - Access a model by name using indexing:
-          `models['model_name']`.
+
+        Examples
+        --------
+        Use `search(query: str)` to retrieve flows matching a query.
+
+        >>> models = app.models
+        >>> model = models.search("model")
+
+        Access a model by name using indexing.
+
+        >>> models = app.models
+        >>> model = models['model_name']
         """
         return components.ModelBrowser(app_id=self.app_id, client=self.__client)
 

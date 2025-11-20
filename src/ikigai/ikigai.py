@@ -37,7 +37,7 @@ class Ikigai:
     ssl : bool or str or tuple
         SSL configuration. See `ikigai.utils.config` for more details.
         Set to `False` to disable SSL verification (unsafe), or provide
-        custom SSL certificate by providing path the path to a certificate 
+        custom SSL certificate by providing path the path to a certificate
         (.pem) file or a tuple of (certificate, key).
     """
 
@@ -59,22 +59,35 @@ class Ikigai:
     @property
     def apps(self) -> ComponentBrowser[components.App]:
         """
-        Browser object to interact with Apps.
+        Access the Apps associated with the Ikigai account user.
 
-        It helps to list, get, and search for Apps accessible to the user in the
-        Ikigai platform.
+        This property returns a `ComponentBrowser` object for `App` components
+        accessible to the Ikigai account user.
 
         Returns
         -------
         ComponentBrowser[components.App]
-            Browser object for Apps.
+            Browser for Apps.
+
+        Examples
+        --------
+        Use `search(query: str)`, which returns Apps matching a query
+        string.
+
+        >>> apps = ikigai.apps()
+        >>> app = apps.search("Examp")
+
+        Individual Apps can also be accessed by name using indexing.
+
+        >>> apps = ikigai.apps()
+        >>> app = apps["Example App"]
         """
         return components.AppBrowser(client=self.__client)
 
     @property
     def app(self) -> components.AppBuilder:
         """
-        Builder to create a new App.
+        Get a Builder to create a new App.
 
         Returns
         -------
@@ -108,7 +121,7 @@ class Ikigai:
     @property
     def builder(self) -> components.FlowDefinitionBuilder:
         """
-        Builder to create a new Flow Definition.
+        Get a Builder to create a new Flow Definition.
 
         Returns
         -------
@@ -120,7 +133,7 @@ class Ikigai:
     @property
     def facet_types(self) -> components.FacetTypes:
         """
-        Available facet types in the Ikigai platform.
+        Available facets for use in the Ikigai platform.
 
         Returns
         -------
