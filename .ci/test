@@ -66,8 +66,7 @@ pipeline {
                                         --python=${PYTHON_VERSION} \
                                         --junitxml=${REPORTS_DIRECTORY}/report.xml \
                                         --randomize \
-                                        --parallel -n 8 \
-                                        -- -x
+                                        --parallel -n 4
                                     """
                                 }
                             }

@@ -63,6 +63,13 @@ class SubModelSpecDict(TypedDict):
 
 ModelMetricsSpecDict = dict[str, Empty]
 
+HyperParameterName = str
+HyperParameterGroupName = str
+ModelHyperParameterGroupDict = dict[HyperParameterName, Any]
+ModelHyperParameterGroupType = dict[
+    HyperParameterGroupName, ModelHyperParameterGroupDict
+]
+
 
 class ModelParameterSpecDict(TypedDict):
     name: str
