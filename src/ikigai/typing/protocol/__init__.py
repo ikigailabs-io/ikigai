@@ -23,6 +23,8 @@ from ikigai.typing.protocol.flow import (
 )
 from ikigai.typing.protocol.generic import Named
 from ikigai.typing.protocol.model import (
+    HyperParameterGroupName,
+    HyperParameterName,
     ModelDict,
     ModelHyperParameterGroupType,
     ModelHyperparameterSpecDict,
@@ -54,6 +56,8 @@ __all__ = [
     "FlowStatusReportDict",
     "FlowVariableDict",
     # Model Protocol
+    "HyperParameterGroupName",
+    "HyperParameterName",
     "ModelDict",
     "ModelHyperParameterGroupType",
     "ModelHyperparameterSpecDict",

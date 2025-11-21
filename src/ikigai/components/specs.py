@@ -14,6 +14,8 @@ from pydantic import BaseModel, ConfigDict, RootModel, field_validator, model_va
 
 from ikigai.typing.protocol import (
     FacetSpecsDict,
+    HyperParameterGroupName,
+    HyperParameterName,
     ModelHyperparameterSpecDict,
     ModelSpecDict,
     SubModelSpecDict,
@@ -390,6 +392,29 @@ class SubModelSpec(BaseModel, Helpful):
 
     model_config = ConfigDict(frozen=True)
 
+    @field_validator("hyperparameters", mode="after")
+    @classmethod
+    def validate_hyperparameters(
+        cls, v: list[ModelHyperparameterSpec]
+    ) -> list[ModelHyperparameterSpec]:
+        # If one hyperparameter has a group, then all hyperparameters must have groups
+        has_any_groups = any(
+            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+        )
+        has_all_groups = all(
+            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+        )
+
+        if has_any_groups and not has_all_groups:
+            message = (
+                "Inconsistent hyperparameter groups for: "
+                "Some hyperparameters have groups while others do not.\n"
+                "This is likely a due to a bug in the model specification."
+            )
+            logger.error(message, extra={"hyperparameter specification": v})
+            raise ValueError(message)
+        return v
+
     @property
     def sub_model_type(self) -> str:
         return self.name
@@ -409,34 +434,15 @@ class SubModelSpec(BaseModel, Helpful):
         return cls.model_validate(data_dict)
 
     @cached_property
-    def _hyperparameter_groups(self) -> dict[str, str]:
-        # If one hyperparameter has a group, then all hyperparameters must have groups
-        has_any_groups = any(
-            hyperparameter.hyperparameter_group is not None
+    def _hyperparameter_groups(
+        self,
+    ) -> dict[HyperParameterName, HyperParameterGroupName]:
+        # Create a mapping from hyperparameter name to its group
+        return {
+            hyperparameter.name: hyperparameter.hyperparameter_group
             for hyperparameter in self.hyperparameters
-        )
-        has_all_groups = all(
-            hyperparameter.hyperparameter_group is not None
-            for hyperparameter in self.hyperparameters
-        )
-
-        if has_any_groups and not has_all_groups:
-            message = (
-                "Inconsistent hyperparameter groups for "
-                f"{self.model_type}.{self.name}: "
-                "Some hyperparameters have groups while others do not.\n"
-                "This is likely a due to a bug in the model specification."
-            )
-            logger.error(message, extra={"sub_model_spec": self})
-            raise ValueError(message)
-        # Create a mapping between hyperparameter name to its group
-        groups: dict[str, str] = {}
-        for hyperparameter in self.hyperparameters:
-            group = hyperparameter.hyperparameter_group
-            if not group:
-                continue
-            groups[hyperparameter.name] = group
-        return groups
+            if hyperparameter.hyperparameter_group
+        }
 
     @override
     def _help(self) -> Generator[str]:
