@@ -10,7 +10,7 @@ from collections.abc import Generator, Mapping
 from functools import cached_property
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, RootModel, model_validator
+from pydantic import BaseModel, ConfigDict, RootModel, field_validator, model_validator
 
 from ikigai.typing.protocol import (
     FacetSpecsDict,
@@ -82,11 +82,25 @@ class FacetType(BaseModel, Helpful):
     is_deprecated: bool
     is_hidden: bool
     facet_requirement: FacetRequirementSpec
-    facet_arguments: list[ArgumentSpec]
-    in_arrow_arguments: list[ArgumentSpec]
-    out_arrow_arguments: list[ArgumentSpec]
+    facet_arguments: dict[str, ArgumentSpec]
+    in_arrow_arguments: dict[str, ArgumentSpec]
+    out_arrow_arguments: dict[str, ArgumentSpec]
 
     model_config = ConfigDict(frozen=True)
+
+    @field_validator(
+        "facet_arguments", "in_arrow_arguments", "out_arrow_arguments", mode="before"
+    )
+    @classmethod
+    def validate_arguments(cls, v: list[dict]) -> dict[str, ArgumentSpec]:
+        if not isinstance(v, list):
+            error_msg = "Expected a list of argument dictionaries"
+            raise ValueError(error_msg)
+
+        return {
+            (spec := ArgumentSpec.model_validate(argument_dict)).name: spec
+            for argument_dict in v
+        }
 
     @property
     def facet_uid(self) -> str:
@@ -102,7 +116,9 @@ class FacetType(BaseModel, Helpful):
         yield f"{self.name.title()}:"
         # Facet Arguments
         visible_facet_arguments = [
-            argument for argument in self.facet_arguments if not argument.is_hidden
+            argument
+            for argument in self.facet_arguments.values()
+            if not argument.is_hidden
         ]
         if not visible_facet_arguments:
             yield "  No arguments"
@@ -119,12 +135,12 @@ class FacetType(BaseModel, Helpful):
         visible_in_arrow_arguments, out_arrow_arguments = (
             [
                 argument
-                for argument in self.in_arrow_arguments
+                for argument in self.in_arrow_arguments.values()
                 if not argument.is_hidden
             ],
             [
                 argument
-                for argument in self.out_arrow_arguments
+                for argument in self.out_arrow_arguments.values()
                 if not argument.is_hidden
             ],
         )

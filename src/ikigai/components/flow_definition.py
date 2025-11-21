@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from random import randbytes
-from typing import Any, ClassVar, cast
+from typing import Any, cast
 
 from pydantic import BaseModel, Field
 
@@ -121,16 +121,6 @@ class FacetBuilder:
 
 class ModelFacetBuilder(FacetBuilder):
     __model_type: ModelType
-    __parameters: dict[str, Any] | None = None
-    __hyperparameters: dict[str, Any] | None = None
-    # TODO: @harsh-at-ikigailabs to make this dynamic
-    __hyperparameter_aliases: ClassVar[set[str]] = {
-        "hyperparameters",
-        "model_selection",
-        "processing",
-        "metrics",
-        "fine_tuning",
-    }
 
     def __init__(
         self,
@@ -140,64 +130,51 @@ class ModelFacetBuilder(FacetBuilder):
         name: str = "",
     ) -> None:
         super().__init__(builder=builder, facet_type=facet_type, name=name)
-        if not any(arg.name == "model_name" for arg in facet_type.facet_arguments):
+        if "model_name" not in facet_type.facet_arguments:
             error_msg = "Facet type must be a model facet"
             raise ValueError(error_msg)
 
         # TODO: Add check that model_type is compatible with the facet type
         self.__model_type = model_type
 
-        # TODO: @harsh-at-ikigailabs make this dynamic based on facet type
-        if any(
-            arg.name in self.__hyperparameter_aliases
-            for arg in facet_type.facet_arguments
-        ):
-            self.__hyperparameters = {}
-
-        if any(arg.name == "parameters" for arg in facet_type.facet_arguments):
-            self.__parameters = {}
-
     def hyperparameters(self, **hyperparameters: Any) -> Self:
-        if self.__hyperparameters is None:
-            error_msg = "Facet type does not support hyperparameters"
+        # If no hyperparameters are defined for this model type
+        #   then raise an error
+        if len(self.__model_type.hyperparameters) <= 0:
+            facet_name = self._facet_type.name.title()
+            error_msg = f"{facet_name} Facet does not support hyperparameters"
             raise RuntimeError(error_msg)
-        # Check if hyperparameter groups are needed for this model type
-        hyperparameter_contains_groups = (
-            hyperparameter.hyperparameter_group is not None
-            for hyperparameter in self.__model_type.hyperparameters
-        )
-        if any(hyperparameter_contains_groups):
-            hyperparameter_groups: ModelHyperParameterGroupType = defaultdict(dict)
-            for hyperparameter in hyperparameters:
-                group = self.__model_type._hyperparameter_groups[hyperparameter]
-                hyperparameter_group = hyperparameter_groups[group]
-                # Type narrowing for mypy
-                if isinstance(hyperparameter_group, dict):
-                    hyperparameter_group[hyperparameter] = hyperparameters[
-                        hyperparameter
-                    ]
-                else:
-                    message = "Unexpected hyperparameter group type"
-                    raise RuntimeError(message)
-            # Handle the facet spec arguments - Respect is_list from Facet Spec
-            for group_name, group_params in hyperparameter_groups.items():
-                facet_argument = next(
-                    facet_argument
-                    for facet_argument in self._facet_type.facet_arguments
-                    if facet_argument.name == group_name
-                )
-                if facet_argument.is_list:
-                    hyperparameter_groups[group_name] = cast(
-                        list[dict[str, Any]], [group_params]
-                    )
-            self.arguments(**hyperparameter_groups)
-        else:
+
+        # If hyperparameter groups are not required for this model type
+        #   then just update facet arguments directly
+        if not self.__model_type._hyperparameter_groups:
             self.arguments(hyperparameters=hyperparameters)
+            return self
+
+        # Hyperparameter groups are needed for this model type
+        #   so group them accordingly
+        hyperparameter_groups: ModelHyperParameterGroupType = defaultdict(dict)
+        for hyperparameter_name, hyperparameter_value in hyperparameters.items():
+            group = self.__model_type._hyperparameter_groups[hyperparameter_name]
+            hyperparameter_group = hyperparameter_groups[group]
+            hyperparameter_group[hyperparameter_name] = hyperparameter_value
+
+        # Handle the facet spec arguments - Respect is_list from Facet Spec
+        hyperparameter_as_arguments = {
+            group_name: (
+                [group_params]
+                if self._facet_type.facet_arguments[group_name].is_list
+                else group_params
+            )
+            for group_name, group_params in hyperparameter_groups.items()
+        }
+        self.arguments(**hyperparameter_as_arguments)
         return self
 
     def parameters(self, **parameters: Any) -> Self:
-        if self.__parameters is None:
-            error_msg = "Facet type does not support parameters"
+        if "parameters" not in self._facet_type.facet_arguments:
+            facet_name = self._facet_type.name.title()
+            error_msg = f"{facet_name} Facet does not support parameters"
             raise RuntimeError(error_msg)
         self.arguments(parameters=parameters)
         return self
