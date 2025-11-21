@@ -421,8 +421,13 @@ class SubModelSpec(BaseModel, Helpful):
         )
 
         if has_any_groups and not has_all_groups:
-            message = "Inconsistent hyperparameter groups:"
-            "Some hyperparameters have groups while others do not."
+            message = (
+                "Inconsistent hyperparameter groups for "
+                f"{self.model_type}.{self.name}: "
+                "Some hyperparameters have groups while others do not.\n"
+                "This is likely a due to a bug in the model specification."
+            )
+            logger.error(message, extra={"sub_model_spec": self})
             raise ValueError(message)
         # Create a mapping between hyperparameter name to its group
         groups: dict[str, str] = {}
