@@ -15,7 +15,7 @@ from ikigai.components.specs import FacetType
 from ikigai.components.specs import SubModelSpec as ModelType
 from ikigai.typing.protocol import FlowDefinitionDict, ModelHyperParameterGroupType
 from ikigai.utils.compatibility import Self
-from ikigai.utils.data_structures import merge
+from ikigai.utils.data_structures import merge_dicts
 
 logger = logging.getLogger("ikigai.components")
 
@@ -79,7 +79,7 @@ class FacetBuilder:
         ).add_arrow(self, **arrow_args)
 
     def arguments(self, **arguments: Any) -> Self:
-        self._arguments = merge(self._arguments, arguments)
+        self._arguments = merge_dicts(self._arguments, arguments)
         return self
 
     def add_arrow(self, parent: FacetBuilder, /, **args) -> Self:

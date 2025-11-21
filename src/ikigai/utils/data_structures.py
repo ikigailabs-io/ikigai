@@ -3,7 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 
-def merge(obj_1: dict, obj_2: dict) -> dict:
+from typing import Any
+
+from ikigai.utils.missing import MISSING
+
+
+def merge_dicts(obj_1: dict, obj_2: dict, *, sentinel: Any = MISSING) -> dict:
     """
     Merge two dictionaries recursively, with the second taking precedence.
 
@@ -12,18 +17,28 @@ def merge(obj_1: dict, obj_2: dict) -> dict:
 
     Parameters
     ----------
+
     obj_1 : dict
         The first dictionary to merge.
+
     obj_2 : dict
         The second dictionary to merge (takes precedence in conflicts).
 
+    sentinel: Any
+        Sentinel value, when present in obj_2 will remove
+        the corresponding key from the result.
+        Avoid using None or MISSING as sentinel, instead create a sentinel
+        using `object()` to ensure uniqueness.
+
     Returns
     -------
+
     dict
         The merged dictionary.
 
     Examples
     --------
+
     Simple merge with conflict resolution:
 
     >>> merge({'a': 1, 'b': 2}, {'b': 3, 'c': 4})
@@ -38,12 +53,26 @@ def merge(obj_1: dict, obj_2: dict) -> dict:
 
     >>> merge({'a': {'b': [1, 2]}}, {'a': {'b': [3, 4]}})
     {'a': {'b': [3, 4]}}
+
+    Using sentinel to remove a value from obj_1
+
+    >>> sentinel = object()
+    >>> merge({'a': 1, 'b': 2}, {'b': sentinel}, sentinel=sentinel)
+    {'a': 1}
     """
     if type(obj_1) is not type(obj_2):
         return obj_2
+
+    use_sentinel = sentinel is not MISSING
     if isinstance(obj_1, dict):
-        res = dict(**obj_1)
+        result = dict(**obj_1)
         for k, v in obj_2.items():
-            res[k] = merge(res[k], v) if k in res else v
-        return res
+            if use_sentinel and v is sentinel:
+                result.pop(k, None)
+                continue
+
+            result[k] = (
+                merge_dicts(result[k], v, sentinel=sentinel) if k in result else v
+            )
+        return result
     return obj_2
