@@ -11,6 +11,7 @@ from typing import Any
 from pydantic import AnyUrl, EmailStr, Field
 from pydantic.dataclasses import dataclass
 from requests import Response
+from requests.exceptions import ConnectionError
 
 from ikigai.client.api import ComponentAPI, SearchAPI
 from ikigai.client.session import Session
@@ -40,6 +41,24 @@ class Client:
         )
         self.__component_api = ComponentAPI(session=self.__session)
         self.__search_api = SearchAPI(session=self.__session)
+
+        # Validate Base URL by making a test request
+        try:
+            self.__search_api.heartbeat()
+        except ConnectionError:
+            message = (
+                f"Could not find Ikigai API at {base_url}. "
+                "Please check the base_url, your internet connection, "
+                "and SSL configuration."
+            )
+            raise ValueError(message) from None
+        except RuntimeError:
+            message = (
+                f"Failed to connect to Ikigai API at {base_url}. "
+                "Please check the base_url. If the problem persists, "
+                "please report an issue."
+            )
+            raise ValueError(message) from None
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Response:
         return self.__session.request(method=HTTPMethod.GET, path=path, params=params)
