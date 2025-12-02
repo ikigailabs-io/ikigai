@@ -810,6 +810,10 @@ class SearchAPI:
     def __post_init__(self, session: Session) -> None:
         self.__session = session
 
+    def heartbeat(self) -> None:
+        self.__session.get(path="/search/heartbeat", suppress_logging=True)
+        return None
+
     """
     Search APIs
     """
