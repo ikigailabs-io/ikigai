@@ -35,27 +35,21 @@ from ikigai.typing.protocol.model import (
 )
 
 __all__ = [
-    # App Protocol
     "AppDict",
-    # Dataset Protocol
+    "ArrowDict",
     "DatasetDict",
     "DatasetLogDict",
-    # Directory Protocol
     "Directory",
     "DirectoryDict",
     "DirectoryType",
-    "NamedDirectoryDict",
-    # Flow Protocol
-    "ArrowDict",
     "FacetDict",
     "FacetSpecsDict",
+    "FlowDefinitionDict",
     "FlowDict",
     "FlowLogDict",
-    "FlowDefinitionDict",
     "FlowModelVariableDict",
     "FlowStatusReportDict",
     "FlowVariableDict",
-    # Model Protocol
     "HyperParameterGroupName",
     "HyperParameterName",
     "ModelDict",
@@ -64,7 +58,7 @@ __all__ = [
     "ModelSpecDict",
     "ModelType",
     "ModelVersionDict",
-    "SubModelSpecDict",
-    # Generic Protocol
     "Named",
+    "NamedDirectoryDict",
+    "SubModelSpecDict",
 ]

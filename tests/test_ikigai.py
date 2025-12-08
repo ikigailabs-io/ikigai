@@ -5,6 +5,7 @@
 from typing import Any
 
 import pytest
+
 from ikigai import Ikigai
 
 

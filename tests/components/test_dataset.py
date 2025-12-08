@@ -7,6 +7,7 @@ from logging import Logger
 
 import pandas as pd
 import pytest
+
 from ikigai.ikigai import Ikigai
 
 

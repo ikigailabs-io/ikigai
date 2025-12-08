@@ -7,6 +7,7 @@ from contextlib import ExitStack
 
 import pandas as pd
 import pytest
+
 from ikigai import Ikigai
 from ikigai.components import FlowStatus
 

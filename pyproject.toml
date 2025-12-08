@@ -164,17 +164,20 @@ ignore = [
   "RET501",   # It's better to have explicit return even if it may be useless
   "RET502",   # It's better to have explicit return even if it may be useless
   "PLR0913",  # Some functions require many args to effectively use ikigai's api
-  "TCH001",   # Conflicts with pydantic usage
-  "TCH002",   # Conflicts with pydantic usage
-  "TCH003",   # Conflicts with pydantic usage
+  "TC001",    # Conflicts with pydantic usage
+  "TC002",    # Conflicts with pydantic usage
+  "TC003",    # Conflicts with pydantic usage
+  "TC006",    # Shouldn't require this if we avoid "bad" forward referencing
 ]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = [
   "S101",     # asserts are ok in tests
   "S311",     # crypt random is not necessary in tests
 ]
-
 
 ## Configure coverage
 [tool.coverage.run]
