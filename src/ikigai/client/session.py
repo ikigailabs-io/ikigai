@@ -48,7 +48,7 @@ class Session:
         suppress_logging: bool = False,
     ) -> Response:
         logger.debug(
-            "[%(method)s] %(path)s %(params)s\n" "json: %(json)s",
+            "[%(method)s] %(path)s %(params)s\njson: %(json)s",
             {"method": method, "path": path, "params": params, "json": json},
         )
         url = f"{self.base_url}{path}"

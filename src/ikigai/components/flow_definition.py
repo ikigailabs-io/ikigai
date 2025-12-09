@@ -79,13 +79,29 @@ class FacetBuilder:
         ).add_arrow(self, **arrow_args)
 
     def arguments(self, **arguments: Any) -> Self:
-        self._arguments = merge_dicts(self._arguments, arguments)
-        return self
+        self._validate_arguments(**arguments)
+        return self._update_arguments(**arguments)
 
     def add_arrow(self, parent: FacetBuilder, /, **args) -> Self:
         self.__arrow_builders.append(
             ArrowBuilder(source=parent, destination=self, arguments=args)
         )
+        return self
+
+    def _validate_arguments(self, **arguments: Any) -> None:
+        facet_name = self._facet_type.name.title()
+        for arg_name, arg_value in arguments.items():
+            # Validate if argument is in facet spec
+            if arg_name not in self._facet_type.facet_arguments:
+                error_msg = f"Argument '{arg_name}' is not valid for {facet_name} facet"
+                raise ValueError(error_msg)
+
+            # Argument is present in facet spec, validate it
+            arg_spec = self._facet_type.facet_arguments[arg_name]
+            arg_spec.validate_value(facet=facet_name, value=arg_value)
+
+    def _update_arguments(self, **arguments: Any) -> Self:
+        self._arguments = merge_dicts(self._arguments, arguments)
         return self
 
     def _build(self) -> tuple[Facet, list[Arrow]]:
@@ -148,7 +164,7 @@ class ModelFacetBuilder(FacetBuilder):
         # If hyperparameter groups are not required for this model type
         #   then just update facet arguments directly
         if not self.__model_type._hyperparameter_groups:
-            self.arguments(hyperparameters=hyperparameters)
+            self._update_arguments(hyperparameters=hyperparameters)
             return self
 
         # Hyperparameter groups are needed for this model type
@@ -168,7 +184,7 @@ class ModelFacetBuilder(FacetBuilder):
             )
             for group_name, group_params in hyperparameter_groups.items()
         }
-        self.arguments(**hyperparameter_as_arguments)
+        self._update_arguments(**hyperparameter_as_arguments)
         return self
 
     def parameters(self, **parameters: Any) -> Self:
@@ -176,8 +192,17 @@ class ModelFacetBuilder(FacetBuilder):
             facet_name = self._facet_type.name.title()
             error_msg = f"{facet_name} Facet does not support parameters"
             raise RuntimeError(error_msg)
-        self.arguments(parameters=parameters)
+        self._validate_parameters(**parameters)
+        self._update_arguments(parameters=parameters)
         return self
+
+    def _validate_hyperparameters(self, **hyperparameters: Any) -> None:
+        # TODO: Implement hyperparameter validation
+        ...
+
+    def _validate_parameters(self, **parameters: Any) -> None:
+        # TODO: Implement parameter validation
+        ...
 
 
 class ArrowBuilder:

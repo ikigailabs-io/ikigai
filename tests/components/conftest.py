@@ -10,6 +10,7 @@ from typing import Any
 import pandas as pd
 import pytest
 from faker import Faker
+
 from ikigai import Ikigai
 
 _ColumnNames = list[str]

@@ -10,7 +10,13 @@ from collections.abc import Generator, Mapping
 from functools import cached_property
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, RootModel, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    RootModel,
+    field_validator,
+    model_validator,
+)
 
 from ikigai.typing.protocol import (
     FacetSpecsDict,
@@ -20,9 +26,10 @@ from ikigai.typing.protocol import (
     ModelSpecDict,
     SubModelSpecDict,
 )
-from ikigai.utils.compatibility import Self, override
+from ikigai.utils.compatibility import Self, StrEnum, override
 from ikigai.utils.custom_validators import LowercaseStr
 from ikigai.utils.helpful import Helpful
+from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.components.specs")
 
@@ -34,9 +41,16 @@ class FacetRequirementSpec(BaseModel):
     min_parent_count: int
 
 
+class ArgumentType(StrEnum):
+    MAP = "MAP"
+    BOOLEAN = "BOOLEAN"
+    TEXT = "TEXT"
+    NUMBER = "NUMBER"
+
+
 class ArgumentSpec(BaseModel, Helpful):
     name: str
-    argument_type: str
+    argument_type: ArgumentType
     default_value: Any | None = None
     children: dict[str, ArgumentSpec]
     have_sub_arguments: bool
@@ -47,6 +61,85 @@ class ArgumentSpec(BaseModel, Helpful):
     options: list | None = None
 
     model_config = ConfigDict(frozen=True)
+
+    def __validation_error_message(
+        self, facet, expectation, actuals: MissingType | Any = MISSING
+    ) -> str:
+        if actuals is MISSING:
+            actuals_str = ""
+        elif actuals is None:
+            actuals_str = ", got 'None'"
+        elif isinstance(actuals, type):
+            actuals_str = f", got type '{actuals.__name__}'"
+        else:
+            actuals_str = f", got {actuals.__class__.__name__}({actuals!r})"
+
+        return f"Argument '{self.name}' for facet '{facet}' {expectation}{actuals_str}"
+
+    def validate_value(self, facet: str, value: Any) -> None:
+        if value is None:
+            if self.is_required:
+                error_msg = self.__validation_error_message(facet, "is required", value)
+                raise ValueError(error_msg)
+            return None  # No further validation for None values
+
+        # Value is not None, perform type checking
+        if self.is_list:
+            return self.__validate_list_value(facet, value)
+
+        if self.argument_type == ArgumentType.MAP:
+            return self.__validate_dict_value(facet, value)
+
+        # Not a dict or list, so it must be a scalar value
+        return self.__validate_scalar_value(facet, value)
+
+    def __validate_list_value(self, facet: str, value: Any) -> None:
+        if not isinstance(value, list):
+            error_msg = self.__validation_error_message(facet, "must be list", value)
+            raise TypeError(error_msg)
+
+        scalar_argument_spec = self.model_copy(update={"is_list": False})
+        for item in value:
+            scalar_argument_spec.validate_value(facet, item)
+        return None  # All items validated
+
+    def __validate_dict_value(self, facet: str, value: Any) -> None:
+        if not isinstance(value, Mapping):
+            error_msg = self.__validation_error_message(facet, "must be mapping", value)
+            raise TypeError(error_msg)
+
+        for name, child_value in value.items():
+            if name not in self.children:
+                error_msg = self.__validation_error_message(
+                    facet, f"provided with unexpected child argument '{name}'"
+                )
+                raise KeyError(error_msg)
+            child_spec = self.children[name]
+            child_spec.validate_value(facet=f"{facet}:{self.name}", value=child_value)
+        return None  # All child arguments validated
+
+    def __validate_scalar_value(self, facet: str, value: Any) -> None:
+        # Basic type checking based on argument_type
+
+        if self.options and value not in self.options:
+            error_msg = self.__validation_error_message(
+                facet, f"must be one of {self.options}", value
+            )
+            raise ValueError(error_msg)
+
+        if self.argument_type == ArgumentType.BOOLEAN and not isinstance(value, bool):
+            error_msg = self.__validation_error_message(facet, "must be boolean", value)
+            raise TypeError(error_msg)
+
+        if self.argument_type == ArgumentType.TEXT and not isinstance(value, str):
+            error_msg = self.__validation_error_message(facet, "must be string", value)
+            raise TypeError(error_msg)
+
+        if self.argument_type == ArgumentType.NUMBER and not isinstance(
+            value, int | float
+        ):
+            error_msg = self.__validation_error_message(facet, "must be numeric", value)
+            raise TypeError(error_msg)
 
     @override
     def _help(self) -> Generator[str]:
@@ -372,7 +465,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             yield f"{self.name}: {hyperparameter_type}{hyperparameter_value}"
 
         if self.children:
-            yield f"{self.name}: {hyperparameter_type} = " "{"
+            yield f"{self.name}: {hyperparameter_type} = {{"
             for child in self.children.values():
                 if child.is_hidden:
                     continue

@@ -6,6 +6,8 @@
 from contextlib import ExitStack
 
 import pandas as pd
+import pytest
+
 from ikigai import Ikigai
 from ikigai.components import FlowStatus
 
@@ -247,3 +249,33 @@ def test_flow_definition_simple_ml_facet(
 
     log = flow.run()
     assert log.status == FlowStatus.SUCCESS, log.data
+
+
+def test_flow_definition_facet_argument_typechecking_scalar_1(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    builder = ikigai.builder
+    with pytest.raises(TypeError):
+        # dataset_id should be str, not int
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED).arguments(
+            dataset_id=123,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+
+
+def test_flow_definition_facet_argument_typechecking_scalar_2(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    builder = ikigai.builder
+    with pytest.raises(TypeError):
+        # header should be bool, not str
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED).arguments(
+            dataset_id="123",
+            file_type="csv",
+            header="True",
+            use_raw_file=False,
+        )
