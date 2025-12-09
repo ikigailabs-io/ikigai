@@ -90,7 +90,7 @@ class FacetBuilder:
 
     def _validate_arguments(self, **arguments: Any) -> None:
         facet_name = self._facet_type.name.title()
-        for arg_name, arg_value in arguments.values():
+        for arg_name, arg_value in arguments.items():
             # Validate if argument is in facet spec
             if arg_name not in self._facet_type.facet_arguments:
                 error_msg = f"Argument '{arg_name}' is not valid for {facet_name} facet"
