@@ -235,7 +235,7 @@ def test_flow_run_success_1(
             use_raw_file=False,
         )
         .facet(facet_type=facet_types.MID.PYTHON, name="count")
-        .arguments(script=("import pandas as pd\n" "df = data\n" "result = df\n"))
+        .arguments(script=("import pandas as pd\ndf = data\nresult = df\n"))
         .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
         .arguments(
             dataset_name=f"output-{flow_name}",

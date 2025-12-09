@@ -80,7 +80,7 @@ def test_dataset_download(
 
     # v. helpful debug message when the test fails
     logger.info(
-        "df1.dtypes:\n%r\n" "%r\n\n" "round_trip_df1.dtypes:\n%r\n" "%r\n\n",
+        ("df1.dtypes:\n%r\n%r\n\nround_trip_df1.dtypes:\n%r\n%r\n\n"),
         df1.dtypes,
         df1.head(),
         round_trip_df1.dtypes,

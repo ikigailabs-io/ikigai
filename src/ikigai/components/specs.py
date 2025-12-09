@@ -465,7 +465,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             yield f"{self.name}: {hyperparameter_type}{hyperparameter_value}"
 
         if self.children:
-            yield f"{self.name}: {hyperparameter_type} = " "{"
+            yield f"{self.name}: {hyperparameter_type} = {{"
             for child in self.children.values():
                 if child.is_hidden:
                     continue
