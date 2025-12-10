@@ -5,9 +5,9 @@
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from ikigai import Ikigai
-from pydantic import ValidationError
 
 
 def test_client_init(cred: dict[str, Any]) -> None:
