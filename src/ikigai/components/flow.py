@@ -16,6 +16,7 @@ from tqdm.auto import tqdm
 
 from ikigai.client import Client
 from ikigai.components.flow_definition import FlowDefinition
+from ikigai.typing.api import RunVariablesRequest
 from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
@@ -331,20 +332,36 @@ class Flow(BaseModel):
             run_logs = [log for log in run_logs if log.timestamp > since]
         return run_logs
 
-    def run(self) -> RunLog:
+    def run(self, **variables) -> RunLog:
         """
         Run the flow
 
-        Run the flow and wait for it to complete execution.
-        This is a blocking call.
+        This function will run the flow and wait for it to complete.
+        It will accept any number of keyword arguments which will be passed as run
+        variables to the flow.
+
+        Parameters
+        ----------
+        **variables : dict
+            Run variables to be passed to the flow, where the key is the variable name
+            and the value is the variable value. Keys that start with an
+            underscore ("_") are reserved for future use and will be ignored.
 
         Returns
         -------
         RunLog
             The final run log of the flow after completion
         """
+        run_variables: RunVariablesRequest = {
+            key: {"value": value}
+            for key, value in variables.items()
+            if not key.startswith("_")
+        }
+
         # Start running pipeline
-        self.__client.component.run_flow(app_id=self.app_id, flow_id=self.flow_id)
+        self.__client.component.run_flow(
+            app_id=self.app_id, flow_id=self.flow_id, run_variables=run_variables
+        )
 
         return self.__await_run()
 
