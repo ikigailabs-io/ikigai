@@ -29,7 +29,6 @@ class FlowDict(TypedDict):
 class FlowDefinitionDict(TypedDict):
     facets: list[FacetDict]
     arrows: list[ArrowDict]
-    arguments: NotRequired[dict]
     variables: NotRequired[dict[str, FlowVariableDict]]
     model_variables: NotRequired[dict[str, FlowModelVariableDict]]
 
