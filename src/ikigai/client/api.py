@@ -454,13 +454,13 @@ class ComponentAPI:
         return resp["pipeline_id"]
 
     def run_flow(
-        self, app_id: str, flow_id: str, run_variables: RunVariablesRequest
+        self, app_id: str, flow_id: str, variables: RunVariablesRequest
     ) -> str:
         payload: dict[str, Mapping] = {
             "pipeline": {"project_id": app_id, "pipeline_id": flow_id}
         }
-        if run_variables:
-            payload["run_variables"] = run_variables
+        if variables:
+            payload["variables"] = variables
 
         resp = self.__session.post(
             path="/component/run-pipeline",

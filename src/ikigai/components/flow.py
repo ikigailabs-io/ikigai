@@ -360,7 +360,7 @@ class Flow(BaseModel):
 
         # Start running pipeline
         self.__client.component.run_flow(
-            app_id=self.app_id, flow_id=self.flow_id, run_variables=run_variables
+            app_id=self.app_id, flow_id=self.flow_id, variables=run_variables
         )
 
         return self.__await_run()
