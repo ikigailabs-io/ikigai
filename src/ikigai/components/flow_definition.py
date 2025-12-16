@@ -102,6 +102,22 @@ class FacetBuilder:
             Any number of keyword arguments where key is the variable name and value is
             the name of the argument of this facet that it should target.
 
+        Examples
+        --------
+        Add a variable called 'dataset' targeting the dataset_id argument
+        >>> IMPORTED = facet_types.INPUT.IMPORTED
+        >>> builder = ikigai.builder
+        >>> builder.facet(facet_type=IMPORTED, name="input").variables(
+        ...     dataset="dataset_id",
+        ... )
+
+        Add a variable called 'dataset' targeting the dataset_name argument
+        >>> EXPORTED = facet_types.OUTPUT.EXPORTED
+        >>> builder = ikigai.builder
+        >>> builder.facet(facet_type=EXPORTED, name="output").variables(
+        ...     dataset="dataset_name",
+        ... )
+
         Returns
         -------
         Self
