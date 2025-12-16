@@ -9,10 +9,9 @@ from collections import defaultdict
 from random import randbytes
 from typing import Any, cast
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from ikigai.components import ArgumentType
-from ikigai.components.specs import FacetType
+from ikigai.components.specs import ArgumentType, FacetType
 from ikigai.components.specs import SubModelSpec as ModelType
 from ikigai.typing.protocol import FlowDefinitionDict, ModelHyperParameterGroupType
 from ikigai.utils.compatibility import Self
@@ -24,6 +23,8 @@ logger = logging.getLogger("ikigai.components")
 class FlowVariable(BaseModel):
     facet_name: str
     argument_name: str = Field(serialization_alias="name")
+
+    model_config = ConfigDict(frozen=True)
 
 
 class FacetBuilder:
@@ -330,6 +331,7 @@ class FlowDefinitionBuilder:
 
     def __init__(self) -> None:
         self._facets = []
+        self._variables = {}
 
     def facet(
         self, facet_type: FacetType, name: str = "", args: dict[str, Any] | None = None
