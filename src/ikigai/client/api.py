@@ -22,6 +22,8 @@ from ikigai.typing.protocol import (
     DatasetDict,
     DatasetLogDict,
     Directory,
+    EmptyDict,
+    FacetSpecsDict,
     FlowDefinitionDict,
     FlowDict,
     FlowLogDict,
@@ -31,8 +33,8 @@ from ikigai.typing.protocol import (
     ModelType,
     ModelVersionDict,
     NamedDirectoryDict,
+    ScheduleDict,
 )
-from ikigai.typing.protocol.flow import FacetSpecsDict
 from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.client.api")
@@ -351,10 +353,12 @@ class ComponentAPI:
         directory: Directory | None,
         high_volume_preference: bool,
         flow_definition: FlowDefinitionDict,
+        schedule: ScheduleDict | None,
     ) -> str:
         directory_dict = (
             cast(dict, directory.to_dict()) if directory is not None else {}
         )
+        schedule_dict = schedule if schedule else EmptyDict()
         resp = self.__session.post(
             path="/component/create-pipeline",
             json={
@@ -364,6 +368,7 @@ class ComponentAPI:
                     "directory": directory_dict,
                     "high_volume_preference": high_volume_preference,
                     "definition": flow_definition,
+                    "schedule": schedule_dict,
                 },
             },
         ).json()
@@ -423,6 +428,7 @@ class ComponentAPI:
         directory: Directory | None = None,
         high_volume_preference: bool | None = None,
         flow_definition: FlowDefinitionDict | None = None,
+        schedule: ScheduleDict | EmptyDict | MissingType = MISSING,
     ) -> str:
         pipeline: dict[str, Any] = {
             "project_id": app_id,
@@ -437,6 +443,8 @@ class ComponentAPI:
             pipeline["high_volume_preference"] = high_volume_preference
         if flow_definition is not None:
             pipeline["definition"] = flow_definition
+        if schedule is not MISSING:
+            pipeline["schedule"] = schedule
 
         resp = self.__session.post(
             path="/component/edit-pipeline", json={"pipeline": pipeline}

@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, TypedDict
 
 
 class Named(Protocol):
@@ -13,4 +13,8 @@ class Named(Protocol):
 
 
 class Empty(Protocol):
+    pass
+
+
+class EmptyDict(TypedDict):
     pass

@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from pydantic import AliasChoices, BaseModel, EmailStr, Field
 from tqdm.auto import tqdm
@@ -19,12 +19,18 @@ from ikigai.components.flow_definition import FlowDefinition
 from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
+    EmptyDict,
     FlowDefinitionDict,
     FlowDict,
     NamedDirectoryDict,
+    ScheduleDict,
 )
 from ikigai.utils.compatibility import UTC, Self, deprecated
-from ikigai.utils.custom_validators import OptionalStr
+from ikigai.utils.custom_serializers import (
+    StrSerializableDatetime,
+    StrSerializableOptionalDatetime,
+)
+from ikigai.utils.custom_validators import CronStr, OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.shim import flow_versioning_shim
 
@@ -72,6 +78,7 @@ class FlowBuilder:
     _directory: Directory | None
     _high_volume_preference: bool
     _flow_definition: FlowDefinitionDict
+    _schedule: ScheduleDict | None
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
@@ -101,6 +108,7 @@ class FlowBuilder:
         self._directory = None
         self._high_volume_preference = False
         self._flow_definition = FlowDefinition().to_dict()
+        self._schedule = None
 
     def new(self, name: str) -> Self:
         self._name = name
@@ -158,6 +166,22 @@ class FlowBuilder:
         self._high_volume_preference = optimize
         return self
 
+    def schedule(self, schedule: Schedule | ScheduleDict) -> Self:
+        """
+        Set the schedule for the flow.
+
+        Parameters
+        ----------
+        schedule : Schedule
+            The schedule to set for the flow.
+        """
+        if isinstance(schedule, Schedule):
+            self._schedule = schedule.to_dict()
+            return self
+
+        self._schedule = schedule
+        return self
+
     def build(self) -> Flow:
         """
         Build the Flow object
@@ -176,6 +200,7 @@ class FlowBuilder:
             directory=self._directory,
             high_volume_preference=self._high_volume_preference,
             flow_definition=self._flow_definition,
+            schedule=self._schedule,
         )
 
         # Populate Flow object
@@ -221,10 +246,40 @@ class RunLog(BaseModel):
         return cls.model_validate(data)
 
 
+class Schedule(BaseModel):
+    """
+    Schedule for a flow.
+
+    Attributes
+    ----------
+    name : str
+        The name of the schedule.
+    start_time : datetime
+        The start time of the schedule.
+    end_time : datetime | None
+        The end time of the schedule. If None, the schedule will run indefinitely.
+    cron : str
+        The cron expression for the schedule.
+    """
+
+    name: str
+    """ Name of the schedule."""
+    start_time: StrSerializableDatetime
+    """ Start time of the schedule."""
+    end_time: StrSerializableOptionalDatetime
+    """ End time of the schedule. If None, the schedule will run indefinitely."""
+    cron: CronStr
+    """ Cron expression for the schedule."""
+
+    def to_dict(self) -> ScheduleDict:
+        return cast(ScheduleDict, self.model_dump())
+
+
 class Flow(BaseModel):
     app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
     flow_id: str = Field(validation_alias=AliasChoices("flow_id", "pipeline_id"))
     name: str
+    schedule: Schedule | None = None
     created_at: datetime
     modified_at: datetime
     __client: Client
@@ -254,6 +309,27 @@ class Flow(BaseModel):
         )
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
+        return self
+
+    def update_schedule(self, schedule: Schedule | None) -> Self:
+        """
+        Set the schedule for the flow.
+
+        Parameters
+        ----------
+        schedule : Schedule | None
+            The schedule to set for the flow. Pass None to remove existing schedule.
+
+        Returns
+        -------
+        Self
+            The updated Flow object.
+        """
+        schedule_dict = schedule.to_dict() if schedule is not None else EmptyDict()
+
+        self.__client.component.edit_flow(
+            app_id=self.app_id, flow_id=self.flow_id, schedule=schedule_dict
+        )
         return self
 
     def move(self, directory: Directory) -> Self:

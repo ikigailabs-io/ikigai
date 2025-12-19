@@ -20,8 +20,9 @@ from ikigai.typing.protocol.flow import (
     FlowModelVariableDict,
     FlowStatusReportDict,
     FlowVariableDict,
+    ScheduleDict,
 )
-from ikigai.typing.protocol.generic import Named
+from ikigai.typing.protocol.generic import EmptyDict, Named
 from ikigai.typing.protocol.model import (
     HyperParameterGroupName,
     HyperParameterName,
@@ -42,6 +43,7 @@ __all__ = [
     "Directory",
     "DirectoryDict",
     "DirectoryType",
+    "EmptyDict",
     "FacetDict",
     "FacetSpecsDict",
     "FlowDefinitionDict",
@@ -60,5 +62,6 @@ __all__ = [
     "ModelVersionDict",
     "Named",
     "NamedDirectoryDict",
+    "ScheduleDict",
     "SubModelSpecDict",
 ]
