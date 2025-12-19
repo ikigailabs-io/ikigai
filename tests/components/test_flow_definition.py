@@ -279,3 +279,38 @@ def test_flow_definition_facet_argument_typechecking_scalar_2(
             header="True",
             use_raw_file=False,
         )
+
+
+def test_flow_definition_variables_check_1(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    builder = ikigai.builder
+    with pytest.raises(ValueError, match="already exists for another facet"):
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED, name="input").variables(
+            dataset="dataset_id",
+        ).facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output").variables(
+            dataset="dataset_name",
+        )
+
+
+def test_flow_definition_variables_check_2(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    builder = ikigai.builder
+    with pytest.raises(ValueError, match="Please set a name for the facet"):
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED).variables(
+            dataset="dataset_id",
+        )
+
+
+def test_flow_definition_variables_check_3(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    builder = ikigai.builder
+    with pytest.raises(ValueError, match="does not have argument 'bad_arg_name'"):
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED, name="input").variables(
+            dataset="bad_arg_name",
+        )

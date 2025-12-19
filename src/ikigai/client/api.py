@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import InitVar
 from functools import cache
 from typing import Any, cast
@@ -16,6 +17,7 @@ from ikigai.client.session import Session
 from ikigai.typing.api import (
     GetComponentsForProjectResponse,
     GetDatasetMultipartUploadUrlsResponse,
+    RunVariablesRequest,
 )
 from ikigai.typing.protocol import (
     AppDict,
@@ -451,10 +453,18 @@ class ComponentAPI:
 
         return resp["pipeline_id"]
 
-    def run_flow(self, app_id: str, flow_id: str) -> str:
+    def run_flow(
+        self, app_id: str, flow_id: str, variables: RunVariablesRequest
+    ) -> str:
+        payload: dict[str, Mapping] = {
+            "pipeline": {"project_id": app_id, "pipeline_id": flow_id}
+        }
+        if variables:
+            payload["variables"] = variables
+
         resp = self.__session.post(
             path="/component/run-pipeline",
-            json={"pipeline": {"project_id": app_id, "pipeline_id": flow_id}},
+            json=payload,
         ).json()
 
         return resp["pipeline_id"]

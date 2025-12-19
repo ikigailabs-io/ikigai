@@ -9,15 +9,22 @@ from collections import defaultdict
 from random import randbytes
 from typing import Any, cast
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from ikigai.components.specs import FacetType
+from ikigai.components.specs import ArgumentType, FacetType
 from ikigai.components.specs import SubModelSpec as ModelType
 from ikigai.typing.protocol import FlowDefinitionDict, ModelHyperParameterGroupType
 from ikigai.utils.compatibility import Self
 from ikigai.utils.data_structures import merge_dicts
 
 logger = logging.getLogger("ikigai.components")
+
+
+class FlowVariable(BaseModel):
+    facet_name: str
+    argument_name: str = Field(serialization_alias="name")
+
+    model_config = ConfigDict(frozen=True)
 
 
 class FacetBuilder:
@@ -81,6 +88,115 @@ class FacetBuilder:
     def arguments(self, **arguments: Any) -> Self:
         self._validate_arguments(**arguments)
         return self._update_arguments(**arguments)
+
+    def variables(self, **variables: str) -> Self:
+        """
+        Add flow variable that target an arguments of this facet.
+
+        To add a variable targeting an argument of this facet,
+        the facet must have a name.
+
+        Parameters
+        ----------
+        **variables : dict
+            Any number of keyword arguments where key is the variable name and value is
+            the name of the argument of this facet that it should target.
+
+        Examples
+        --------
+        Add a variable called 'dataset' targeting the dataset_id argument
+        >>> IMPORTED = facet_types.INPUT.IMPORTED
+        >>> builder = ikigai.builder
+        >>> builder.facet(facet_type=IMPORTED, name="input").variables(
+        ...     dataset="dataset_id",
+        ... )
+
+        Add a variable called 'dataset' targeting the dataset_name argument
+        >>> EXPORTED = facet_types.OUTPUT.EXPORTED
+        >>> builder = ikigai.builder
+        >>> builder.facet(facet_type=EXPORTED, name="output").variables(
+        ...     dataset="dataset_name",
+        ... )
+
+        Returns
+        -------
+        Self
+            The current FacetBuilder object
+
+        Raises
+        ------
+        RuntimeError
+            If the facet is already built
+
+        ValueError
+            If the facet does not have a name
+
+        ValueError
+            If any of the arguments do not exist on the facet
+
+        ValueError
+            If any of the arguments are of type MAP or LIST.
+            (Currently ikigai platform does not support MAP or LIST arguments)
+        """
+        if self.__facet:
+            error_msg = "Facet already built, cannot set arguments"
+            raise RuntimeError(error_msg)
+
+        if not self.__name:
+            error_msg = (
+                "Variables are only allowed on facets that have a name. "
+                "Please set a name for the facet."
+            )
+            raise ValueError(error_msg)
+
+        facet_type_name = self._facet_type.name.title()
+        errors: list[str] = []
+        for variable_name, argument_name in variables.items():
+            argument_spec = self._facet_type.facet_arguments.get(argument_name)
+
+            # If argument does not exist on the facet, add an error
+            if not argument_spec:
+                errors.append(
+                    f"{facet_type_name} facet does not have argument '{argument_name}'"
+                )
+                continue
+
+            # If argument is of type MAP or LIST, add an error
+            variable_type: str = (
+                "LIST" if argument_spec.is_list else argument_spec.argument_type
+            )
+            if argument_spec.argument_type is ArgumentType.MAP or argument_spec.is_list:
+                errors.append(
+                    f"Variable {variable_name!r} targeting argument {argument_name!r} "
+                    f"of type {variable_type} is currently not supported."
+                )
+                continue
+
+            # If there is already a variable with the same name, add an error
+            if (
+                existing_variable := self._builder._variables.get(variable_name)
+            ) and existing_variable.facet_name != self.__name:
+                errors.append(
+                    f"Variable {variable_name!r} already exists for another facet "
+                    f"{existing_variable.facet_name}. Please use a different "
+                    "variable name."
+                )
+                continue
+
+        if errors:
+            error_msg = "\n".join(errors)
+            raise ValueError(error_msg)
+
+        self._builder._add_variables(
+            {
+                variable_name: FlowVariable(
+                    facet_name=self.__name,
+                    argument_name=argument_name,
+                )
+                for variable_name, argument_name in variables.items()
+            }
+        )
+        return self
 
     def add_arrow(self, parent: FacetBuilder, /, **args) -> Self:
         self.__arrow_builders.append(
@@ -227,9 +343,11 @@ class ArrowBuilder:
 
 class FlowDefinitionBuilder:
     _facets: list[FacetBuilder]
+    _variables: dict[str, FlowVariable]
 
     def __init__(self) -> None:
         self._facets = []
+        self._variables = {}
 
     def facet(
         self, facet_type: FacetType, name: str = "", args: dict[str, Any] | None = None
@@ -261,6 +379,10 @@ class FlowDefinitionBuilder:
         self._facets.append(facet_builder)
         return facet_builder
 
+    def _add_variables(self, variables: dict[str, FlowVariable]) -> Self:
+        self._variables = merge_dicts(self._variables, variables)
+        return self
+
     def build(self) -> FlowDefinition:
         facets: list[Facet] = []
         arrows: list[Arrow] = []
@@ -272,8 +394,7 @@ class FlowDefinitionBuilder:
         return FlowDefinition(
             facets=facets,
             arrows=arrows,
-            arguments={},
-            variables={},
+            variables=self._variables,
             model_variables={},
         )
 
@@ -294,8 +415,7 @@ class Arrow(BaseModel):
 class FlowDefinition(BaseModel):
     facets: list[Facet] = Field(default_factory=list)
     arrows: list[Arrow] = Field(default_factory=list)
-    arguments: dict = Field(default_factory=dict)
-    variables: dict = Field(default_factory=dict)
+    variables: dict[str, FlowVariable] = Field(default_factory=dict)
     model_variables: dict = Field(default_factory=dict)
 
     def to_dict(self) -> FlowDefinitionDict:

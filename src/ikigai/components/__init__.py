@@ -32,7 +32,7 @@ from ikigai.components.model import (
     ModelDirectory,
     ModelDirectoryBuilder,
 )
-from ikigai.components.specs import FacetTypes, ModelTypes
+from ikigai.components.specs import ArgumentType, FacetTypes, ModelTypes
 
 __all__ = [
     "App",
@@ -40,6 +40,7 @@ __all__ = [
     "AppBuilder",
     "AppDirectory",
     "AppDirectoryBuilder",
+    "ArgumentType",
     "Dataset",
     "DatasetBrowser",
     "DatasetBuilder",
