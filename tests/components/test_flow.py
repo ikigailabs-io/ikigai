@@ -365,6 +365,30 @@ def test_flow_browser_1(
     assert fetched_flow.name == flow_name
 
 
+def test_flow_schedule(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("Test to get flow by name").build()
+    cleanup.callback(app.delete)
+
+    flow = app.flow.new(name=flow_name).schedule(cron="0 0 * * *").build()
+
+    assert flow.schedule is not None
+
+    flow_details = flow.describe()
+
+    schedule = flow_details.get("schedule")
+    assert schedule is not None, flow_details
+
+    assert schedule["name"] == flow.name, schedule
+    assert schedule["cron"] == "0 0 * * *", schedule
+    assert schedule["start_time"] is not None, schedule
+    assert schedule.get("end_time") == "", schedule
+
+
 def test_flow_browser_search_1(
     ikigai: Ikigai, app_name: str, flow_name: str, cleanup: ExitStack
 ) -> None:

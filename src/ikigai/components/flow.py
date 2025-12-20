@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, cast
 
-from pydantic import AliasChoices, BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field, field_validator
 from tqdm.auto import tqdm
 
 from ikigai.client import Client
@@ -166,20 +166,35 @@ class FlowBuilder:
         self._high_volume_preference = optimize
         return self
 
-    def schedule(self, schedule: Schedule | ScheduleDict) -> Self:
+    def schedule(
+        self,
+        cron: str,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+    ) -> Self:
         """
         Set the schedule for the flow.
 
         Parameters
         ----------
-        schedule : Schedule
-            The schedule to set for the flow.
-        """
-        if isinstance(schedule, Schedule):
-            self._schedule = schedule.to_dict()
-            return self
+        cron : str
+            The cron expression for the schedule.
+        start_time : datetime | None
+            The start time of the schedule. If None, the schedule will start from now.
+        end_time : datetime | None
+            The end time of the schedule. If None, the schedule will run indefinitely.
 
-        self._schedule = schedule
+        Returns
+        -------
+        Self
+            The FlowBuilder instance with schedule set.
+        """
+        if start_time is None:
+            start_time = datetime.now()
+
+        self._schedule = Schedule(
+            name=self._name, start_time=start_time, end_time=end_time, cron=cron
+        ).to_dict()
         return self
 
     def build(self) -> Flow:
@@ -270,6 +285,16 @@ class Schedule(BaseModel):
     """ End time of the schedule. If None, the schedule will run indefinitely."""
     cron: CronStr
     """ Cron expression for the schedule."""
+
+    @field_validator("end_time", mode="before")
+    @classmethod
+    def validate_end_time(cls, v: str | None) -> datetime | None:
+        if not v:
+            return None
+        if not v.isnumeric():
+            error_msg = "End time must be a timestamp"
+            raise ValueError(error_msg)
+        return datetime.fromtimestamp(int(v))
 
     def to_dict(self) -> ScheduleDict:
         return cast(ScheduleDict, self.model_dump())
