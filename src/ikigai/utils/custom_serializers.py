@@ -7,7 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import PlainSerializer
+from pydantic import AwareDatetime, PlainSerializer
 
 
 def __datetime_to_str(value: datetime) -> str:
@@ -20,7 +20,7 @@ def __optional_datetime_to_str(value: datetime | None) -> str:
     return str(int(value.timestamp()))
 
 
-StrSerializableDatetime = Annotated[datetime, PlainSerializer(__datetime_to_str)]
+StrSerializableDatetime = Annotated[AwareDatetime, PlainSerializer(__datetime_to_str)]
 StrSerializableOptionalDatetime = Annotated[
-    datetime | None, PlainSerializer(__optional_datetime_to_str)
+    AwareDatetime | None, PlainSerializer(__optional_datetime_to_str)
 ]

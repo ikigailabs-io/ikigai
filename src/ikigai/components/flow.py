@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 from pydantic import AliasChoices, BaseModel, EmailStr, Field, field_validator
 from tqdm.auto import tqdm
@@ -19,13 +19,12 @@ from ikigai.components.flow_definition import FlowDefinition
 from ikigai.typing.protocol import (
     Directory,
     DirectoryType,
-    EmptyDict,
     FlowDefinitionDict,
     FlowDict,
     NamedDirectoryDict,
     ScheduleDict,
 )
-from ikigai.utils.compatibility import UTC, Self, deprecated
+from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.custom_serializers import (
     StrSerializableDatetime,
     StrSerializableOptionalDatetime,
@@ -35,6 +34,8 @@ from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.shim import flow_versioning_shim
 
 logger = logging.getLogger("ikigai.components")
+
+T = TypeVar("T")
 
 
 class FlowBrowser:
@@ -72,13 +73,55 @@ class FlowBrowser:
         return NamedMapping(matched_flows)
 
 
+class Schedule(BaseModel):
+    """
+    Schedule for a flow.
+    """
+
+    name: str
+    """Name of the schedule."""
+    start_time: StrSerializableDatetime
+    """Start time of the schedule."""
+    end_time: StrSerializableOptionalDatetime = None
+    """End time of the schedule. If None, the schedule will run indefinitely."""
+    cron: CronStr
+    """Cron expression for the schedule."""
+
+    @field_validator("end_time", "start_time", mode="before")
+    @classmethod
+    def validate_time(cls, v: object) -> datetime | str | None:
+        if v is None or v == "":
+            return None
+
+        if not isinstance(v, (str, datetime)):
+            error_msg = f"Must be a timestamp, datetime, or None. Got {type(v)}"
+            raise TypeError(error_msg)
+
+        if isinstance(v, datetime):
+            # Remove microseconds resolution
+            v = v.replace(microsecond=0)
+            # If the datetime is naive, convert it to local timezone
+            if v.tzinfo is None:
+                v = v.astimezone()
+
+        return v
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Self:
+        logger.debug("Creating a %s from %s", cls.__name__, data)
+        return cls.model_validate(data)
+
+    def to_dict(self) -> ScheduleDict:
+        return cast(ScheduleDict, self.model_dump())
+
+
 class FlowBuilder:
     _app_id: str
     _name: str
     _directory: Directory | None
     _high_volume_preference: bool
     _flow_definition: FlowDefinitionDict
-    _schedule: ScheduleDict | None
+    _schedule: Schedule | None
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
@@ -168,34 +211,44 @@ class FlowBuilder:
 
     def schedule(
         self,
-        cron: str,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
+        schedule: Schedule | ScheduleDict | str,
     ) -> Self:
         """
         Set the schedule for the flow.
 
         Parameters
         ----------
-        cron : str
-            The cron expression for the schedule.
-        start_time : datetime | None
-            The start time of the schedule. If None, the schedule will start from now.
-        end_time : datetime | None
-            The end time of the schedule. If None, the schedule will run indefinitely.
+        schedule : Schedule | ScheduleDict | str
+            The schedule to set for the flow. Can be provided as a Schedule object,
+            a Schedule dictionary, or a cron string.
 
         Returns
         -------
         Self
             The FlowBuilder instance with schedule set.
         """
-        if start_time is None:
-            start_time = datetime.now()
+        if isinstance(schedule, str):
+            self._schedule = Schedule(
+                name=self._name,
+                cron=schedule,
+                start_time=datetime.now(),
+                end_time=None,
+            )
+            return self
 
-        self._schedule = Schedule(
-            name=self._name, start_time=start_time, end_time=end_time, cron=cron
-        ).to_dict()
-        return self
+        if isinstance(schedule, Mapping):
+            self._schedule = Schedule.from_dict(schedule)
+            return self
+
+        if isinstance(schedule, Schedule):
+            self._schedule = schedule
+            return self
+
+        error_msg = (
+            f"Schedule was of type {type(schedule)} but, "
+            "must be a Schedule, ScheduleDict, or cron string"
+        )
+        raise TypeError(error_msg)
 
     def build(self) -> Flow:
         """
@@ -215,7 +268,7 @@ class FlowBuilder:
             directory=self._directory,
             high_volume_preference=self._high_volume_preference,
             flow_definition=self._flow_definition,
-            schedule=self._schedule,
+            schedule=self._schedule.to_dict() if self._schedule else None,
         )
 
         # Populate Flow object
@@ -261,45 +314,6 @@ class RunLog(BaseModel):
         return cls.model_validate(data)
 
 
-class Schedule(BaseModel):
-    """
-    Schedule for a flow.
-
-    Attributes
-    ----------
-    name : str
-        The name of the schedule.
-    start_time : datetime
-        The start time of the schedule.
-    end_time : datetime | None
-        The end time of the schedule. If None, the schedule will run indefinitely.
-    cron : str
-        The cron expression for the schedule.
-    """
-
-    name: str
-    """ Name of the schedule."""
-    start_time: StrSerializableDatetime
-    """ Start time of the schedule."""
-    end_time: StrSerializableOptionalDatetime
-    """ End time of the schedule. If None, the schedule will run indefinitely."""
-    cron: CronStr
-    """ Cron expression for the schedule."""
-
-    @field_validator("end_time", mode="before")
-    @classmethod
-    def validate_end_time(cls, v: str | None) -> datetime | None:
-        if not v:
-            return None
-        if not v.isnumeric():
-            error_msg = "End time must be a timestamp"
-            raise ValueError(error_msg)
-        return datetime.fromtimestamp(int(v))
-
-    def to_dict(self) -> ScheduleDict:
-        return cast(ScheduleDict, self.model_dump())
-
-
 class Flow(BaseModel):
     app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
     flow_id: str = Field(validation_alias=AliasChoices("flow_id", "pipeline_id"))
@@ -308,6 +322,16 @@ class Flow(BaseModel):
     created_at: datetime
     modified_at: datetime
     __client: Client
+
+    @field_validator("schedule", mode="before")
+    @classmethod
+    def validate_schedule(cls, v: T) -> T | None:
+        if isinstance(v, Mapping) and not any(bool(value) for value in v.values()):
+            # If the schedule returned is filled with blank values,
+            #   it means the schedule is not set.
+            #   This is a quirk of grpc serialization.
+            return None
+        return v
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
@@ -336,25 +360,44 @@ class Flow(BaseModel):
         self.name = name
         return self
 
-    def update_schedule(self, schedule: Schedule | None) -> Self:
+    def update_schedule(
+        self, schedule: Schedule | ScheduleDict | str | None = None
+    ) -> Self:
         """
-        Set the schedule for the flow.
+        Update the schedule for the flow.
 
         Parameters
         ----------
-        schedule : Schedule | None
-            The schedule to set for the flow. Pass None to remove existing schedule.
+        schedule : Schedule | ScheduleDict | str | None
+            The schedule to set for the flow.
+            Can be provided as a Schedule object, a Schedule dictionary, or a
+            cron string. Pass None to remove existing schedule.
 
         Returns
         -------
         Self
             The updated Flow object.
         """
-        schedule_dict = schedule.to_dict() if schedule is not None else EmptyDict()
+        if isinstance(schedule, str):
+            schedule = Schedule(
+                name=self.name, cron=schedule, start_time=datetime.now(), end_time=None
+            )
+        if isinstance(schedule, Mapping):
+            schedule = Schedule.from_dict(schedule)
 
         self.__client.component.edit_flow(
-            app_id=self.app_id, flow_id=self.flow_id, schedule=schedule_dict
+            app_id=self.app_id,
+            flow_id=self.flow_id,
+            schedule=schedule.to_dict() if schedule else None,
         )
+
+        if schedule is None:
+            # HACK: BE has no way to remove schedule via API,
+            #   so we wait for 90 seconds to ensure the schedule is removed
+            time.sleep(90)
+
+        # Update the schedule attribute
+        self.schedule = schedule
         return self
 
     def move(self, directory: Directory) -> Self:
@@ -461,7 +504,7 @@ class Flow(BaseModel):
         return shimed_flow  # noqa: RET504
 
     def __await_run(self) -> RunLog:
-        start_time = datetime.now(UTC)
+        start_time = datetime.now()
         # TODO: Switch to using websockets once they are available
         with tqdm(total=100, dynamic_ncols=True) as progress_bar:
             status_report = self.status()

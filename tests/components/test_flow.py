@@ -4,12 +4,13 @@
 
 
 from contextlib import ExitStack
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
 
 from ikigai import Ikigai
-from ikigai.components import FlowStatus
+from ikigai.components import FlowStatus, Schedule
 
 
 def test_flow_creation(
@@ -365,28 +366,263 @@ def test_flow_browser_1(
     assert fetched_flow.name == flow_name
 
 
-def test_flow_schedule(
+def test_flow_schedule_build_1(
     ikigai: Ikigai,
     app_name: str,
     flow_name: str,
     cleanup: ExitStack,
 ) -> None:
-    app = ikigai.app.new(name=app_name).description("Test to get flow by name").build()
+    """
+    Test to build a scheduled flow with a cron string.
+
+    This test is to ensure that the flow schedule is built correctly
+    when a cron string is provided.
+    """
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("Test to build a scheduled flow with a cron string")
+        .build()
+    )
     cleanup.callback(app.delete)
 
-    flow = app.flow.new(name=flow_name).schedule(cron="0 0 * * *").build()
+    flow = app.flow.new(name=flow_name).schedule("0 0 * * *").build()
 
-    assert flow.schedule is not None
+    assert flow.schedule is not None, flow.describe()
 
-    flow_details = flow.describe()
+    assert flow.schedule.name == flow.name, flow.schedule
+    assert flow.schedule.cron == "0 0 * * *", flow.schedule
+    assert flow.schedule.start_time is not None, flow.schedule
+    assert flow.schedule.end_time is None, flow.schedule
 
-    schedule = flow_details.get("schedule")
-    assert schedule is not None, flow_details
 
-    assert schedule["name"] == flow.name, schedule
-    assert schedule["cron"] == "0 0 * * *", schedule
-    assert schedule["start_time"] is not None, schedule
-    assert schedule.get("end_time") == "", schedule
+def test_flow_schedule_build_2(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    """
+    Test to build a scheduled flow with a schedule dictionary.
+
+    This test is to ensure that the flow schedule is built correctly
+    when a schedule dictionary is provided.
+    """
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("Test to build a scheduled flow with a schedule dictionary")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    flow = (
+        app.flow.new(name=flow_name)
+        .schedule(
+            {
+                "name": flow_name,
+                "cron": "0 0 * * *",
+                "start_time": str(int(datetime.now().timestamp())),
+            }
+        )
+        .build()
+    )
+
+    assert flow.schedule is not None, flow.describe()
+    assert flow.schedule.name == flow.name, flow.schedule
+    assert flow.schedule.cron == "0 0 * * *", flow.schedule
+    assert flow.schedule.start_time is not None, flow.schedule
+    assert flow.schedule.end_time is None, flow.schedule
+
+
+def test_flow_schedule_update_1(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    """
+    Test to update a scheduled flow with a cron string.
+
+    This test is to ensure that the flow schedule is updated correctly
+    when a cron string is provided.
+    """
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("Test to update a scheduled flow with a cron string")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    start_time = datetime.now()
+    end_time = start_time + timedelta(days=1)
+    initial_schedule = Schedule(
+        name=flow_name,
+        cron="0 0 * * *",
+        start_time=start_time,
+        end_time=end_time,
+    )
+    flow = app.flow.new(name=flow_name).schedule(initial_schedule).build()
+
+    flow.update_schedule("0 */2 * * *")
+
+    # Re-fetch the flow
+    flow = app.flows[flow_name]
+    assert flow.schedule is not None, flow.describe()
+    assert flow.schedule.cron == "0 */2 * * *", flow.schedule
+    assert flow.schedule.start_time is not None, flow.schedule
+    assert flow.schedule.end_time is None, flow.schedule
+
+
+def test_flow_schedule_update_2(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    """
+    Test to update a scheduled flow with a schedule dictionary.
+
+    This test is to ensure that the flow schedule is updated correctly
+    when a schedule dictionary is provided.
+    """
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("Test to update a scheduled flow with a schedule dictionary")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    start_time = datetime.now()
+    end_time = start_time + timedelta(days=1)
+    initial_schedule = Schedule(
+        name=flow_name,
+        cron="0 0 * * *",
+        start_time=start_time,
+        end_time=end_time,
+    )
+    flow = app.flow.new(name=flow_name).schedule(initial_schedule).build()
+
+    flow.update_schedule(
+        {
+            "name": flow_name,
+            "cron": "0 */2 * * *",
+            "start_time": str(int(datetime.now().timestamp())),
+        }
+    )
+
+    # Re-fetch the flow
+    flow = app.flows[flow_name]
+    assert flow.schedule is not None, flow.describe()
+    assert flow.schedule.cron == "0 */2 * * *", flow.schedule
+    assert flow.schedule.start_time is not None, flow.schedule
+    assert flow.schedule.end_time is None, flow.schedule
+
+
+def test_flow_schedule_update_3(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    """
+    Test to update a scheduled flow with a schedule object.
+
+    This test is to ensure that the flow schedule is updated correctly
+    when a schedule object is provided.
+    """
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("Test to update a scheduled flow with a schedule object")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    start_time = datetime.now()
+    end_time = start_time + timedelta(weeks=1)
+    initial_schedule = Schedule(
+        name=flow_name,
+        cron="0 0 * * *",
+        start_time=start_time,
+        end_time=end_time,
+    )
+    flow = app.flow.new(name=flow_name).schedule(initial_schedule).build()
+
+    new_schedule = Schedule(
+        name=flow_name,
+        cron="0 */2 * * *",
+        start_time=start_time,
+        end_time=end_time,
+    )
+    flow.update_schedule(new_schedule)
+
+    # Re-fetch the flow
+    flow = app.flows[flow_name]
+    assert flow.schedule is not None, flow.describe()
+    schedule = flow.schedule
+    assert schedule.cron == new_schedule.cron, schedule
+    assert schedule.start_time == new_schedule.start_time, schedule.start_time
+    assert schedule.end_time == new_schedule.end_time, schedule.end_time
+
+
+def test_flow_schedule_build_3(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    """
+    Test to build a scheduled flow with a schedule object.
+
+    This test is to ensure that the flow schedule is built correctly
+    when a schedule object is provided.
+    """
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("Test to build a scheduled flow with a schedule object")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    schedule = Schedule(
+        name=flow_name,
+        cron="0 0 * * *",
+        start_time=datetime.now(),
+        end_time=None,
+    )
+    flow = app.flow.new(name=flow_name).schedule(schedule).build()
+
+    assert flow.schedule is not None, flow.describe()
+
+    assert flow.schedule.name == flow.name, flow.schedule
+    assert flow.schedule.cron == "0 0 * * *", flow.schedule
+    assert flow.schedule.start_time is not None, flow.schedule
+    assert flow.schedule.end_time is None, flow.schedule
+
+
+def test_flow_schedule_update_4(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    """
+    Test to remove the schedule from a flow.
+
+    This test is to ensure that the flow schedule is removed correctly.
+    """
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("Test to remove the schedule from a flow")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    flow = app.flow.new(name=flow_name).schedule("0 0 * * *").build()
+
+    flow.update_schedule(None)
+
+    # Re-fetch the flow
+    flow = app.flows[flow_name]
+    assert flow.schedule is None, flow.describe()
 
 
 def test_flow_browser_search_1(

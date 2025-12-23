@@ -428,7 +428,7 @@ class ComponentAPI:
         directory: Directory | None = None,
         high_volume_preference: bool | None = None,
         flow_definition: FlowDefinitionDict | None = None,
-        schedule: ScheduleDict | EmptyDict | MissingType = MISSING,
+        schedule: ScheduleDict | None | MissingType = MISSING,
     ) -> str:
         pipeline: dict[str, Any] = {
             "project_id": app_id,
@@ -444,7 +444,16 @@ class ComponentAPI:
         if flow_definition is not None:
             pipeline["definition"] = flow_definition
         if schedule is not MISSING:
-            pipeline["schedule"] = schedule
+            if schedule is not None:
+                pipeline["schedule"] = schedule
+            else:
+                # HACK: No way to remove schedule via API, update after BE supports it.
+                pipeline["schedule"] = {
+                    "name": "-",
+                    "cron": "0 0 0 0 0",
+                    "start_time": "1",
+                    "end_time": "1",
+                }
 
         resp = self.__session.post(
             path="/component/edit-pipeline", json={"pipeline": pipeline}
