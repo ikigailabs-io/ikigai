@@ -22,7 +22,6 @@ from ikigai.typing.protocol import (
     DatasetDict,
     DatasetLogDict,
     Directory,
-    EmptyDict,
     FacetSpecsDict,
     FlowDefinitionDict,
     FlowDict,
@@ -358,7 +357,7 @@ class ComponentAPI:
         directory_dict = (
             cast(dict, directory.to_dict()) if directory is not None else {}
         )
-        schedule_dict = schedule if schedule else EmptyDict()
+        schedule_dict = schedule if schedule else None
         resp = self.__session.post(
             path="/component/create-pipeline",
             json={

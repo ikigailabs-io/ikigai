@@ -29,6 +29,7 @@ def test_flow_creation(
 
     flow_dict = flow.to_dict()
     assert flow_dict["name"] == flow_name
+    assert flow_dict["schedule"] is None
 
     flows_after_creation = app.flows()
     assert len(flows_after_creation) == 1

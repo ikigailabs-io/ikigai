@@ -344,6 +344,7 @@ class Flow(BaseModel):
         return {
             "flow_id": self.flow_id,
             "name": self.name,
+            "schedule": self.schedule.to_dict() if self.schedule else None,
             "created_at": self.created_at,
             "modified_at": self.modified_at,
         }
