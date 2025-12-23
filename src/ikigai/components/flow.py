@@ -505,7 +505,7 @@ class Flow(BaseModel):
         return shimed_flow  # noqa: RET504
 
     def __await_run(self) -> RunLog:
-        start_time = datetime.now()
+        start_time = datetime.now().astimezone()
         # TODO: Switch to using websockets once they are available
         with tqdm(total=100, dynamic_ncols=True) as progress_bar:
             status_report = self.status()
