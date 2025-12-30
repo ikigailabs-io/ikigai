@@ -11,6 +11,13 @@ from ikigai.typing.protocol.directory import DirectoryDict
 from ikigai.utils.compatibility import NotRequired
 
 
+class ScheduleDict(TypedDict):
+    name: str
+    start_time: str
+    end_time: NotRequired[str]
+    cron: str
+
+
 class FlowDict(TypedDict):
     project_id: str
     pipeline_id: str
@@ -19,7 +26,7 @@ class FlowDict(TypedDict):
     definition: FlowDefinitionDict
     trigger_downstream_pipelines: bool
     high_volume_preference: bool
-    schedule: dict
+    schedule: NotRequired[ScheduleDict]
     last_run: NotRequired[dict]
     next_run: NotRequired[dict]
     created_at: str
