@@ -48,6 +48,13 @@ class ArgumentType(StrEnum):
     NUMBER = "NUMBER"
 
 
+class HyperparameterType(StrEnum):
+    MAP = "MAP"
+    BOOLEAN = "BOOLEAN"
+    TEXT = "TEXT"
+    NUMBER = "NUMBER"
+
+
 class ArgumentSpec(BaseModel, Helpful):
     name: str
     argument_type: ArgumentType
@@ -411,7 +418,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
     have_options: bool
     have_sub_hyperparameters: bool
     hyperparameter_group: str | None
-    hyperparameter_type: str
+    hyperparameter_type: HyperparameterType
     is_deprecated: bool
     is_hidden: bool
     is_list: bool
@@ -438,7 +445,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             have_options=data["have_options"],
             have_sub_hyperparameters=data["have_sub_hyperparameters"],
             hyperparameter_group=data.get("hyperparameter_group"),
-            hyperparameter_type=data["hyperparameter_type"],
+            hyperparameter_type=HyperparameterType(data["hyperparameter_type"]),
             is_deprecated=data["is_deprecated"],
             is_hidden=data["is_hidden"],
             is_list=data["is_list"],
@@ -446,6 +453,81 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             options=data.get("options"),
             sub_hyperparameter_requirements=sub_hyperparameter_requirements,
         )
+
+    def __validation_error_message(
+        self, model: str, expectation: str, actuals: MissingType | Any = MISSING
+    ) -> str:
+        if actuals is MISSING:
+            actuals_str = ""
+        elif actuals is None:
+            actuals_str = ", got 'None'"
+        elif isinstance(actuals, type):
+            actuals_str = f", got type '{actuals.__name__}'"
+        else:
+            actuals_str = f", got {actuals.__class__.__name__}({actuals!r})"
+
+        return f"Hyperparameter '{self.name}' for {model} {expectation}{actuals_str}"
+
+    def validate_value(self, model: str, value: Any) -> None:
+        if self.is_list:
+            return self.__validate_list_value(model, value)
+
+        if self.hyperparameter_type == HyperparameterType.MAP:
+            # Equivalent to having MAP type arguments
+            return self.__validate_dict_value(model, value)
+
+        # Not a list or dict, so it must be a scalar value
+        return self.__validate_scalar_value(model, value)
+
+    def __validate_list_value(self, model: str, value: Any) -> None:
+        if not isinstance(value, list):
+            error_msg = self.__validation_error_message(model, "must be list", value)
+            raise TypeError(error_msg)
+
+        scalar_hyperparameter_spec = self.model_copy(update={"is_list": False})
+        for item in value:
+            scalar_hyperparameter_spec.validate_value(model, item)
+        return None  # All items validated
+
+    def __validate_dict_value(self, model: str, value: Any) -> None:
+        if not isinstance(value, Mapping):
+            error_msg = self.__validation_error_message(model, "must be mapping", value)
+            raise TypeError(error_msg)
+
+        for name, child_value in value.items():
+            if name not in self.children:
+                error_msg = self.__validation_error_message(
+                    model, f"provided with unexpected child hyperparameter '{name}'"
+                )
+                raise KeyError(error_msg)
+            child_spec = self.children[name]
+            child_spec.validate_value(model, child_value)
+        return None  # All child hyperparameters validated
+
+    def __validate_scalar_value(self, model: str, value: Any) -> None:
+        if self.options and value not in self.options:
+            error_msg = self.__validation_error_message(
+                model, f"must be one of {self.options}", value
+            )
+            raise ValueError(error_msg)
+
+        if self.hyperparameter_type == HyperparameterType.BOOLEAN and not isinstance(
+            value, bool
+        ):
+            error_msg = self.__validation_error_message(model, "must be boolean", value)
+            raise TypeError(error_msg)
+
+        if self.hyperparameter_type == HyperparameterType.TEXT and not isinstance(
+            value, str
+        ):
+            error_msg = self.__validation_error_message(model, "must be string", value)
+            raise TypeError(error_msg)
+
+        if self.hyperparameter_type == HyperparameterType.NUMBER and not isinstance(
+            value, int | float
+        ):
+            error_msg = self.__validation_error_message(model, "must be numeric", value)
+            raise TypeError(error_msg)
 
     @override
     def _help(self) -> Generator[str]:

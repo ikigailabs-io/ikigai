@@ -277,6 +277,9 @@ class ModelFacetBuilder(FacetBuilder):
             error_msg = f"{facet_name} Facet does not support hyperparameters"
             raise RuntimeError(error_msg)
 
+        # Validate the hyperparameters
+        self._validate_hyperparameters(**hyperparameters)
+
         # If hyperparameter groups are not required for this model type
         #   then just update facet arguments directly
         if not self.__model_type._hyperparameter_groups:
@@ -313,8 +316,21 @@ class ModelFacetBuilder(FacetBuilder):
         return self
 
     def _validate_hyperparameters(self, **hyperparameters: Any) -> None:
-        # TODO: Implement hyperparameter validation
-        ...
+        model_name = self.__model_type.name.title()
+        for hyperparameter_name, hyperparameter_value in hyperparameters.items():
+            # Validate if hyperparameter is in model spec
+            if hyperparameter_name not in self.__model_type.hyperparameters:
+                error_msg = (
+                    f"Hyperparameter '{hyperparameter_name}' is not valid for "
+                    f"{model_name} models"
+                )
+                raise ValueError(error_msg)
+
+            # Hyperparameter is in model spec, validate it
+            hyperparameter_spec = self.__model_type.hyperparameters[hyperparameter_name]
+            hyperparameter_spec.validate_value(
+                model=model_name, value=hyperparameter_value
+            )
 
     def _validate_parameters(self, **parameters: Any) -> None:
         # TODO: Implement parameter validation
