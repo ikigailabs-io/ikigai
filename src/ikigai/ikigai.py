@@ -24,20 +24,21 @@ class Ikigai:
 
     Parameters
     ----------
-    user_email : str
+
+    user_email: str
         Email of the user.
 
-    api_key : str
+    api_key: str
         API key for authentication.
 
-    base_url : str, optional
+    base_url: str
         Base URL of the Ikigai API endpoints. Default is
         "https://api.ikigailabs.io".
 
-    ssl : bool or str or tuple
+    ssl: bool or str or tuple
         SSL configuration. See `ikigai.utils.config` for more details.
         Set to `False` to disable SSL verification (unsafe), or provide
-        custom SSL certificate by providing path the path to a certificate
+        custom SSL certificate by providing the path to a certificate
         (.pem) file or a tuple of (certificate, key).
     """
 
@@ -61,23 +62,24 @@ class Ikigai:
         """
         Access the Apps associated with the Ikigai account user.
 
-        This property returns a `ComponentBrowser` object for `App` components
-        accessible to the Ikigai account user.
+        Returns a `ComponentBrowser[App]` to access the account user's apps.
 
         Returns
         -------
+
         ComponentBrowser[components.App]
             Browser for Apps.
 
         Examples
         --------
+
         Use `search(query: str)`, which returns Apps matching a query
         string.
 
         >>> apps = ikigai.apps()
         >>> app = apps.search("Examp")
 
-        Individual Apps can also be accessed by name using indexing.
+        Retrieve an App by name.
 
         >>> apps = ikigai.apps()
         >>> app = apps["Example App"]
@@ -91,8 +93,9 @@ class Ikigai:
 
         Returns
         -------
+
         components.AppBuilder
-            A new App builder object.
+            A new App builder.
         """
         return components.AppBuilder(client=self.__client)
 
@@ -102,6 +105,7 @@ class Ikigai:
 
         Returns
         -------
+
         NamedMapping[components.AppDirectory]
             Mapping of names to Directories.
         """
@@ -125,18 +129,20 @@ class Ikigai:
 
         Returns
         -------
+
         components.FlowDefinitionBuilder
-            A new Flow Definition builder object.
+            A new Flow Definition builder.
         """
         return components.FlowDefinitionBuilder()
 
     @property
     def facet_types(self) -> components.FacetTypes:
         """
-        Available facets for use in the Ikigai platform.
+        Available facets for use on the Ikigai platform.
 
         Returns
         -------
+
         components.FacetTypes
             Available facet types.
         """
@@ -151,6 +157,7 @@ class Ikigai:
 
         Returns
         -------
+
         components.ModelTypes
             Available model types.
         """

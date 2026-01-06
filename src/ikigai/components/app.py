@@ -92,25 +92,26 @@ class App(BaseModel):
 
     Attributes
     ----------
-    app_id : str
+
+    app_id: str
         Unique identifier of the app.
 
-    name : str
+    name: str
         Name of the App.
 
-    owner : EmailStr
+    owner: EmailStr
         Email address of the app owner.
 
-    description : str
+    description: str
         Description of the app.
 
-    created_at : datetime
+    created_at: datetime
         Timestamp when the app was created.
 
-    modified_at : datetime
+    modified_at: datetime
         Timestamp when the app was last modified.
 
-    last_used_at : datetime
+    last_used_at: datetime
         Timestamp when the app was last used.
     """
 
@@ -139,6 +140,7 @@ class App(BaseModel):
 
         Returns
         -------
+
         dict
             Dictionary containing the App attributes.
         """
@@ -158,6 +160,7 @@ class App(BaseModel):
 
         Returns
         -------
+
         None
         """
         self.__client.component.delete_app(app_id=self.app_id)
@@ -169,11 +172,13 @@ class App(BaseModel):
 
         Parameters
         ----------
-        name : str
+
+        name: str
             New name for the App.
 
         Returns
         -------
+
         Self
             Updated App.
         """
@@ -188,11 +193,13 @@ class App(BaseModel):
 
         Parameters
         ----------
-        directory : Directory
+
+        directory: Directory
             Target directory.
 
         Returns
         -------
+
         Self
             Updated App.
         """
@@ -205,11 +212,13 @@ class App(BaseModel):
 
         Parameters
         ----------
-        description : str
+
+        description: str
             The new description for the App.
 
         Returns
         -------
+
         Self
             The updated App with the new description.
         """
@@ -226,6 +235,7 @@ class App(BaseModel):
 
         Returns
         -------
+
         dict[str, Any]
             Dictionary containing App details and its associated
             components.
@@ -247,23 +257,24 @@ class App(BaseModel):
         """
         Access the datasets associated with the App.
 
-        This property returns a `DatasetBrowser` object that provides access
-        to the App's datasets.
+        Returns a `ComponentBrowser[Dataset]` to access this app's datasets.
 
         Returns
         -------
+
         DatasetBrowser
-            Browser object for interacting with the App's datasets.
+            Dataset browser for interacting with the App's datasets.
 
         Examples
         --------
+
         Use `search(query: str)`, which returns datasets matching a query
         string.
 
         >>> datasets = app.datasets
         >>> dataset = datasets.search("Examp")
 
-        Individual datasets can also be accessed by name using indexing.
+        Retrieve a dataset by name.
 
         >>> datasets = app.datasets
         >>> dataset = datasets['Example Dataset']
@@ -301,22 +312,23 @@ class App(BaseModel):
         """
         Access the flows associated with the App.
 
-        This property returns a `FlowBrowser` object for `Flow` components
-        in the App.
+        Returns a `ComponentBrowser[Flow]` to access this app's flows.
 
         Returns
         -------
+
         FlowBrowser
-            Browser object for interacting with the App's flows.
+            Flow browser for interacting with the App's flows.
 
         Examples
         --------
+
         Use `search(query: str)` to retrieve flows matching a query.
 
         >>> flows = app.flows
         >>> flow = flows.search("Examp")
 
-        Access a flow by name using indexing.
+        Retrieve a flow by name.
 
         >>> flows = app.flows
         >>> flow = flows['Example Flow']
@@ -352,22 +364,23 @@ class App(BaseModel):
         """
         Access the models associated with the App.
 
-        This property returns a `ModelBrowser` object for `Model` components
-        in the App.
+        Returns a `ComponentBrowser[Model]` to access this app's models.
 
         Returns
         -------
+
         ModelBrowser
-            Browser object for interacting with the App's models.
+            Model browser for interacting with the App's models.
 
         Examples
         --------
+
         Use `search(query: str)` to retrieve flows matching a query.
 
         >>> models = app.models
         >>> model = models.search("model")
 
-        Access a model by name using indexing.
+        Retrieve a model by name.
 
         >>> models = app.models
         >>> model = models['model_name']
