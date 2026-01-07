@@ -333,8 +333,18 @@ class ModelFacetBuilder(FacetBuilder):
             )
 
     def _validate_parameters(self, **parameters: Any) -> None:
-        # TODO: Implement parameter validation
-        ...
+        model_name = self.__model_type.name.title()
+        for parameter_name, parameter_value in parameters.items():
+            # Validate if parameter is in model spec
+            if parameter_name not in self.__model_type.parameters:
+                error_msg = (
+                    f"Parameter '{parameter_name}' is not valid for {model_name} models"
+                )
+                raise ValueError(error_msg)
+
+            # Parameter is in model spec, validate it
+            parameter_spec = self.__model_type.parameters[parameter_name]
+            parameter_spec.validate_value(model=model_name, value=parameter_value)
 
 
 class ArrowBuilder:

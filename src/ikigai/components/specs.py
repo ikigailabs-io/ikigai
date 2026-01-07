@@ -55,6 +55,12 @@ class HyperparameterType(StrEnum):
     NUMBER = "NUMBER"
 
 
+class ParameterType(StrEnum):
+    BOOLEAN = "BOOLEAN"
+    TEXT = "TEXT"
+    NUMBER = "NUMBER"
+
+
 class ArgumentSpec(BaseModel, Helpful):
     name: str
     argument_type: ArgumentType
@@ -395,6 +401,58 @@ class ModelParameterSpec(BaseModel, Helpful):
 
     model_config = ConfigDict(frozen=True)
 
+    def __validation_error_message(
+        self, model: str, expectation: str, actuals: MissingType | Any = MISSING
+    ) -> str:
+        if actuals is MISSING:
+            actuals_str = ""
+        elif actuals is None:
+            actuals_str = ", got 'None'"
+        elif isinstance(actuals, type):
+            actuals_str = f", got type '{actuals.__name__}'"
+        else:
+            actuals_str = f", got {actuals.__class__.__name__}({actuals!r})"
+
+        return f"Parameter '{self.name}' for {model} {expectation}{actuals_str}"
+
+    def validate_value(self, model: str, value: Any) -> None:
+        if self.is_list:
+            return self.__validate_list_value(model, value)
+
+        # Not a list or dict, so it must be a scalar value
+        return self.__validate_scalar_value(model, value)
+
+    def __validate_list_value(self, model: str, value: Any) -> None:
+        if not isinstance(value, list):
+            error_msg = self.__validation_error_message(model, "must be list", value)
+            raise TypeError(error_msg)
+
+        scalar_parameter_spec = self.model_copy(update={"is_list": False})
+        for item in value:
+            scalar_parameter_spec.validate_value(model, item)
+        return None  # All items validated
+
+    def __validate_scalar_value(self, model: str, value: Any) -> None:
+        if self.options and value not in self.options:
+            error_msg = self.__validation_error_message(
+                model, "must be one of {self.options}", value
+            )
+            raise ValueError(error_msg)
+
+        if self.parameter_type == ParameterType.BOOLEAN and not isinstance(value, bool):
+            error_msg = self.__validation_error_message(model, "must be boolean", value)
+            raise TypeError(error_msg)
+
+        if self.parameter_type == ParameterType.TEXT and not isinstance(value, str):
+            error_msg = self.__validation_error_message(model, "must be string", value)
+            raise TypeError(error_msg)
+
+        if self.parameter_type == ParameterType.NUMBER and not isinstance(
+            value, int | float
+        ):
+            error_msg = self.__validation_error_message(model, "must be numeric", value)
+            raise TypeError(error_msg)
+
     @override
     def _help(self) -> Generator[str]:
         parameter_type = (
@@ -434,7 +492,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
         if isinstance(v, list):
             if not (
                 all(
-                    isinstance(item, tuple | list) and len(item) == 2  # noqa: PLR2004
+                    isinstance(item, tuple | list) and len(item) == 2  # noqa: PLR2004 -- 2 is a fairly reasonable literal len
                     for item in v
                 )
             ):
@@ -470,7 +528,6 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             return self.__validate_list_value(model, value)
 
         if self.hyperparameter_type == HyperparameterType.MAP:
-            # Equivalent to having MAP type arguments
             return self.__validate_dict_value(model, value)
 
         # Not a list or dict, so it must be a scalar value
@@ -559,10 +616,17 @@ class SubModelSpec(BaseModel, Helpful):
     is_hidden: bool
     keywords: list[str]
     metrics: ModelMetricsSpec
-    parameters: list[ModelParameterSpec]
+    parameters: dict[str, ModelParameterSpec]
     hyperparameters: dict[str, ModelHyperparameterSpec]
 
     model_config = ConfigDict(frozen=True)
+
+    @field_validator("parameters", mode="after")
+    @classmethod
+    def validate_parameters(
+        cls, v: dict[str, ModelParameterSpec]
+    ) -> dict[str, ModelParameterSpec]:
+        return {parameter.name: parameter for parameter in v.values()}
 
     @field_validator("hyperparameters", mode="after")
     @classmethod
@@ -597,7 +661,6 @@ class SubModelSpec(BaseModel, Helpful):
     def from_dict(cls, model_type: str, data: SubModelSpecDict) -> Self:
         data_dict = {
             **data,
-            "parameters": list(data["parameters"].values()),
             "model_type": model_type,
         }
 
@@ -625,7 +688,9 @@ class SubModelSpec(BaseModel, Helpful):
 
         # Parameters and Hyperparameters
         visible_parameters = [
-            parameter for parameter in self.parameters if not parameter.is_hidden
+            parameter
+            for parameter in self.parameters.values()
+            if not parameter.is_hidden
         ]
         visible_hyperparameters = [
             hyperparameter
