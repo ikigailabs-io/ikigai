@@ -13,6 +13,7 @@ from typing import Any
 from pydantic import (
     BaseModel,
     ConfigDict,
+    Field,
     RootModel,
     field_validator,
     model_validator,
@@ -22,7 +23,6 @@ from ikigai.typing.protocol import (
     FacetSpecsDict,
     HyperParameterGroupName,
     HyperParameterName,
-    ModelHyperparameterSpecDict,
     ModelSpecDict,
     SubModelSpecDict,
 )
@@ -424,35 +424,32 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
     is_list: bool
     children: dict[str, ModelHyperparameterSpec]
     options: list | None = None
-    sub_hyperparameter_requirements: dict[Any, list[str]]
+    sub_hyperparameter_requirements: dict[Any, list[str]] = Field(default_factory=dict)
 
     model_config = ConfigDict(frozen=True)
 
+    @field_validator("sub_hyperparameter_requirements", mode="before")
     @classmethod
-    def from_dict(cls, data: ModelHyperparameterSpecDict) -> Self:
-        children = {
-            name: ModelHyperparameterSpec.from_dict(child)
-            for name, child in data["children"].items()
-        }
-        sub_hyperparameter_requirements = {
-            requirement[0]: requirement[1]
-            for requirement in data.get("sub_hyperparameter_requirements", [])
-        }
+    def validate_sub_hyperparameter_requirements(cls, v: Any) -> dict[Any, list[str]]:
+        if isinstance(v, list):
+            if not (
+                all(
+                    isinstance(item, tuple | list) and len(item) == 2  # noqa: PLR2004
+                    for item in v
+                )
+            ):
+                error_msg = (
+                    "Expected a list of "
+                    "(hyperparameter_value, [required_hyperparameter_names]) tuples"
+                )
+                raise ValueError(error_msg)
+            return dict(v)
 
-        return cls(
-            name=data["name"],
-            default_value=data.get("default_value"),
-            have_options=data["have_options"],
-            have_sub_hyperparameters=data["have_sub_hyperparameters"],
-            hyperparameter_group=data.get("hyperparameter_group"),
-            hyperparameter_type=HyperparameterType(data["hyperparameter_type"]),
-            is_deprecated=data["is_deprecated"],
-            is_hidden=data["is_hidden"],
-            is_list=data["is_list"],
-            children=children,
-            options=data.get("options"),
-            sub_hyperparameter_requirements=sub_hyperparameter_requirements,
-        )
+        if isinstance(v, dict):
+            return v
+
+        error_msg = "Expected a dictionary or list of requirements"
+        raise ValueError(error_msg)
 
     def __validation_error_message(
         self, model: str, expectation: str, actuals: MissingType | Any = MISSING
@@ -563,21 +560,23 @@ class SubModelSpec(BaseModel, Helpful):
     keywords: list[str]
     metrics: ModelMetricsSpec
     parameters: list[ModelParameterSpec]
-    hyperparameters: list[ModelHyperparameterSpec]
+    hyperparameters: dict[str, ModelHyperparameterSpec]
 
     model_config = ConfigDict(frozen=True)
 
     @field_validator("hyperparameters", mode="after")
     @classmethod
     def validate_hyperparameters(
-        cls, v: list[ModelHyperparameterSpec]
-    ) -> list[ModelHyperparameterSpec]:
+        cls, v: dict[str, ModelHyperparameterSpec]
+    ) -> dict[str, ModelHyperparameterSpec]:
         # If one hyperparameter has a group, then all hyperparameters must have groups
         has_any_groups = any(
-            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+            hyperparameter.hyperparameter_group is not None
+            for hyperparameter in v.values()
         )
         has_all_groups = all(
-            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+            hyperparameter.hyperparameter_group is not None
+            for hyperparameter in v.values()
         )
 
         if has_any_groups and not has_all_groups:
@@ -588,7 +587,7 @@ class SubModelSpec(BaseModel, Helpful):
             )
             logger.error(message, extra={"hyperparameter specification": v})
             raise ValueError(message)
-        return v
+        return {hyperparameter.name: hyperparameter for hyperparameter in v.values()}
 
     @property
     def sub_model_type(self) -> str:
@@ -599,10 +598,6 @@ class SubModelSpec(BaseModel, Helpful):
         data_dict = {
             **data,
             "parameters": list(data["parameters"].values()),
-            "hyperparameters": [
-                ModelHyperparameterSpec.from_dict(hyperparameter_dict)
-                for hyperparameter_dict in data["hyperparameters"].values()
-            ],
             "model_type": model_type,
         }
 
@@ -615,7 +610,7 @@ class SubModelSpec(BaseModel, Helpful):
         # Create a mapping from hyperparameter name to its group
         return {
             hyperparameter.name: hyperparameter.hyperparameter_group
-            for hyperparameter in self.hyperparameters
+            for hyperparameter in self.hyperparameters.values()
             if hyperparameter.hyperparameter_group
         }
 
@@ -634,7 +629,7 @@ class SubModelSpec(BaseModel, Helpful):
         ]
         visible_hyperparameters = [
             hyperparameter
-            for hyperparameter in self.hyperparameters
+            for hyperparameter in self.hyperparameters.values()
             if not hyperparameter.is_hidden
         ]
         yield "  parameters:"
