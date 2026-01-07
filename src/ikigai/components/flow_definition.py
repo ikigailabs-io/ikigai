@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from random import randbytes
 from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -220,7 +219,7 @@ class FacetBuilder:
         self._arguments = merge_dicts(self._arguments, arguments)
         return self
 
-    def _build(self) -> tuple[Facet, list[Arrow]]:
+    def _build(self, facet_id: str) -> tuple[Facet, list[Arrow]]:
         if self.__facet is not None:
             if self.__arrows is None:
                 error_msg = (
@@ -234,7 +233,7 @@ class FacetBuilder:
         self._facet_type.check_arguments(arguments=self._arguments)
 
         self.__facet = Facet(
-            facet_id=randbytes(4).hex(),  # noqa: S311 -- Not security relevant
+            facet_id=facet_id,
             facet_uid=self._facet_type.facet_uid,
             name=self.__name,
             arguments=self._arguments,
@@ -386,8 +385,8 @@ class FlowDefinitionBuilder:
     def build(self) -> FlowDefinition:
         facets: list[Facet] = []
         arrows: list[Arrow] = []
-        for facet_builder in self._facets:
-            facet, in_arrows = facet_builder._build()
+        for idx, facet_builder in enumerate(self._facets):
+            facet, in_arrows = facet_builder._build(facet_id=str(idx))
             facets.append(facet)
             arrows.extend(in_arrows)
 
