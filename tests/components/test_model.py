@@ -281,3 +281,45 @@ def test_model_builder_hyperparameter_typechecking_boolean(
             facet_type=facet_types.MID.PREDICT,
             model_type=model_types.EMBEDDING.LGMT1,
         ).hyperparameters(use_scaling="True")
+
+
+def test_model_builder_parameter_typechecking_invalid_name(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    model_types = ikigai.model_types
+    builder = ikigai.builder
+    with pytest.raises(ValueError, match="is not valid for Lasso models"):
+        # bad_param is not a valid parameter for Lasso
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED).model_facet(
+            facet_type=facet_types.MID.PREDICT,
+            model_type=model_types.LINEAR.LASSO,
+        ).parameters(bad_param="value")
+
+
+def test_model_builder_parameter_typechecking_text(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    model_types = ikigai.model_types
+    builder = ikigai.builder
+    with pytest.raises(TypeError, match="must be string"):
+        # target_column should be string, not int
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED).model_facet(
+            facet_type=facet_types.MID.PREDICT,
+            model_type=model_types.LINEAR.LASSO,
+        ).parameters(target_column=123)
+
+
+def test_model_builder_parameter_typechecking_list(
+    ikigai: Ikigai,
+) -> None:
+    facet_types = ikigai.facet_types
+    model_types = ikigai.model_types
+    builder = ikigai.builder
+    with pytest.raises(TypeError, match="must be list"):
+        # feature_columns should be a list, not a string
+        builder.facet(facet_type=facet_types.INPUT.IMPORTED).model_facet(
+            facet_type=facet_types.MID.PREDICT,
+            model_type=model_types.AI_CAST.BASE,
+        ).parameters(identifier_columns="not-a-list")
