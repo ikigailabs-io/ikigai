@@ -1,0 +1,86 @@
+pipeline {
+    agent {
+        kubernetes {
+            label 'jenkins-jenkins-agent'
+            customWorkspace "/home/jenkins/agent/workspace/up/${env.BUILD_NUMBER}"
+        }
+    }
+
+    stages{
+        stage('Setup Hatch') {
+            steps{
+                script{
+                    def hatch_download_url = 'https://github.com/pypa/hatch/releases/latest/download/hatch-x86_64-unknown-linux-gnu.tar.gz'
+                    jobcacher(
+                        caches: [[
+                            $class: 'ArbitraryFileCache',
+                            path: '/tmp/hatch',
+                            cacheValidityDecidingFile: 'pyproject.toml'
+                        ]],
+                        maxCacheSize: 512,
+                    ) {
+                        sh """
+                        set +x
+                        mkdir -p /tmp/hatch
+                        echo 'Downloading hatch binary'
+                        wget --output-document=/tmp/hatch/hatch.tar.gz ${hatch_download_url}
+                        tar -zxvf /tmp/hatch/hatch.tar.gz -C /tmp/hatch
+                        rm /tmp/hatch/hatch.tar.gz
+                        echo 'Checking hatch binary'
+                        /tmp/hatch/hatch --version
+                        """
+                    }
+
+                    sh(
+                        label: 'Installing Hatch',
+                        script: '''
+                        set +x
+                        sudo mv /tmp/hatch/hatch /usr/local/bin/hatch
+                        echo 'Checking hatch installation'
+                        hatch --version
+                        '''
+                    )
+                }
+            }
+        }
+
+        stage('Test') {
+            matrix {
+                axes {
+                    axis {
+                        name 'PYTHON_VERSION'
+                        values '3.10', '3.11', '3.12', '3.13'
+                    }
+                }
+                stages {
+                    stage('Run Tests') {
+                        steps{
+                            script {
+                                def REPORTS_DIRECTORY = "reports/${PYTHON_VERSION}"
+                                sh "mkdir -p ${REPORTS_DIRECTORY}"
+                                withCredentials([file(credentialsId: 'PCL-test-env-dev', variable: 'TEST_ENV_FILE_PATH')]) {
+                                    sh "mv ${TEST_ENV_FILE_PATH} test-env.toml"
+
+                                    sh """
+                                    hatch test \
+                                        --python=${PYTHON_VERSION} \
+                                        --junitxml=${REPORTS_DIRECTORY}/report.xml \
+                                        --randomize \
+                                        --parallel -n 4
+                                    """
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post{
+        always {
+            junit 'reports/**/*.xml'
+            cleanWs()
+        }
+    }
+}

@@ -118,7 +118,7 @@ def _upload_data(
     dataset_status: str = "RUNNING"
     while dataset_status == "RUNNING":
         # Block thread while dataset is still being processed
-        time.sleep(0.25)
+        time.sleep(1)
         dataset_status = client.component.confirm_dataset_upload(
             app_id=app_id, dataset_id=dataset_id
         )

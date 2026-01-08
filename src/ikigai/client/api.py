@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import InitVar
 from functools import cache
 from typing import Any, cast
@@ -16,13 +17,13 @@ from ikigai.client.session import Session
 from ikigai.typing.api import (
     GetComponentsForProjectResponse,
     GetDatasetMultipartUploadUrlsResponse,
+    RunVariablesRequest,
 )
 from ikigai.typing.protocol import (
     AppDict,
     DatasetDict,
     DatasetLogDict,
     Directory,
-    DirectoryDict,
     FlowDefinitionDict,
     FlowDict,
     FlowLogDict,
@@ -31,6 +32,7 @@ from ikigai.typing.protocol import (
     ModelSpecDict,
     ModelType,
     ModelVersionDict,
+    NamedDirectoryDict,
 )
 from ikigai.typing.protocol.flow import FacetSpecsDict
 from ikigai.utils.missing import MISSING, MissingType
@@ -90,24 +92,6 @@ class ComponentAPI:
         ).json()["project"]
 
         return cast(AppDict, app_dict)
-
-    def get_app_directories_for_user(
-        self, directory_id: str | MissingType = MISSING
-    ) -> list[DirectoryDict]:
-        """
-        NOTE: Platform should add a fetch_all field to distinguish between root
-            directory and no directory, in anticipation of this we just pass it in.
-        """
-        params: dict[str, Any] = {"fetch_all": directory_id is MISSING}
-        if directory_id is not MISSING:
-            params["directory_id"] = directory_id
-
-        directory_dicts = self.__session.get(
-            path="/component/get-project-directories-for-user",
-            params=params,
-        ).json()["directories"]
-
-        return cast(list[DirectoryDict], directory_dicts)
 
     def get_apps_for_user(
         self, directory_id: str | MissingType = MISSING
@@ -469,10 +453,18 @@ class ComponentAPI:
 
         return resp["pipeline_id"]
 
-    def run_flow(self, app_id: str, flow_id: str) -> str:
+    def run_flow(
+        self, app_id: str, flow_id: str, variables: RunVariablesRequest
+    ) -> str:
+        payload: dict[str, Mapping] = {
+            "pipeline": {"project_id": app_id, "pipeline_id": flow_id}
+        }
+        if variables:
+            payload["variables"] = variables
+
         resp = self.__session.post(
             path="/component/run-pipeline",
-            json={"pipeline": {"project_id": app_id, "pipeline_id": flow_id}},
+            json=payload,
         ).json()
 
         return resp["pipeline_id"]
@@ -621,6 +613,55 @@ class ComponentAPI:
     Directory APIs
     """
 
+    def create_app_directory(self, name: str, parent: Directory | None = None) -> str:
+        parent_id = parent.directory_id if parent else ""
+
+        resp = self.__session.post(
+            path="/component/create-project-directory",
+            json={
+                "directory": {
+                    "name": name,
+                    "parent_id": parent_id,
+                }
+            },
+        ).json()
+
+        return resp["directory_id"]
+
+    def get_app_directory(self, directory_id: str) -> NamedDirectoryDict:
+        directory = self.__session.get(
+            path="/component/get-project-directory",
+            params={"directory_id": directory_id},
+        ).json()["directory"]
+
+        return cast(NamedDirectoryDict, directory)
+
+    def get_app_directories_for_user(
+        self, directory_id: str | MissingType = MISSING
+    ) -> list[NamedDirectoryDict]:
+        """
+        NOTE: Platform should add a fetch_all field to distinguish between root
+            directory and no directory, in anticipation of this we just pass it in.
+        """
+        params: dict[str, Any] = {"fetch_all": directory_id is MISSING}
+        if directory_id is not MISSING:
+            params["directory_id"] = directory_id
+
+        directory_dicts = self.__session.get(
+            path="/component/get-project-directories-for-user",
+            params=params,
+        ).json()["directories"]
+
+        return cast(list[NamedDirectoryDict], directory_dicts)
+
+    def delete_app_directory(self, directory_id: str) -> str:
+        resp = self.__session.post(
+            path="/component/delete-project-directory",
+            json={"directory": {"directory_id": directory_id}},
+        ).json()
+
+        return resp["directory_id"]
+
     def create_dataset_directory(
         self, app_id: str, name: str, parent: Directory | None = None
     ) -> str:
@@ -639,17 +680,19 @@ class ComponentAPI:
 
         return resp["directory_id"]
 
-    def get_dataset_directory(self, app_id: str, directory_id: str) -> DirectoryDict:
+    def get_dataset_directory(
+        self, app_id: str, directory_id: str
+    ) -> NamedDirectoryDict:
         directory = self.__session.get(
             path="/component/get-dataset-directory",
             params={"project_id": app_id, "directory_id": directory_id},
         ).json()["directory"]
 
-        return cast(DirectoryDict, directory)
+        return cast(NamedDirectoryDict, directory)
 
     def get_dataset_directories_for_app(
         self, app_id: str, parent: Directory | MissingType = MISSING
-    ) -> list[DirectoryDict]:
+    ) -> list[NamedDirectoryDict]:
         params = {"project_id": app_id}
         if parent is not MISSING:
             params["directory_id"] = parent.directory_id
@@ -660,7 +703,7 @@ class ComponentAPI:
         ).json()
         directories = resp["directories"]
 
-        return cast(list[DirectoryDict], directories)
+        return cast(list[NamedDirectoryDict], directories)
 
     def create_flow_directory(
         self, app_id: str, name: str, parent: Directory | None = None
@@ -680,17 +723,17 @@ class ComponentAPI:
 
         return resp["directory_id"]
 
-    def get_flow_directory(self, app_id: str, directory_id: str) -> DirectoryDict:
+    def get_flow_directory(self, app_id: str, directory_id: str) -> NamedDirectoryDict:
         directory = self.__session.get(
             path="/component/get-pipeline-directory",
             params={"project_id": app_id, "directory_id": directory_id},
         ).json()["directory"]
 
-        return cast(DirectoryDict, directory)
+        return cast(NamedDirectoryDict, directory)
 
     def get_flow_directories_for_app(
         self, app_id: str, parent: Directory | MissingType = MISSING
-    ) -> list[DirectoryDict]:
+    ) -> list[NamedDirectoryDict]:
         params = {"project_id": app_id}
         if parent is not MISSING:
             params["directory_id"] = parent.directory_id
@@ -701,7 +744,7 @@ class ComponentAPI:
         ).json()
 
         directories = resp["directories"]
-        return cast(list[DirectoryDict], directories)
+        return cast(list[NamedDirectoryDict], directories)
 
     def create_model_directory(
         self, app_id: str, name: str, parent: Directory | None = None
@@ -721,17 +764,17 @@ class ComponentAPI:
 
         return resp["directory_id"]
 
-    def get_model_directory(self, app_id: str, directory_id: str) -> DirectoryDict:
+    def get_model_directory(self, app_id: str, directory_id: str) -> NamedDirectoryDict:
         directory = self.__session.get(
             path="/component/get-model-directory",
             params={"project_id": app_id, "directory_id": directory_id},
         ).json()["directory"]
 
-        return cast(DirectoryDict, directory)
+        return cast(NamedDirectoryDict, directory)
 
     def get_model_directories_for_app(
         self, app_id: str, parent: Directory | MissingType = MISSING
-    ) -> list[DirectoryDict]:
+    ) -> list[NamedDirectoryDict]:
         params = {"project_id": app_id}
         if parent is not MISSING:
             params["directory_id"] = parent.directory_id
@@ -742,7 +785,7 @@ class ComponentAPI:
         ).json()
 
         directories = resp["directories"]
-        return cast(list[DirectoryDict], directories)
+        return cast(list[NamedDirectoryDict], directories)
 
     """
     Spec APIs
@@ -776,6 +819,10 @@ class SearchAPI:
 
     def __post_init__(self, session: Session) -> None:
         self.__session = session
+
+    def heartbeat(self) -> None:
+        self.__session.get(path="/search/heartbeat", suppress_logging=True)
+        return None
 
     """
     Search APIs

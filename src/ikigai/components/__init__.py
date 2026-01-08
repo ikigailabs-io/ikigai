@@ -2,7 +2,13 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.components.app import App, AppBrowser, AppBuilder, AppDirectory
+from ikigai.components.app import (
+    App,
+    AppBrowser,
+    AppBuilder,
+    AppDirectory,
+    AppDirectoryBuilder,
+)
 from ikigai.components.dataset import (
     Dataset,
     DatasetBrowser,
@@ -26,13 +32,15 @@ from ikigai.components.model import (
     ModelDirectory,
     ModelDirectoryBuilder,
 )
-from ikigai.components.specs import FacetTypes, ModelTypes
+from ikigai.components.specs import ArgumentType, FacetTypes, ModelTypes
 
 __all__ = [
     "App",
     "AppBrowser",
     "AppBuilder",
     "AppDirectory",
+    "AppDirectoryBuilder",
+    "ArgumentType",
     "Dataset",
     "DatasetBrowser",
     "DatasetBuilder",
@@ -43,9 +51,9 @@ __all__ = [
     "FlowBrowser",
     "FlowBuilder",
     "FlowDefinitionBuilder",
+    "FlowDirectory",
     "FlowDirectoryBuilder",
     "FlowStatus",
-    "FlowDirectory",
     "Model",
     "ModelBrowser",
     "ModelBuilder",

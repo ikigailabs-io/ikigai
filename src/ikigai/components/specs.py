@@ -7,19 +7,29 @@ from __future__ import annotations
 import logging
 from collections import ChainMap
 from collections.abc import Generator, Mapping
+from functools import cached_property
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, RootModel, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    RootModel,
+    field_validator,
+    model_validator,
+)
 
 from ikigai.typing.protocol import (
     FacetSpecsDict,
+    HyperParameterGroupName,
+    HyperParameterName,
     ModelHyperparameterSpecDict,
     ModelSpecDict,
     SubModelSpecDict,
 )
-from ikigai.utils.compatibility import Self, override
+from ikigai.utils.compatibility import Self, StrEnum, override
 from ikigai.utils.custom_validators import LowercaseStr
 from ikigai.utils.helpful import Helpful
+from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.components.specs")
 
@@ -31,9 +41,16 @@ class FacetRequirementSpec(BaseModel):
     min_parent_count: int
 
 
+class ArgumentType(StrEnum):
+    MAP = "MAP"
+    BOOLEAN = "BOOLEAN"
+    TEXT = "TEXT"
+    NUMBER = "NUMBER"
+
+
 class ArgumentSpec(BaseModel, Helpful):
     name: str
-    argument_type: str
+    argument_type: ArgumentType
     default_value: Any | None = None
     children: dict[str, ArgumentSpec]
     have_sub_arguments: bool
@@ -44,6 +61,85 @@ class ArgumentSpec(BaseModel, Helpful):
     options: list | None = None
 
     model_config = ConfigDict(frozen=True)
+
+    def __validation_error_message(
+        self, facet, expectation, actuals: MissingType | Any = MISSING
+    ) -> str:
+        if actuals is MISSING:
+            actuals_str = ""
+        elif actuals is None:
+            actuals_str = ", got 'None'"
+        elif isinstance(actuals, type):
+            actuals_str = f", got type '{actuals.__name__}'"
+        else:
+            actuals_str = f", got {actuals.__class__.__name__}({actuals!r})"
+
+        return f"Argument '{self.name}' for facet '{facet}' {expectation}{actuals_str}"
+
+    def validate_value(self, facet: str, value: Any) -> None:
+        if value is None:
+            if self.is_required:
+                error_msg = self.__validation_error_message(facet, "is required", value)
+                raise ValueError(error_msg)
+            return None  # No further validation for None values
+
+        # Value is not None, perform type checking
+        if self.is_list:
+            return self.__validate_list_value(facet, value)
+
+        if self.argument_type == ArgumentType.MAP:
+            return self.__validate_dict_value(facet, value)
+
+        # Not a dict or list, so it must be a scalar value
+        return self.__validate_scalar_value(facet, value)
+
+    def __validate_list_value(self, facet: str, value: Any) -> None:
+        if not isinstance(value, list):
+            error_msg = self.__validation_error_message(facet, "must be list", value)
+            raise TypeError(error_msg)
+
+        scalar_argument_spec = self.model_copy(update={"is_list": False})
+        for item in value:
+            scalar_argument_spec.validate_value(facet, item)
+        return None  # All items validated
+
+    def __validate_dict_value(self, facet: str, value: Any) -> None:
+        if not isinstance(value, Mapping):
+            error_msg = self.__validation_error_message(facet, "must be mapping", value)
+            raise TypeError(error_msg)
+
+        for name, child_value in value.items():
+            if name not in self.children:
+                error_msg = self.__validation_error_message(
+                    facet, f"provided with unexpected child argument '{name}'"
+                )
+                raise KeyError(error_msg)
+            child_spec = self.children[name]
+            child_spec.validate_value(facet=f"{facet}:{self.name}", value=child_value)
+        return None  # All child arguments validated
+
+    def __validate_scalar_value(self, facet: str, value: Any) -> None:
+        # Basic type checking based on argument_type
+
+        if self.options and value not in self.options:
+            error_msg = self.__validation_error_message(
+                facet, f"must be one of {self.options}", value
+            )
+            raise ValueError(error_msg)
+
+        if self.argument_type == ArgumentType.BOOLEAN and not isinstance(value, bool):
+            error_msg = self.__validation_error_message(facet, "must be boolean", value)
+            raise TypeError(error_msg)
+
+        if self.argument_type == ArgumentType.TEXT and not isinstance(value, str):
+            error_msg = self.__validation_error_message(facet, "must be string", value)
+            raise TypeError(error_msg)
+
+        if self.argument_type == ArgumentType.NUMBER and not isinstance(
+            value, int | float
+        ):
+            error_msg = self.__validation_error_message(facet, "must be numeric", value)
+            raise TypeError(error_msg)
 
     @override
     def _help(self) -> Generator[str]:
@@ -81,11 +177,25 @@ class FacetType(BaseModel, Helpful):
     is_deprecated: bool
     is_hidden: bool
     facet_requirement: FacetRequirementSpec
-    facet_arguments: list[ArgumentSpec]
-    in_arrow_arguments: list[ArgumentSpec]
-    out_arrow_arguments: list[ArgumentSpec]
+    facet_arguments: dict[str, ArgumentSpec]
+    in_arrow_arguments: dict[str, ArgumentSpec]
+    out_arrow_arguments: dict[str, ArgumentSpec]
 
     model_config = ConfigDict(frozen=True)
+
+    @field_validator(
+        "facet_arguments", "in_arrow_arguments", "out_arrow_arguments", mode="before"
+    )
+    @classmethod
+    def validate_arguments(cls, v: list[dict]) -> dict[str, ArgumentSpec]:
+        if not isinstance(v, list):
+            error_msg = "Expected a list of argument dictionaries"
+            raise ValueError(error_msg)
+
+        return {
+            (spec := ArgumentSpec.model_validate(argument_dict)).name: spec
+            for argument_dict in v
+        }
 
     @property
     def facet_uid(self) -> str:
@@ -101,7 +211,9 @@ class FacetType(BaseModel, Helpful):
         yield f"{self.name.title()}:"
         # Facet Arguments
         visible_facet_arguments = [
-            argument for argument in self.facet_arguments if not argument.is_hidden
+            argument
+            for argument in self.facet_arguments.values()
+            if not argument.is_hidden
         ]
         if not visible_facet_arguments:
             yield "  No arguments"
@@ -118,12 +230,12 @@ class FacetType(BaseModel, Helpful):
         visible_in_arrow_arguments, out_arrow_arguments = (
             [
                 argument
-                for argument in self.in_arrow_arguments
+                for argument in self.in_arrow_arguments.values()
                 if not argument.is_hidden
             ],
             [
                 argument
-                for argument in self.out_arrow_arguments
+                for argument in self.out_arrow_arguments.values()
                 if not argument.is_hidden
             ],
         )
@@ -353,7 +465,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             yield f"{self.name}: {hyperparameter_type}{hyperparameter_value}"
 
         if self.children:
-            yield f"{self.name}: {hyperparameter_type} = " "{"
+            yield f"{self.name}: {hyperparameter_type} = {{"
             for child in self.children.values():
                 if child.is_hidden:
                     continue
@@ -373,6 +485,29 @@ class SubModelSpec(BaseModel, Helpful):
 
     model_config = ConfigDict(frozen=True)
 
+    @field_validator("hyperparameters", mode="after")
+    @classmethod
+    def validate_hyperparameters(
+        cls, v: list[ModelHyperparameterSpec]
+    ) -> list[ModelHyperparameterSpec]:
+        # If one hyperparameter has a group, then all hyperparameters must have groups
+        has_any_groups = any(
+            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+        )
+        has_all_groups = all(
+            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+        )
+
+        if has_any_groups and not has_all_groups:
+            message = (
+                "Inconsistent hyperparameter groups for: "
+                "Some hyperparameters have groups while others do not.\n"
+                "This is likely a due to a bug in the model specification."
+            )
+            logger.error(message, extra={"hyperparameter specification": v})
+            raise ValueError(message)
+        return v
+
     @property
     def sub_model_type(self) -> str:
         return self.name
@@ -390,6 +525,17 @@ class SubModelSpec(BaseModel, Helpful):
         }
 
         return cls.model_validate(data_dict)
+
+    @cached_property
+    def _hyperparameter_groups(
+        self,
+    ) -> dict[HyperParameterName, HyperParameterGroupName]:
+        # Create a mapping from hyperparameter name to its group
+        return {
+            hyperparameter.name: hyperparameter.hyperparameter_group
+            for hyperparameter in self.hyperparameters
+            if hyperparameter.hyperparameter_group
+        }
 
     @override
     def _help(self) -> Generator[str]:

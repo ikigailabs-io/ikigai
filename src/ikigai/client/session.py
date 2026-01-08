@@ -44,9 +44,11 @@ class Session:
         path: str,
         params: dict[str, str] | None = None,
         json: dict | None = None,
+        *,
+        suppress_logging: bool = False,
     ) -> Response:
         logger.debug(
-            "[%(method)s] %(path)s %(params)s\n" "json: %(json)s",
+            "[%(method)s] %(path)s %(params)s\njson: %(json)s",
             {"method": method, "path": path, "params": params, "json": json},
         )
         url = f"{self.base_url}{path}"
@@ -60,6 +62,33 @@ class Session:
             return resp
         if resp.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
             # A 4XX error happened
+            if not suppress_logging:
+                logger.error(
+                    "Request"
+                    "[%(method)s] %(path)s %(params)s\n"
+                    "%(request)s\n\n"
+                    "Response [%(status)s]"
+                    "headers: %(response_headers)s\n"
+                    "%(response)s\n\n",
+                    {
+                        "method": method,
+                        "path": path,
+                        "params": params,
+                        "request": resp.request.body,
+                        "status": resp.status_code,
+                        "response_headers": resp.headers,
+                        "response": resp.text,
+                    },
+                )
+            message = (
+                f"[{resp.status_code}] Server rejected the request. "
+                "Check the request and try again.\n"
+                f"Response: {resp.text}"
+            )
+            raise RuntimeError(message)
+
+        # A 5XX error happened
+        if not suppress_logging:
             logger.error(
                 "Request"
                 "[%(method)s] %(path)s %(params)s\n"
@@ -77,31 +106,6 @@ class Session:
                     "response": resp.text,
                 },
             )
-            message = (
-                f"[{resp.status_code}] Server rejected the request. "
-                "Check the request and try again.\n"
-                f"Response: {resp.text}"
-            )
-            raise RuntimeError(message)
-
-        # A 5XX error happened
-        logger.error(
-            "Request"
-            "[%(method)s] %(path)s %(params)s\n"
-            "%(request)s\n\n"
-            "Response [%(status)s]"
-            "headers: %(response_headers)s\n"
-            "%(response)s\n\n",
-            {
-                "method": method,
-                "path": path,
-                "params": params,
-                "request": resp.request.body,
-                "status": resp.status_code,
-                "response_headers": resp.headers,
-                "response": resp.text,
-            },
-        )
         message = (
             f"[{resp.status_code}] The server encountered an error. "
             "Try again later, if problem persists report an issue.\n"
@@ -109,11 +113,33 @@ class Session:
         )
         raise RuntimeError(message)
 
-    def get(self, path: str, params: dict[str, Any] | None = None) -> Response:
-        return self.request(method=HTTPMethod.GET, path=path, params=params)
+    def get(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        *,
+        suppress_logging: bool = False,
+    ) -> Response:
+        return self.request(
+            method=HTTPMethod.GET,
+            path=path,
+            params=params,
+            suppress_logging=suppress_logging,
+        )
 
-    def post(self, path: str, json: dict[Any, Any] | None = None) -> Response:
-        return self.request(method=HTTPMethod.POST, path=path, json=json)
+    def post(
+        self,
+        path: str,
+        json: dict[Any, Any] | None = None,
+        *,
+        suppress_logging: bool = False,
+    ) -> Response:
+        return self.request(
+            method=HTTPMethod.POST,
+            path=path,
+            json=json,
+            suppress_logging=suppress_logging,
+        )
 
     def __del__(self) -> None:
         self.__session.close()

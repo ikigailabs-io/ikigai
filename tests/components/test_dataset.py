@@ -7,6 +7,7 @@ from logging import Logger
 
 import pandas as pd
 import pytest
+
 from ikigai.ikigai import Ikigai
 
 
@@ -24,7 +25,6 @@ def test_dataset_creation(
     assert len(datasets) == 0
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     with pytest.raises(KeyError):
         datasets.get_id(dataset.dataset_id)
@@ -47,7 +47,6 @@ def test_dataset_editing(
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     dataset.rename(f"updated {dataset_name}")
     dataset.edit_data(df2)
@@ -74,7 +73,6 @@ def test_dataset_download(
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     round_trip_df1 = dataset.df()
     assert len(df1) == len(round_trip_df1)
@@ -82,7 +80,7 @@ def test_dataset_download(
 
     # v. helpful debug message when the test fails
     logger.info(
-        "df1.dtypes:\n%r\n" "%r\n\n" "round_trip_df1.dtypes:\n%r\n" "%r\n\n",
+        ("df1.dtypes:\n%r\n%r\n\nround_trip_df1.dtypes:\n%r\n%r\n\n"),
         df1.dtypes,
         df1.head(),
         round_trip_df1.dtypes,
@@ -104,7 +102,6 @@ def test_dataset_describe(
     app = ikigai.app.new(name=app_name).description("A test app").build()
     cleanup.callback(app.delete)
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     description = dataset.describe()
     assert description is not None
@@ -154,8 +151,11 @@ def test_dataset_directories_creation(
         .df(df1)
         .build()
     )
-    cleanup.callback(dataset.delete)
-    assert len(nested_dataset_directory.datasets()) == 1
+    nested_directory_datasets = nested_dataset_directory.datasets()
+    assert len(nested_directory_datasets) == 1
+    assert dataset_name in nested_directory_datasets
+    assert nested_directory_datasets[dataset_name].dataset_id == dataset.dataset_id
+
     assert len(dataset_directory.datasets()) == 0
 
 
@@ -172,7 +172,6 @@ def test_dataset_browser_1(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     fetched_dataset = app.datasets[dataset_name]
     assert fetched_dataset.dataset_id == dataset.dataset_id
@@ -192,7 +191,6 @@ def test_dataset_browser_search_1(
     cleanup.callback(app.delete)
 
     dataset = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset.delete)
 
     dataset_name_substr = dataset_name.split("-", maxsplit=1)[1]
     fetched_datasets = app.datasets.search(dataset_name_substr)
@@ -200,7 +198,7 @@ def test_dataset_browser_search_1(
     assert dataset_name in fetched_datasets
     fetched_dataset = fetched_datasets[dataset_name]
 
-    assert fetched_dataset.dataset_id
+    assert fetched_dataset.dataset_id == dataset.dataset_id
 
 
 """
@@ -227,7 +225,6 @@ def test_iplt_7641_datasets(
     cleanup.callback(app.delete)
 
     dataset_1 = app.dataset.new(name=dataset_name).df(df1).build()
-    cleanup.callback(dataset_1.delete)
 
     dataset_directory = app.dataset_directory.new(name=dataset_directory_name_1).build()
     dataset_2 = (
@@ -236,7 +233,6 @@ def test_iplt_7641_datasets(
         .df(df1)
         .build()
     )
-    cleanup.callback(dataset_2.delete)
 
     datasets = app.datasets()
     directory_datasets = dataset_directory.datasets()

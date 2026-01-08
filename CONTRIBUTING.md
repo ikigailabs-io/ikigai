@@ -155,35 +155,42 @@ TOTAL                                 475     46     36     10    87%
 
 ### Releasing new version
 
-To release new version first and foremost you need to bump the version.
-`hatch` makes it quite smooth.
+To release new version you can run:
+
+```sh
+make release (TAG=[micro|minor|major])
+```
+
+Which in turn bumps the version using `hatch version`.
+Ex.
 
 ```sh
 $ hatch version micro
-Old: 0.0.2
-New: 0.0.3
+Old: 0.2.8
+New: 0.2.9
 ```
 
-After this commit any files hatch changed when updating the version.
-Create a tag to go along with the commit. For consistency use the following
-template for commit message and tag:
+After this it commits any files hatch changed when updating the version.
+And creates a tag to go along with the commit. Using the following template
+for commit message and tag:
 
 ```txt
 $ git commit -m "Bump version to v$(hatch version)"
-[main XXXXXXX] Bump version to v0.0.3
+[main XXXXXXX] Bump version to v0.2.9
  1 file changed, 1 insertions(+), 1 deletions(-)
 
 $ git tag "v$(hatch version)"
 ```
 
-Push the commit and tag
+Finally it pushes the commit and tag
 
 ```sh
 git push && git push --tags
 ```
 
-Then create a new release on [github-releases][github-releases] using the tag
-you just created.
+As the final step create a new release on [github-releases][github-releases]
+using the tag that was just created. This will trigger the CD to build and
+upload the new version to PyPI.
 
 ### Profiling tests
 

@@ -23,7 +23,10 @@ from ikigai.typing.protocol.flow import (
 )
 from ikigai.typing.protocol.generic import Named
 from ikigai.typing.protocol.model import (
+    HyperParameterGroupName,
+    HyperParameterName,
     ModelDict,
+    ModelHyperParameterGroupType,
     ModelHyperparameterSpecDict,
     ModelSpecDict,
     ModelType,
@@ -32,33 +35,30 @@ from ikigai.typing.protocol.model import (
 )
 
 __all__ = [
-    # App Protocol
     "AppDict",
-    # Dataset Protocol
+    "ArrowDict",
     "DatasetDict",
     "DatasetLogDict",
-    # Directory Protocol
     "Directory",
     "DirectoryDict",
     "DirectoryType",
-    "NamedDirectoryDict",
-    # Flow Protocol
-    "ArrowDict",
     "FacetDict",
     "FacetSpecsDict",
+    "FlowDefinitionDict",
     "FlowDict",
     "FlowLogDict",
-    "FlowDefinitionDict",
     "FlowModelVariableDict",
     "FlowStatusReportDict",
     "FlowVariableDict",
-    # Model Protocol
+    "HyperParameterGroupName",
+    "HyperParameterName",
     "ModelDict",
+    "ModelHyperParameterGroupType",
     "ModelHyperparameterSpecDict",
     "ModelSpecDict",
     "ModelType",
     "ModelVersionDict",
-    "SubModelSpecDict",
-    # Generic Protocol
     "Named",
+    "NamedDirectoryDict",
+    "SubModelSpecDict",
 ]
