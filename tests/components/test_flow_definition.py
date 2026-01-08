@@ -237,7 +237,7 @@ def test_flow_definition_simple_ml_facet(
             model_name=model.name,
             version="initial-train",
         )
-        .hyperparameters(alpha=0.1, fit_intercept=True)
+        .hyperparameters(alpha=0.1)
         .parameters(
             target_column="target",
         )
