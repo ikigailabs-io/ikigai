@@ -10,17 +10,19 @@ from typing import Annotated
 from pydantic import AwareDatetime, PlainSerializer
 
 
-def __datetime_to_str(value: datetime) -> str:
+def __datetime_to_timestamp(value: datetime) -> str:
     return str(int(value.timestamp()))
 
 
-def __optional_datetime_to_str(value: datetime | None) -> str:
+def __optional_datetime_to_timestamp(value: datetime | None) -> str:
     if not value:
         return ""
     return str(int(value.timestamp()))
 
 
-StrSerializableDatetime = Annotated[AwareDatetime, PlainSerializer(__datetime_to_str)]
-StrSerializableOptionalDatetime = Annotated[
-    AwareDatetime | None, PlainSerializer(__optional_datetime_to_str)
+TimestampSerializableDatetime = Annotated[
+    AwareDatetime, PlainSerializer(__datetime_to_timestamp)
+]
+TimestampSerializableOptionalDatetime = Annotated[
+    AwareDatetime | None, PlainSerializer(__optional_datetime_to_timestamp)
 ]

@@ -26,8 +26,8 @@ from ikigai.typing.protocol import (
 )
 from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.custom_serializers import (
-    StrSerializableDatetime,
-    StrSerializableOptionalDatetime,
+    TimestampSerializableDatetime,
+    TimestampSerializableOptionalDatetime,
 )
 from ikigai.utils.custom_validators import CronStr, OptionalStr
 from ikigai.utils.named_mapping import NamedMapping
@@ -80,9 +80,9 @@ class Schedule(BaseModel):
 
     name: str
     """Name of the schedule."""
-    start_time: StrSerializableDatetime
+    start_time: TimestampSerializableDatetime
     """Start time of the schedule."""
-    end_time: StrSerializableOptionalDatetime = None
+    end_time: TimestampSerializableOptionalDatetime = None
     """End time of the schedule. If None, the schedule will run indefinitely."""
     cron: CronStr
     """Cron expression for the schedule."""
