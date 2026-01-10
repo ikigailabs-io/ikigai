@@ -85,6 +85,36 @@ class AppBuilder:
 
 
 class App(BaseModel):
+    """
+    Represents an App in the Ikigai platform.
+
+    Apps are the basic organizational units in Ikigai.
+
+    Attributes
+    ----------
+
+    app_id: str
+        Unique identifier of the app.
+
+    name: str
+        Name of the App.
+
+    owner: EmailStr
+        Email address of the app owner.
+
+    description: str
+        Description of the app.
+
+    created_at: datetime
+        Timestamp when the app was created.
+
+    modified_at: datetime
+        Timestamp when the app was last modified.
+
+    last_used_at: datetime
+        Timestamp when the app was last used.
+    """
+
     app_id: str = Field(validation_alias="project_id")
     name: str
     owner: EmailStr
@@ -105,6 +135,15 @@ class App(BaseModel):
     """
 
     def to_dict(self) -> dict:
+        """
+        Convert the App to a dictionary representation.
+
+        Returns
+        -------
+
+        dict
+            Dictionary containing the App attributes.
+        """
         return {
             "app_id": self.app_id,
             "name": self.name,
@@ -116,20 +155,73 @@ class App(BaseModel):
         }
 
     def delete(self) -> None:
+        """
+        Delete the App.
+
+        Returns
+        -------
+
+        None
+        """
         self.__client.component.delete_app(app_id=self.app_id)
         return None
 
     def rename(self, name: str) -> Self:
+        """
+        Rename the App.
+
+        Parameters
+        ----------
+
+        name: str
+            New name for the App.
+
+        Returns
+        -------
+
+        Self
+            Updated App.
+        """
         _ = self.__client.component.edit_app(app_id=self.app_id, name=name)
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.name = name
         return self
 
     def move(self, directory: Directory) -> Self:
+        """
+        Move the App to the target directory.
+
+        Parameters
+        ----------
+
+        directory: Directory
+            Target directory.
+
+        Returns
+        -------
+
+        Self
+            Updated App.
+        """
         _ = self.__client.component.edit_app(app_id=self.app_id, directory=directory)
         return self
 
     def update_description(self, description: str) -> Self:
+        """
+        Update the App's description.
+
+        Parameters
+        ----------
+
+        description: str
+            The new description for the App.
+
+        Returns
+        -------
+
+        Self
+            The updated App with the new description.
+        """
         _ = self.__client.component.edit_app(
             app_id=self.app_id, description=description
         )
@@ -138,6 +230,16 @@ class App(BaseModel):
         return self
 
     def describe(self) -> dict[str, Any]:
+        """
+        Get details about the App including its components.
+
+        Returns
+        -------
+
+        dict[str, Any]
+            Dictionary containing App details and its associated
+            components.
+        """
         components = self.__client.component.get_components_for_app(app_id=self.app_id)
 
         # Combine components information with app info
@@ -152,6 +254,31 @@ class App(BaseModel):
 
     @property
     def datasets(self) -> ComponentBrowser[components.Dataset]:
+        """
+        Access the datasets associated with the App.
+
+        Returns a `ComponentBrowser[Dataset]` to access this app's datasets.
+
+        Returns
+        -------
+
+        DatasetBrowser
+            Dataset browser for interacting with the App's datasets.
+
+        Examples
+        --------
+
+        Use `search(query: str)`, which returns datasets matching a query
+        string.
+
+        >>> datasets = app.datasets
+        >>> dataset = datasets.search("Examp")
+
+        Retrieve a dataset by name.
+
+        >>> datasets = app.datasets
+        >>> dataset = datasets['Example Dataset']
+        """
         return components.DatasetBrowser(app_id=self.app_id, client=self.__client)
 
     @property
@@ -182,6 +309,30 @@ class App(BaseModel):
 
     @property
     def flows(self) -> ComponentBrowser[components.Flow]:
+        """
+        Access the flows associated with the App.
+
+        Returns a `ComponentBrowser[Flow]` to access this app's flows.
+
+        Returns
+        -------
+
+        FlowBrowser
+            Flow browser for interacting with the App's flows.
+
+        Examples
+        --------
+
+        Use `search(query: str)` to retrieve flows matching a query.
+
+        >>> flows = app.flows
+        >>> flow = flows.search("Examp")
+
+        Retrieve a flow by name.
+
+        >>> flows = app.flows
+        >>> flow = flows['Example Flow']
+        """
         return components.FlowBrowser(app_id=self.app_id, client=self.__client)
 
     @property
@@ -210,6 +361,30 @@ class App(BaseModel):
 
     @property
     def models(self) -> ComponentBrowser[components.Model]:
+        """
+        Access the models associated with the App.
+
+        Returns a `ComponentBrowser[Model]` to access this app's models.
+
+        Returns
+        -------
+
+        ModelBrowser
+            Model browser for interacting with the App's models.
+
+        Examples
+        --------
+
+        Use `search(query: str)` to retrieve flows matching a query.
+
+        >>> models = app.models
+        >>> model = models.search("model")
+
+        Retrieve a model by name.
+
+        >>> models = app.models
+        >>> model = models['model_name']
+        """
         return components.ModelBrowser(app_id=self.app_id, client=self.__client)
 
     @property
