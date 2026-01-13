@@ -270,13 +270,6 @@ class ModelFacetBuilder(FacetBuilder):
         self.__model_type = model_type
 
     def hyperparameters(self, **hyperparameters: Any) -> Self:
-        # If no hyperparameters are defined for this model type
-        #   then raise an error
-        if len(self.__model_type.hyperparameters) <= 0:
-            facet_name = self._facet_type.name.title()
-            error_msg = f"{facet_name} Facet does not support hyperparameters"
-            raise RuntimeError(error_msg)
-
         # Validate the hyperparameters
         self._validate_hyperparameters(**hyperparameters)
 
@@ -307,16 +300,18 @@ class ModelFacetBuilder(FacetBuilder):
         return self
 
     def parameters(self, **parameters: Any) -> Self:
-        if "parameters" not in self._facet_type.facet_arguments:
-            facet_name = self._facet_type.name.title()
-            error_msg = f"{facet_name} Facet does not support parameters"
-            raise RuntimeError(error_msg)
         self._validate_parameters(**parameters)
         self._update_arguments(parameters=parameters)
         return self
 
     def _validate_hyperparameters(self, **hyperparameters: Any) -> None:
         model_name = self.__model_type.name.title()
+        # If no hyperparameters are defined for this model type
+        #   then raise an error
+        if len(self.__model_type.hyperparameters) <= 0:
+            error_msg = f"{model_name} Model does not support hyperparameters"
+            raise RuntimeError(error_msg)
+
         for hyperparameter_name, hyperparameter_value in hyperparameters.items():
             # Validate if hyperparameter is in model spec
             if hyperparameter_name not in self.__model_type.hyperparameters:
@@ -334,6 +329,10 @@ class ModelFacetBuilder(FacetBuilder):
 
     def _validate_parameters(self, **parameters: Any) -> None:
         model_name = self.__model_type.name.title()
+        if "parameters" not in self._facet_type.facet_arguments:
+            error_msg = f"{model_name} Model does not support parameters"
+            raise RuntimeError(error_msg)
+
         for parameter_name, parameter_value in parameters.items():
             # Validate if parameter is in model spec
             if parameter_name not in self.__model_type.parameters:
