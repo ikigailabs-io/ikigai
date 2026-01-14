@@ -13,6 +13,7 @@ from typing import Any
 from pydantic import (
     BaseModel,
     ConfigDict,
+    Field,
     RootModel,
     field_validator,
     model_validator,
@@ -22,7 +23,6 @@ from ikigai.typing.protocol import (
     FacetSpecsDict,
     HyperParameterGroupName,
     HyperParameterName,
-    ModelHyperparameterSpecDict,
     ModelSpecDict,
     SubModelSpecDict,
 )
@@ -43,6 +43,19 @@ class FacetRequirementSpec(BaseModel):
 
 class ArgumentType(StrEnum):
     MAP = "MAP"
+    BOOLEAN = "BOOLEAN"
+    TEXT = "TEXT"
+    NUMBER = "NUMBER"
+
+
+class HyperparameterType(StrEnum):
+    MAP = "MAP"
+    BOOLEAN = "BOOLEAN"
+    TEXT = "TEXT"
+    NUMBER = "NUMBER"
+
+
+class ParameterType(StrEnum):
     BOOLEAN = "BOOLEAN"
     TEXT = "TEXT"
     NUMBER = "NUMBER"
@@ -388,6 +401,58 @@ class ModelParameterSpec(BaseModel, Helpful):
 
     model_config = ConfigDict(frozen=True)
 
+    def __validation_error_message(
+        self, model: str, expectation: str, actuals: MissingType | Any = MISSING
+    ) -> str:
+        if actuals is MISSING:
+            actuals_str = ""
+        elif actuals is None:
+            actuals_str = ", got 'None'"
+        elif isinstance(actuals, type):
+            actuals_str = f", got type '{actuals.__name__}'"
+        else:
+            actuals_str = f", got {actuals.__class__.__name__}({actuals!r})"
+
+        return f"Parameter '{self.name}' for {model} {expectation}{actuals_str}"
+
+    def validate_value(self, model: str, value: Any) -> None:
+        if self.is_list:
+            return self.__validate_list_value(model, value)
+
+        # Not a list or dict, so it must be a scalar value
+        return self.__validate_scalar_value(model, value)
+
+    def __validate_list_value(self, model: str, value: Any) -> None:
+        if not isinstance(value, list):
+            error_msg = self.__validation_error_message(model, "must be list", value)
+            raise TypeError(error_msg)
+
+        scalar_parameter_spec = self.model_copy(update={"is_list": False})
+        for item in value:
+            scalar_parameter_spec.validate_value(model, item)
+        return None  # All items validated
+
+    def __validate_scalar_value(self, model: str, value: Any) -> None:
+        if self.options and value not in self.options:
+            error_msg = self.__validation_error_message(
+                model, "must be one of {self.options}", value
+            )
+            raise ValueError(error_msg)
+
+        if self.parameter_type == ParameterType.BOOLEAN and not isinstance(value, bool):
+            error_msg = self.__validation_error_message(model, "must be boolean", value)
+            raise TypeError(error_msg)
+
+        if self.parameter_type == ParameterType.TEXT and not isinstance(value, str):
+            error_msg = self.__validation_error_message(model, "must be string", value)
+            raise TypeError(error_msg)
+
+        if self.parameter_type == ParameterType.NUMBER and not isinstance(
+            value, int | float
+        ):
+            error_msg = self.__validation_error_message(model, "must be numeric", value)
+            raise TypeError(error_msg)
+
     @override
     def _help(self) -> Generator[str]:
         parameter_type = (
@@ -411,41 +476,112 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
     have_options: bool
     have_sub_hyperparameters: bool
     hyperparameter_group: str | None
-    hyperparameter_type: str
+    hyperparameter_type: HyperparameterType
     is_deprecated: bool
     is_hidden: bool
     is_list: bool
     children: dict[str, ModelHyperparameterSpec]
     options: list | None = None
-    sub_hyperparameter_requirements: dict[Any, list[str]]
+    sub_hyperparameter_requirements: dict[Any, list[str]] = Field(default_factory=dict)
 
     model_config = ConfigDict(frozen=True)
 
+    @field_validator("sub_hyperparameter_requirements", mode="before")
     @classmethod
-    def from_dict(cls, data: ModelHyperparameterSpecDict) -> Self:
-        children = {
-            name: ModelHyperparameterSpec.from_dict(child)
-            for name, child in data["children"].items()
-        }
-        sub_hyperparameter_requirements = {
-            requirement[0]: requirement[1]
-            for requirement in data.get("sub_hyperparameter_requirements", [])
-        }
+    def validate_sub_hyperparameter_requirements(cls, v: Any) -> dict[Any, list[str]]:
+        if isinstance(v, list):
+            if not (
+                all(
+                    isinstance(item, tuple | list) and len(item) == 2  # noqa: PLR2004 -- 2 is a fairly reasonable literal len
+                    for item in v
+                )
+            ):
+                error_msg = (
+                    "Expected a list of "
+                    "(hyperparameter_value, [required_hyperparameter_names]) tuples"
+                )
+                raise ValueError(error_msg)
+            return dict(v)
 
-        return cls(
-            name=data["name"],
-            default_value=data.get("default_value"),
-            have_options=data["have_options"],
-            have_sub_hyperparameters=data["have_sub_hyperparameters"],
-            hyperparameter_group=data.get("hyperparameter_group"),
-            hyperparameter_type=data["hyperparameter_type"],
-            is_deprecated=data["is_deprecated"],
-            is_hidden=data["is_hidden"],
-            is_list=data["is_list"],
-            children=children,
-            options=data.get("options"),
-            sub_hyperparameter_requirements=sub_hyperparameter_requirements,
-        )
+        if isinstance(v, dict):
+            return v
+
+        error_msg = "Expected a dictionary or list of requirements"
+        raise ValueError(error_msg)
+
+    def __validation_error_message(
+        self, model: str, expectation: str, actuals: MissingType | Any = MISSING
+    ) -> str:
+        if actuals is MISSING:
+            actuals_str = ""
+        elif actuals is None:
+            actuals_str = ", got 'None'"
+        elif isinstance(actuals, type):
+            actuals_str = f", got type '{actuals.__name__}'"
+        else:
+            actuals_str = f", got {actuals.__class__.__name__}({actuals!r})"
+
+        return f"Hyperparameter '{self.name}' for {model} {expectation}{actuals_str}"
+
+    def validate_value(self, model: str, value: Any) -> None:
+        if self.is_list:
+            return self.__validate_list_value(model, value)
+
+        if self.hyperparameter_type == HyperparameterType.MAP:
+            return self.__validate_dict_value(model, value)
+
+        # Not a list or dict, so it must be a scalar value
+        return self.__validate_scalar_value(model, value)
+
+    def __validate_list_value(self, model: str, value: Any) -> None:
+        if not isinstance(value, list):
+            error_msg = self.__validation_error_message(model, "must be list", value)
+            raise TypeError(error_msg)
+
+        scalar_hyperparameter_spec = self.model_copy(update={"is_list": False})
+        for item in value:
+            scalar_hyperparameter_spec.validate_value(model, item)
+        return None  # All items validated
+
+    def __validate_dict_value(self, model: str, value: Any) -> None:
+        if not isinstance(value, Mapping):
+            error_msg = self.__validation_error_message(model, "must be mapping", value)
+            raise TypeError(error_msg)
+
+        for name, child_value in value.items():
+            if name not in self.children:
+                error_msg = self.__validation_error_message(
+                    model, f"provided with unexpected child hyperparameter '{name}'"
+                )
+                raise KeyError(error_msg)
+            child_spec = self.children[name]
+            child_spec.validate_value(model, child_value)
+        return None  # All child hyperparameters validated
+
+    def __validate_scalar_value(self, model: str, value: Any) -> None:
+        if self.options and value not in self.options:
+            error_msg = self.__validation_error_message(
+                model, f"must be one of {self.options}", value
+            )
+            raise ValueError(error_msg)
+
+        if self.hyperparameter_type == HyperparameterType.BOOLEAN and not isinstance(
+            value, bool
+        ):
+            error_msg = self.__validation_error_message(model, "must be boolean", value)
+            raise TypeError(error_msg)
+
+        if self.hyperparameter_type == HyperparameterType.TEXT and not isinstance(
+            value, str
+        ):
+            error_msg = self.__validation_error_message(model, "must be string", value)
+            raise TypeError(error_msg)
+
+        if self.hyperparameter_type == HyperparameterType.NUMBER and not isinstance(
+            value, int | float
+        ):
+            error_msg = self.__validation_error_message(model, "must be numeric", value)
+            raise TypeError(error_msg)
 
     @override
     def _help(self) -> Generator[str]:
@@ -480,22 +616,31 @@ class SubModelSpec(BaseModel, Helpful):
     is_hidden: bool
     keywords: list[str]
     metrics: ModelMetricsSpec
-    parameters: list[ModelParameterSpec]
-    hyperparameters: list[ModelHyperparameterSpec]
+    parameters: dict[str, ModelParameterSpec]
+    hyperparameters: dict[str, ModelHyperparameterSpec]
 
     model_config = ConfigDict(frozen=True)
+
+    @field_validator("parameters", mode="after")
+    @classmethod
+    def validate_parameters(
+        cls, v: dict[str, ModelParameterSpec]
+    ) -> dict[str, ModelParameterSpec]:
+        return {parameter.name: parameter for parameter in v.values()}
 
     @field_validator("hyperparameters", mode="after")
     @classmethod
     def validate_hyperparameters(
-        cls, v: list[ModelHyperparameterSpec]
-    ) -> list[ModelHyperparameterSpec]:
+        cls, v: dict[str, ModelHyperparameterSpec]
+    ) -> dict[str, ModelHyperparameterSpec]:
         # If one hyperparameter has a group, then all hyperparameters must have groups
         has_any_groups = any(
-            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+            hyperparameter.hyperparameter_group is not None
+            for hyperparameter in v.values()
         )
         has_all_groups = all(
-            hyperparameter.hyperparameter_group is not None for hyperparameter in v
+            hyperparameter.hyperparameter_group is not None
+            for hyperparameter in v.values()
         )
 
         if has_any_groups and not has_all_groups:
@@ -506,7 +651,7 @@ class SubModelSpec(BaseModel, Helpful):
             )
             logger.error(message, extra={"hyperparameter specification": v})
             raise ValueError(message)
-        return v
+        return {hyperparameter.name: hyperparameter for hyperparameter in v.values()}
 
     @property
     def sub_model_type(self) -> str:
@@ -516,11 +661,6 @@ class SubModelSpec(BaseModel, Helpful):
     def from_dict(cls, model_type: str, data: SubModelSpecDict) -> Self:
         data_dict = {
             **data,
-            "parameters": list(data["parameters"].values()),
-            "hyperparameters": [
-                ModelHyperparameterSpec.from_dict(hyperparameter_dict)
-                for hyperparameter_dict in data["hyperparameters"].values()
-            ],
             "model_type": model_type,
         }
 
@@ -533,7 +673,7 @@ class SubModelSpec(BaseModel, Helpful):
         # Create a mapping from hyperparameter name to its group
         return {
             hyperparameter.name: hyperparameter.hyperparameter_group
-            for hyperparameter in self.hyperparameters
+            for hyperparameter in self.hyperparameters.values()
             if hyperparameter.hyperparameter_group
         }
 
@@ -548,11 +688,13 @@ class SubModelSpec(BaseModel, Helpful):
 
         # Parameters and Hyperparameters
         visible_parameters = [
-            parameter for parameter in self.parameters if not parameter.is_hidden
+            parameter
+            for parameter in self.parameters.values()
+            if not parameter.is_hidden
         ]
         visible_hyperparameters = [
             hyperparameter
-            for hyperparameter in self.hyperparameters
+            for hyperparameter in self.hyperparameters.values()
             if not hyperparameter.is_hidden
         ]
         yield "  parameters:"
