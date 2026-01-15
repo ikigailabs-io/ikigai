@@ -23,6 +23,7 @@ from ikigai.components.flow import (
     FlowDirectory,
     FlowDirectoryBuilder,
     FlowStatus,
+    Schedule,
 )
 from ikigai.components.flow_definition import FlowDefinitionBuilder
 from ikigai.components.model import (
@@ -60,4 +61,5 @@ __all__ = [
     "ModelDirectory",
     "ModelDirectoryBuilder",
     "ModelTypes",
+    "Schedule",
 ]

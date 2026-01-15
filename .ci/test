@@ -58,13 +58,14 @@ pipeline {
                             script {
                                 def REPORTS_DIRECTORY = "reports/${PYTHON_VERSION}"
                                 sh "mkdir -p ${REPORTS_DIRECTORY}"
-                                withCredentials([file(credentialsId: 'PCL-test-env-dev', variable: 'TEST_ENV_FILE_PATH')]) {
+                                withCredentials([file(credentialsId: 'PCL-test-env-first-prod', variable: 'TEST_ENV_FILE_PATH')]) {
                                     sh "mv ${TEST_ENV_FILE_PATH} test-env.toml"
 
                                     sh """
                                     hatch test \
                                         --python=${PYTHON_VERSION} \
                                         --junitxml=${REPORTS_DIRECTORY}/report.xml \
+                                        -o junit_logging=all \
                                         --randomize \
                                         --parallel -n 4
                                     """
