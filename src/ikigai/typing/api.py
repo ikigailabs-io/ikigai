@@ -5,7 +5,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
+
+from ikigai.utils.compatibility import StrEnum
 
 
 class RunVariableValue(TypedDict):
@@ -19,6 +21,32 @@ class GetDatasetMultipartUploadUrlsResponse(TypedDict):
     upload_id: str
     content_type: str
     urls: dict[int, str]
+
+
+class DatasetDownloadStatus(StrEnum):
+    SUCCESS = "SUCCESS"
+    IN_PROGRESS = "IN_PROGRESS"
+    FAILED = "FAILED"
+
+
+class _InitializeDatasetDownloadFailedResponse(TypedDict):
+    status: Literal[DatasetDownloadStatus.FAILED]
+
+
+class _InitializeDatasetDownloadInProgressResponse(TypedDict):
+    status: Literal[DatasetDownloadStatus.IN_PROGRESS]
+
+
+class _InitializeDatasetDownloadSuccessResponse(TypedDict):
+    status: Literal[DatasetDownloadStatus.SUCCESS]
+    url: str
+
+
+InitializeDatasetDownloadResponse = (
+    _InitializeDatasetDownloadFailedResponse
+    | _InitializeDatasetDownloadInProgressResponse
+    | _InitializeDatasetDownloadSuccessResponse
+)
 
 
 class GetComponentsForProjectResponse(TypedDict):

@@ -17,6 +17,7 @@ from ikigai.client.session import Session
 from ikigai.typing.api import (
     GetComponentsForProjectResponse,
     GetDatasetMultipartUploadUrlsResponse,
+    InitializeDatasetDownloadResponse,
     RunVariablesRequest,
 )
 from ikigai.typing.protocol import (
@@ -172,7 +173,9 @@ class ComponentAPI:
         ).json()
         return resp["dataset_id"]
 
-    def get_dataset_download_url(self, app_id: str, dataset_id: str) -> str:
+    def initialize_dataset_download(
+        self, app_id: str, dataset_id: str
+    ) -> InitializeDatasetDownloadResponse:
         resp = self.__session.get(
             path="/component/get-dataset-download-url",
             params={
@@ -180,7 +183,7 @@ class ComponentAPI:
                 "dataset_id": dataset_id,
             },
         ).json()
-        return resp["url"]
+        return cast(InitializeDatasetDownloadResponse, resp)
 
     def get_dataset(self, app_id: str, dataset_id: str) -> DatasetDict:
         resp = self.__session.get(

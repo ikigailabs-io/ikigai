@@ -20,6 +20,7 @@ import requests
 from pydantic import BaseModel, Field
 
 from ikigai.client import Client
+from ikigai.typing.api import DatasetDownloadStatus
 from ikigai.typing.protocol import (
     DatasetDict,
     Directory,
@@ -141,6 +142,32 @@ def _upload_data(
         # TODO: Improve Error
         error_msg = "Dataset failed to verify"
         raise RuntimeError(error_msg, dataset_logs)
+
+
+def _get_dataset_download_url(client: Client, app_id: str, dataset_id: str) -> str:
+    response = client.component.initialize_dataset_download(
+        app_id=app_id,
+        dataset_id=dataset_id,
+    )
+
+    while response["status"] == DatasetDownloadStatus.IN_PROGRESS:
+        time.sleep(1)
+        response = client.component.initialize_dataset_download(
+            app_id=app_id,
+            dataset_id=dataset_id,
+        )
+
+    if response["status"] == DatasetDownloadStatus.FAILED:
+        error_msg = (
+            "Dataset download failed, dataset size might be too large to download"
+        )
+        raise RuntimeError(error_msg)
+
+    if response["status"] != DatasetDownloadStatus.SUCCESS:
+        error_msg = f"Got unexpected dataset download status: {response['status']}"
+        raise RuntimeError(error_msg)
+
+    return response["url"]
 
 
 class DatasetBrowser:
@@ -313,7 +340,8 @@ class Dataset(BaseModel):
         return self
 
     def df(self, **parser_options) -> pd.DataFrame:
-        download_url = self.__client.component.get_dataset_download_url(
+        download_url = _get_dataset_download_url(
+            client=self.__client,
             app_id=self.app_id,
             dataset_id=self.dataset_id,
         )
