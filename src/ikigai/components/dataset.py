@@ -225,16 +225,19 @@ class DatasetBuilder:
 
         Parameters
         ----------
-        name : str
+
+        name: str
             Name of the new dataset.
 
         Returns
         -------
+
         DatasetBuilder
-            The builder instance, allowing method chaining.
+            The builder instance. Enables method chaining.
 
         Examples
         --------
+
         >>> builder = DatasetBuilder(client, app_id)
         >>> builder.new("training-data")
         """
@@ -246,17 +249,19 @@ class DatasetBuilder:
         Provide dataset contents from a pandas DataFrame.
 
         The DataFrame is serialized to CSV format and stored internally
-        until the dataset is created via :meth:`build`.
+        until the dataset is created by calling the `build` method.
 
         Parameters
         ----------
-        data : pandas.DataFrame
+
+        data: pandas.DataFrame
             DataFrame containing the dataset contents to upload.
 
         Returns
         -------
+
         DatasetBuilder
-            The builder instance, allowing method chaining.
+            The builder instance. Enables method chaining.
         """
         buffer = io.BytesIO()
         data.to_csv(buffer, index_label=False, index=False)
@@ -280,25 +285,23 @@ class DatasetBuilder:
 
         This method creates a new dataset using the configured name and
         optional directory, uploads the provided data, and returns a
-        populated :class:`Dataset` instance.
+        populated `Dataset` instance.
 
         Returns
         -------
+
         Dataset
             The newly created dataset.
 
         Raises
         ------
+
         ValueError
             If no dataset contents have been provided.
         Exception
             If dataset creation or data upload fails. In this case, the
             partially created dataset is deleted before re-raising
             the exception.
-
-        Notes
-        -----
-        This method performs network operations and is not idempotent.
         """
         if self._data is None:
             error_msg = "Dataset is empty"
@@ -340,35 +343,35 @@ class Dataset(BaseModel):
     """
     Represents a Dataset in the Ikigai platform.
 
-    Datasets are any data files stored in the Ikigai platform. You can upload 
-    your files to Ikigai to create a dataset. Ikigai supports various file types 
-    such as CSV and Pandas DataFrame.
+    A dataset consists of data files uploaded to Ikigai and supports
+    formats such as CSV and pandas DataFrame.
 
     Attributes
     ----------
-    app_id : str
+
+    app_id: str
         Unique identifier of the app.
 
-    dataset_id : str
+    dataset_id: str
         Unique identifier of the dataset.
 
-    name : str
+    name: str
         Name of the dataset.
 
-    filename : str
+    filename: str
         Name of the dataset file.
 
-    file_extension : str
+    file_extension: str
         File extension of the dataset (e.g. CSV, Pandas DataFrame).
 
-    data_types : dict[str, ColumnDataType]
+    data_types: dict[str, ColumnDataType]
         Mapping of column names to their corresponding data types (e.g. numeric, 
         text, categorical, time).
 
-    size : int
+    size: int
         Size of the dataset in bytes.
 
-    created_at : datetime
+    created_at: datetime
         Timestamp indicating when the dataset was created.
 
     modified_at : datetime
@@ -433,18 +436,21 @@ class Dataset(BaseModel):
 
         Parameters
         ----------
+
         **parser_options
             Additional keyword arguments providing pandas parser options
-            to ``pandas.read_csv``.
+            to `pandas.read_csv`.
 
         Returns
         -------
+
         pandas.DataFrame
             Dataset contents loaded into a DataFrame.
 
         Examples
         --------
-        Download the dataset into a pandas DataFrame. Use the ``head`` method to
+
+        Download the dataset into a pandas DataFrame. Use the `head` method to
         display the first rows of the dataset. The number of rows to display can
         be specified as an argument.
            
@@ -465,17 +471,20 @@ class Dataset(BaseModel):
 
         Parameters
         ----------
-        data : pandas.DataFrame
+
+        data: pandas.DataFrame
             New DataFrame containing the updated dataset to upload.
 
         Returns
         -------
+
         None
 
         Examples
         --------
+
         Download the dataset as a DataFrame, modify it, and upload the updated 
-        DataFrame using ``.edit_data()``.
+        DataFrame using `.edit_data()`.
 
         >>> df = dataset.df()                     
         >>> df_updated = df[df.columns[:-1]]      
@@ -498,6 +507,7 @@ class Dataset(BaseModel):
 
         Returns
         -------
+
         DatasetDict
             Dictionary containing dataset details.
         """
