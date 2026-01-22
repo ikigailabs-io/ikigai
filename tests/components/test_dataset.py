@@ -8,7 +8,10 @@ from logging import Logger
 import pandas as pd
 import pytest
 
+from ikigai.components import FlowStatus
+from ikigai.components.dataset import _get_dataset_download_url
 from ikigai.ikigai import Ikigai
+from ikigai.typing.api import DatasetDownloadStatus
 
 
 def test_dataset_creation(
@@ -89,6 +92,124 @@ def test_dataset_download(
 
     pd.testing.assert_frame_equal(
         df1, round_trip_df1, check_dtype=False, check_exact=False
+    )
+
+
+def test_dataset_async_download(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
+    logger: Logger,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    Test async dataset download by running a high volume flow.
+
+    This test creates a high volume pipeline with a simple imported->exported
+    structure. The output dataset will require async download processing,
+    which tests the DatasetDownloadStatus.IN_PROGRESS handling.
+    """
+    app = (
+        ikigai.app.new(name=app_name).description("Test async dataset download").build()
+    )
+    cleanup.callback(app.delete)
+
+    # Create a small input dataset
+    input_dataset = app.dataset.new(name=dataset_name).df(df1).build()
+
+    # Create a high volume flow with imported->exported structure
+    facet_types = ikigai.facet_types
+    output_dataset_name = f"output-{dataset_name}"
+    flow_definition = (
+        ikigai.builder.facet(
+            facet_type=facet_types.INPUT.IMPORTED, name=input_dataset.name
+        )
+        .arguments(
+            dataset_id=input_dataset.dataset_id,
+            file_type="csv",
+            header=True,
+            use_raw_file=False,
+        )
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(
+            dataset_name=output_dataset_name,
+            file_type="csv",
+            header=True,
+        )
+        .build()
+    )
+
+    # Build flow with high volume preference enabled
+    flow = (
+        app.flow.new(name=f"flow-{dataset_name}")
+        .definition(flow_definition)
+        .high_volume_preference(optimize=True)
+        .build()
+    )
+
+    # Run the flow - this should create an output dataset
+    logger.info("Running high volume flow to generate output dataset")
+    run_log = flow.run()
+
+    # Verify the flow succeeded
+    assert run_log.status == FlowStatus.SUCCESS, run_log.data
+
+    # Get the output dataset
+    output_dataset = app.datasets[output_dataset_name]
+
+    # Track whether IN_PROGRESS status was encountered
+    in_progress_encountered = False
+
+    # Wrap the original function to track IN_PROGRESS status
+    original_get_url = _get_dataset_download_url
+
+    def tracked_get_dataset_download_url(client, app_id, dataset_id):
+        nonlocal in_progress_encountered
+        # Call initialize_dataset_download to check initial status
+        response = client.component.initialize_dataset_download(
+            app_id=app_id,
+            dataset_id=dataset_id,
+        )
+
+        # Track if we got IN_PROGRESS
+        if response["status"] == DatasetDownloadStatus.IN_PROGRESS:
+            in_progress_encountered = True
+            logger.info("✓ Async download triggered: IN_PROGRESS status detected")
+
+        # Delegate to original implementation
+        return original_get_url(client, app_id, dataset_id)
+
+    monkeypatch.setattr(
+        "ikigai.components.dataset._get_dataset_download_url",
+        tracked_get_dataset_download_url,
+    )
+
+    # Download the dataset - this will test the async download logic
+    logger.info("Attempting to download output dataset (should trigger async download)")
+    downloaded_df = output_dataset.df()
+
+    # Verify that IN_PROGRESS status was encountered
+    assert in_progress_encountered, (
+        "Expected IN_PROGRESS status to be returned during async download, "
+        "but it was not encountered"
+    )
+
+    # Verify the downloaded data matches the input
+    assert len(downloaded_df) == len(df1)
+    assert downloaded_df.columns.equals(df1.columns)
+
+    logger.info(
+        ("Input df1:\n%r\n%r\n\nDownloaded df:\n%r\n%r\n\n"),
+        df1.dtypes,
+        df1.head(),
+        downloaded_df.dtypes,
+        downloaded_df.head(),
+    )
+
+    pd.testing.assert_frame_equal(
+        df1, downloaded_df, check_dtype=False, check_exact=False
     )
 
 
