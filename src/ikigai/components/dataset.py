@@ -221,7 +221,7 @@ class DatasetBuilder:
 
     def new(self, name: str) -> Self:
         """
-        Set the name of the dataset to be created.
+        Create a new dataset in the current app with the specified name.
 
         Parameters
         ----------
@@ -238,18 +238,14 @@ class DatasetBuilder:
         Examples
         --------
 
-        >>> builder = DatasetBuilder(client, app_id)
-        >>> builder.new("training-data")
+        >>> new_dataset = app.dataset.new("New Dataset")
         """
         self._name = name
         return self
 
     def df(self, data: pd.DataFrame) -> Self:
         """
-        Provide dataset contents from a pandas DataFrame.
-
-        The DataFrame is serialized to CSV format and stored internally
-        until the dataset is created by calling the `build` method.
+        Set dataset content from a pandas DataFrame.
 
         Parameters
         ----------
@@ -262,6 +258,13 @@ class DatasetBuilder:
 
         DatasetBuilder
             The builder instance. Enables method chaining.
+
+        Examples
+        --------
+
+        >>> new_dataset = app.dataset.new("New Dataset")
+        >>> df = pd.DataFrame({"Name": ["Alice", "Bob"], "Age": [25, 30]})
+        >>> new_dataset = new_dataset.df(df).build()
         """
         buffer = io.BytesIO()
         data.to_csv(buffer, index_label=False, index=False)
@@ -283,9 +286,8 @@ class DatasetBuilder:
         """
         Create the dataset and upload its contents.
 
-        This method creates a new dataset using the configured name and
-        optional directory, uploads the provided data, and returns a
-        populated `Dataset` instance.
+        This method creates a new dataset using the configured name, directory, 
+        and data, and returns a populated `Dataset` instance.
 
         Returns
         -------
@@ -341,16 +343,13 @@ class ColumnDataType(BaseModel):
 
 class Dataset(BaseModel):
     """
-    Represents a Dataset in the Ikigai platform.
-
-    A dataset consists of data files uploaded to Ikigai and supports
-    formats such as CSV and pandas DataFrame.
+    A Dataset on the Ikigai platform.
 
     Attributes
     ----------
 
     app_id: str
-        Unique identifier of the app.
+        The app this dataset belongs to.
 
     dataset_id: str
         Unique identifier of the dataset.
@@ -362,7 +361,7 @@ class Dataset(BaseModel):
         Name of the dataset file.
 
     file_extension: str
-        File extension of the dataset (e.g. CSV, Pandas DataFrame).
+        File extension of the dataset.
 
     data_types: dict[str, ColumnDataType]
         Mapping of column names to their corresponding data types (e.g. numeric, 
@@ -372,10 +371,10 @@ class Dataset(BaseModel):
         Size of the dataset in bytes.
 
     created_at: datetime
-        Timestamp indicating when the dataset was created.
+        Datetime indicating when the dataset was created.
 
     modified_at : datetime
-       Timestamp indicating when the dataset was last modified.
+       Datetime indicating when the dataset was last modified.
     """
 
     app_id: str = Field(validation_alias="project_id")
@@ -432,14 +431,15 @@ class Dataset(BaseModel):
 
     def df(self, **parser_options) -> pd.DataFrame:
         """
-        Download the dataset and load it into a pandas DataFrame.
+        Load dataset content as a pandas DataFrame.
 
         Parameters
         ----------
 
         **parser_options
             Additional keyword arguments providing pandas parser options
-            to `pandas.read_csv`.
+            to `pandas.read_csv`. Described in `pandas documentation 
+             <http://www.example.com>`_.
 
         Returns
         -------
@@ -467,13 +467,13 @@ class Dataset(BaseModel):
 
     def edit_data(self, data: pd.DataFrame) -> None:
         """
-        Update the dataset with new data.
+        Overwrite the dataset content with new data.
 
         Parameters
         ----------
 
         data: pandas.DataFrame
-            New DataFrame containing the updated dataset to upload.
+            DataFrame containing the new data.
 
         Returns
         -------
