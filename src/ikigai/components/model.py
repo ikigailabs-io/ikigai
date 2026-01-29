@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, PrivateAttr
 
 from ikigai.client.client import Client
 from ikigai.components.specs import SubModelSpec
@@ -118,7 +118,7 @@ class Model(BaseModel):
     description: str
     created_at: datetime
     modified_at: datetime
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
@@ -182,7 +182,7 @@ class ModelVersion(BaseModel):
     metrics: dict[str, Any]
     created_at: datetime
     modified_at: datetime
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @property
     def name(self) -> str:
@@ -237,7 +237,7 @@ class ModelDirectory(BaseModel):
     app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
     directory_id: str
     name: str
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @property
     def type(self) -> DirectoryType:

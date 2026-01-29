@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import InitVar
 
-from pydantic import AnyUrl, EmailStr, Field
+from pydantic import EmailStr, Field, HttpUrl
 from pydantic.dataclasses import dataclass
 
 from ikigai import components
@@ -45,7 +45,7 @@ class Ikigai:
 
     user_email: EmailStr
     api_key: InitVar[str]
-    base_url: AnyUrl = Field(default=AnyUrl("https://api.ikigailabs.io"))
+    base_url: HttpUrl = Field(default=HttpUrl("https://api.ikigailabs.io"))
     ssl: InitVar[SSLConfig | MissingType] = MISSING
     __client: Client = Field(init=False)
 

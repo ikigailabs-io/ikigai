@@ -218,7 +218,7 @@ class App(BaseModel):
     created_at: datetime
     modified_at: datetime
     last_used_at: datetime
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
@@ -554,7 +554,7 @@ class AppDirectoryBuilder:
 class AppDirectory(BaseModel):
     directory_id: str
     name: str
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @property
     def type(self) -> DirectoryType:

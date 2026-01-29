@@ -11,7 +11,14 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, TypeVar, cast
 
-from pydantic import AliasChoices, BaseModel, EmailStr, Field, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    EmailStr,
+    Field,
+    PrivateAttr,
+    field_validator,
+)
 from tqdm.auto import tqdm
 
 from ikigai.client import Client
@@ -322,7 +329,7 @@ class Flow(BaseModel):
     schedule: Schedule | None = None
     created_at: datetime
     modified_at: datetime
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @field_validator("schedule", mode="before")
     @classmethod
@@ -609,7 +616,7 @@ class FlowDirectory(BaseModel):
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @property
     def type(self) -> DirectoryType:

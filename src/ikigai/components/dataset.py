@@ -17,7 +17,7 @@ from typing import Any
 
 import pandas as pd
 import requests
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from ikigai.client import Client
 from ikigai.typing.api import DatasetDownloadStatus
@@ -296,7 +296,7 @@ class Dataset(BaseModel):
     size: int
     created_at: datetime
     modified_at: datetime
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
@@ -400,7 +400,7 @@ class DatasetDirectory(BaseModel):
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @property
     def type(self) -> DirectoryType:
