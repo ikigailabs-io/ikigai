@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.typing.protocol.app import AppDict
+from ikigai.typing.protocol.app import AppAccessLevel, AppDict
 from ikigai.typing.protocol.dataset import DatasetDict, DatasetLogDict
 from ikigai.typing.protocol.directory import (
     Directory,
@@ -36,6 +36,7 @@ from ikigai.typing.protocol.model import (
 )
 
 __all__ = [
+    "AppAccessLevel",
     "AppDict",
     "ArrowDict",
     "DatasetDict",

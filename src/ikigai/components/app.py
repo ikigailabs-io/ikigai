@@ -6,13 +6,19 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
+from functools import cached_property
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, PrivateAttr
 
 from ikigai import components
 from ikigai.client import Client
-from ikigai.typing.protocol import Directory, DirectoryType, NamedDirectoryDict
+from ikigai.typing.protocol import (
+    AppAccessLevel,
+    Directory,
+    DirectoryType,
+    NamedDirectoryDict,
+)
 from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.component_browser import ComponentBrowser
 from ikigai.utils.named_mapping import NamedMapping
@@ -82,6 +88,96 @@ class AppBuilder:
         )
         app_dict = self.__client.component.get_app(app_id=app_id)
         return App.from_dict(data=app_dict, client=self.__client)
+
+
+class AppAccess(BaseModel):
+    """
+    Access manager for the App.
+
+    Grant/Update/Revoke access to the App.
+    """
+
+    __app_id: str = PrivateAttr()
+    __client: Client = PrivateAttr()
+
+    def __init__(self, *, app_id: str, client: Client) -> None:
+        super().__init__()
+        self.__app_id = app_id
+        self.__client = client
+
+    def grant(self, email: EmailStr, access_level: AppAccessLevel) -> Self:
+        """
+        Grant access to the App.
+
+        Parameters
+        ----------
+
+        email: EmailStr
+            Email address of the user to grant access to.
+
+        access_level: AppAccessLevel
+            Access level to grant to the user.
+
+        Returns
+        -------
+
+        Self
+            Access manager for the App.
+        """
+        self.__client.component.grant_app_access(
+            app_id=self.__app_id,
+            email=email,
+            access_level=access_level,
+        )
+        return self
+
+    def update(self, email: EmailStr, access_level: AppAccessLevel) -> Self:
+        """
+        Update access to the App.
+
+        Parameters
+        ----------
+
+        email: EmailStr
+            Email address of the user to update access for.
+
+        access_level: AppAccessLevel
+            New access level for the user.
+
+        Returns
+        -------
+
+        Self
+            Access manager for the App.
+        """
+        self.__client.component.update_app_access(
+            app_id=self.__app_id,
+            email=email,
+            access_level=access_level,
+        )
+        return self
+
+    def revoke(self, email: EmailStr) -> Self:
+        """
+        Revoke access to the App.
+
+        Parameters
+        ----------
+
+        email: EmailStr
+            Email address of the user to revoke access for.
+
+        Returns
+        -------
+
+        Self
+            Access manager for the App.
+        """
+        self.__client.component.revoke_app_access(
+            app_id=self.__app_id,
+            email=email,
+        )
+        return self
 
 
 class App(BaseModel):
@@ -228,6 +324,19 @@ class App(BaseModel):
         # TODO: handle error case, currently it is a raise NotImplemented from Session
         self.description = description
         return self
+
+    @cached_property
+    def access(self) -> AppAccess:
+        """
+        Manage access to the App.
+
+        Returns
+        -------
+
+        AppAccess
+            Access manager for the App.
+        """
+        return AppAccess(app_id=self.app_id, client=self.__client)
 
     def describe(self) -> dict[str, Any]:
         """

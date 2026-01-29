@@ -21,6 +21,7 @@ from ikigai.typing.api import (
     RunVariablesRequest,
 )
 from ikigai.typing.protocol import (
+    AppAccessLevel,
     AppDict,
     DatasetDict,
     DatasetLogDict,
@@ -149,6 +150,42 @@ class ComponentAPI:
             json={"project": {"project_id": app_id}},
         ).json()
 
+        return resp["project_id"]
+
+    def grant_app_access(
+        self, app_id: str, email: str, access_level: AppAccessLevel
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/share-project",
+            json={
+                "project": {"project_id": app_id},
+                "user": {"email": email, "project_access_level": access_level},
+            },
+        ).json()
+        return resp["project_id"]
+
+    def update_app_access(
+        self, app_id: str, email: str, access_level: AppAccessLevel
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/edit-project-access-level-for-user",
+            json={
+                "project": {
+                    "project_id": app_id,
+                },
+                "user": {"email": email, "project_access_level": access_level},
+            },
+        ).json()
+        return resp["project_id"]
+
+    def revoke_app_access(self, app_id: str, email: str) -> str:
+        resp = self.__session.post(
+            path="/component/unshare-project",
+            json={
+                "project": {"project_id": app_id},
+                "user": {"email": email},
+            },
+        ).json()
         return resp["project_id"]
 
     """
