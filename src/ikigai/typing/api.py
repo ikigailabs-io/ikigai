@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Literal, TypedDict
 
-from ikigai.utils.compatibility import StrEnum
+from ikigai.utils.enums import DatasetDownloadStatus
 
 
 class RunVariableValue(TypedDict):
@@ -21,12 +21,6 @@ class GetDatasetMultipartUploadUrlsResponse(TypedDict):
     upload_id: str
     content_type: str
     urls: dict[int, str]
-
-
-class DatasetDownloadStatus(StrEnum):
-    SUCCESS = "SUCCESS"
-    IN_PROGRESS = "IN_PROGRESS"
-    FAILED = "FAILED"
 
 
 class _InitializeDatasetDownloadFailedResponse(TypedDict):

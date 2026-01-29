@@ -8,10 +8,16 @@ import logging
 import time
 from collections.abc import Mapping
 from datetime import datetime
-from enum import Enum
 from typing import Any, TypeVar, cast
 
-from pydantic import AliasChoices, BaseModel, EmailStr, Field, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    EmailStr,
+    Field,
+    PrivateAttr,
+    field_validator,
+)
 from tqdm.auto import tqdm
 
 from ikigai.client import Client
@@ -19,7 +25,6 @@ from ikigai.components.flow_definition import FlowDefinition
 from ikigai.typing.api import RunVariablesRequest
 from ikigai.typing.protocol import (
     Directory,
-    DirectoryType,
     FlowDefinitionDict,
     FlowDict,
     NamedDirectoryDict,
@@ -31,6 +36,7 @@ from ikigai.utils.custom_serializers import (
     TimestampSerializableOptionalDatetime,
 )
 from ikigai.utils.custom_validators import CronStr, OptionalStr
+from ikigai.utils.enums import DirectoryType, FlowStatus
 from ikigai.utils.named_mapping import NamedMapping
 from ikigai.utils.shim import flow_versioning_shim
 
@@ -278,20 +284,6 @@ class FlowBuilder:
         return Flow.from_dict(data=flow_dict, client=self.__client)
 
 
-class FlowStatus(str, Enum):
-    SCHEDULED = "SCHEDULED"
-    RUNNING = "RUNNING"
-    STOPPING = "STOPPING"
-    STOPPED = "STOPPED"
-    FAILED = "FAILED"
-    IDLE = "IDLE"
-    UNKNOWN = "UNKNOWN"
-    SUCCESS = "SUCCESS"  # Not available via /component/is-pipeline-running
-
-    def __repr__(self) -> str:
-        return self.value
-
-
 class FlowStatusReport(BaseModel):
     status: FlowStatus
     progress: int | None = Field(default=None)
@@ -322,7 +314,7 @@ class Flow(BaseModel):
     schedule: Schedule | None = None
     created_at: datetime
     modified_at: datetime
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @field_validator("schedule", mode="before")
     @classmethod
@@ -609,7 +601,7 @@ class FlowDirectory(BaseModel):
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
-    __client: Client
+    __client: Client = PrivateAttr()
 
     @property
     def type(self) -> DirectoryType:

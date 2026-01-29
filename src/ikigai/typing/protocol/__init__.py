@@ -7,7 +7,6 @@ from ikigai.typing.protocol.dataset import DatasetDict, DatasetLogDict
 from ikigai.typing.protocol.directory import (
     Directory,
     DirectoryDict,
-    DirectoryType,
     NamedDirectoryDict,
 )
 from ikigai.typing.protocol.flow import (
@@ -42,7 +41,6 @@ __all__ = [
     "DatasetLogDict",
     "Directory",
     "DirectoryDict",
-    "DirectoryType",
     "FacetDict",
     "FacetSpecsDict",
     "FlowDefinitionDict",

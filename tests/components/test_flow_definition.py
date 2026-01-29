@@ -8,8 +8,7 @@ from contextlib import ExitStack
 import pandas as pd
 import pytest
 
-from ikigai import Ikigai
-from ikigai.components import FlowStatus
+from ikigai import FlowStatus, Ikigai
 
 
 def test_flow_definition_builder_facet_types(

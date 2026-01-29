@@ -8,7 +8,7 @@ import logging
 from dataclasses import InitVar
 from typing import Any
 
-from pydantic import AnyUrl, EmailStr, Field
+from pydantic import EmailStr, Field, HttpUrl
 from pydantic.dataclasses import dataclass
 from requests import Response
 from requests.exceptions import ConnectionError
@@ -26,7 +26,7 @@ class Client:
     # Init only vars
     user_email: InitVar[EmailStr]
     api_key: InitVar[str]
-    base_url: InitVar[AnyUrl]
+    base_url: InitVar[HttpUrl]
     ssl: InitVar[SSLConfig]
 
     __session: Session = Field(init=False)
@@ -34,7 +34,7 @@ class Client:
     __search_api: SearchAPI = Field(init=False)
 
     def __post_init__(
-        self, user_email: EmailStr, api_key: str, base_url: AnyUrl, ssl: SSLConfig
+        self, user_email: EmailStr, api_key: str, base_url: HttpUrl, ssl: SSLConfig
     ) -> None:
         self.__session = Session(
             user_email=user_email, api_key=api_key, base_url=base_url, ssl=ssl

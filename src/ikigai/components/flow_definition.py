@@ -10,11 +10,12 @@ from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ikigai.components.specs import ArgumentType, FacetType
+from ikigai.components.specs import FacetType
 from ikigai.components.specs import SubModelSpec as ModelType
 from ikigai.typing.protocol import FlowDefinitionDict, ModelHyperParameterGroupType
 from ikigai.utils.compatibility import Self
 from ikigai.utils.data_structures import merge_dicts
+from ikigai.utils.enums import FacetArgumentType
 
 logger = logging.getLogger("ikigai.components")
 
@@ -164,7 +165,10 @@ class FacetBuilder:
             variable_type: str = (
                 "LIST" if argument_spec.is_list else argument_spec.argument_type
             )
-            if argument_spec.argument_type is ArgumentType.MAP or argument_spec.is_list:
+            if (
+                argument_spec.argument_type is FacetArgumentType.MAP
+                or argument_spec.is_list
+            ):
                 errors.append(
                     f"Variable {variable_name!r} targeting argument {argument_name!r} "
                     f"of type {variable_type} is currently not supported."

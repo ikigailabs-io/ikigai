@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytest
 
-from ikigai import Ikigai
-from ikigai.components import FlowStatus, Schedule
+from ikigai import FlowStatus, Ikigai
+from ikigai.components import Schedule
 
 
 def test_flow_creation(

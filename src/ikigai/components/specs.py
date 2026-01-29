@@ -26,8 +26,13 @@ from ikigai.typing.protocol import (
     ModelSpecDict,
     SubModelSpecDict,
 )
-from ikigai.utils.compatibility import Self, StrEnum, override
+from ikigai.utils.compatibility import Self, override
 from ikigai.utils.custom_validators import LowercaseStr
+from ikigai.utils.enums import (
+    FacetArgumentType,
+    ModelHyperparameterType,
+    ModelParameterType,
+)
 from ikigai.utils.helpful import Helpful
 from ikigai.utils.missing import MISSING, MissingType
 
@@ -41,29 +46,9 @@ class FacetRequirementSpec(BaseModel):
     min_parent_count: int
 
 
-class ArgumentType(StrEnum):
-    MAP = "MAP"
-    BOOLEAN = "BOOLEAN"
-    TEXT = "TEXT"
-    NUMBER = "NUMBER"
-
-
-class HyperparameterType(StrEnum):
-    MAP = "MAP"
-    BOOLEAN = "BOOLEAN"
-    TEXT = "TEXT"
-    NUMBER = "NUMBER"
-
-
-class ParameterType(StrEnum):
-    BOOLEAN = "BOOLEAN"
-    TEXT = "TEXT"
-    NUMBER = "NUMBER"
-
-
 class ArgumentSpec(BaseModel, Helpful):
     name: str
-    argument_type: ArgumentType
+    argument_type: FacetArgumentType
     default_value: Any | None = None
     children: dict[str, ArgumentSpec]
     have_sub_arguments: bool
@@ -100,7 +85,7 @@ class ArgumentSpec(BaseModel, Helpful):
         if self.is_list:
             return self.__validate_list_value(facet, value)
 
-        if self.argument_type == ArgumentType.MAP:
+        if self.argument_type == FacetArgumentType.MAP:
             return self.__validate_dict_value(facet, value)
 
         # Not a dict or list, so it must be a scalar value
@@ -140,15 +125,17 @@ class ArgumentSpec(BaseModel, Helpful):
             )
             raise ValueError(error_msg)
 
-        if self.argument_type == ArgumentType.BOOLEAN and not isinstance(value, bool):
+        if self.argument_type == FacetArgumentType.BOOLEAN and not isinstance(
+            value, bool
+        ):
             error_msg = self.__validation_error_message(facet, "must be boolean", value)
             raise TypeError(error_msg)
 
-        if self.argument_type == ArgumentType.TEXT and not isinstance(value, str):
+        if self.argument_type == FacetArgumentType.TEXT and not isinstance(value, str):
             error_msg = self.__validation_error_message(facet, "must be string", value)
             raise TypeError(error_msg)
 
-        if self.argument_type == ArgumentType.NUMBER and not isinstance(
+        if self.argument_type == FacetArgumentType.NUMBER and not isinstance(
             value, int | float
         ):
             error_msg = self.__validation_error_message(facet, "must be numeric", value)
@@ -439,15 +426,19 @@ class ModelParameterSpec(BaseModel, Helpful):
             )
             raise ValueError(error_msg)
 
-        if self.parameter_type == ParameterType.BOOLEAN and not isinstance(value, bool):
+        if self.parameter_type == ModelParameterType.BOOLEAN and not isinstance(
+            value, bool
+        ):
             error_msg = self.__validation_error_message(model, "must be boolean", value)
             raise TypeError(error_msg)
 
-        if self.parameter_type == ParameterType.TEXT and not isinstance(value, str):
+        if self.parameter_type == ModelParameterType.TEXT and not isinstance(
+            value, str
+        ):
             error_msg = self.__validation_error_message(model, "must be string", value)
             raise TypeError(error_msg)
 
-        if self.parameter_type == ParameterType.NUMBER and not isinstance(
+        if self.parameter_type == ModelParameterType.NUMBER and not isinstance(
             value, int | float
         ):
             error_msg = self.__validation_error_message(model, "must be numeric", value)
@@ -476,7 +467,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
     have_options: bool
     have_sub_hyperparameters: bool
     hyperparameter_group: str | None
-    hyperparameter_type: HyperparameterType
+    hyperparameter_type: ModelHyperparameterType
     is_deprecated: bool
     is_hidden: bool
     is_list: bool
@@ -527,7 +518,7 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
         if self.is_list:
             return self.__validate_list_value(model, value)
 
-        if self.hyperparameter_type == HyperparameterType.MAP:
+        if self.hyperparameter_type == ModelHyperparameterType.MAP:
             return self.__validate_dict_value(model, value)
 
         # Not a list or dict, so it must be a scalar value
@@ -565,20 +556,22 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
             )
             raise ValueError(error_msg)
 
-        if self.hyperparameter_type == HyperparameterType.BOOLEAN and not isinstance(
-            value, bool
+        if (
+            self.hyperparameter_type == ModelHyperparameterType.BOOLEAN
+            and not isinstance(value, bool)
         ):
             error_msg = self.__validation_error_message(model, "must be boolean", value)
             raise TypeError(error_msg)
 
-        if self.hyperparameter_type == HyperparameterType.TEXT and not isinstance(
+        if self.hyperparameter_type == ModelHyperparameterType.TEXT and not isinstance(
             value, str
         ):
             error_msg = self.__validation_error_message(model, "must be string", value)
             raise TypeError(error_msg)
 
-        if self.hyperparameter_type == HyperparameterType.NUMBER and not isinstance(
-            value, int | float
+        if (
+            self.hyperparameter_type == ModelHyperparameterType.NUMBER
+            and not isinstance(value, int | float)
         ):
             error_msg = self.__validation_error_message(model, "must be numeric", value)
             raise TypeError(error_msg)
