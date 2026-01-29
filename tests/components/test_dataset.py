@@ -8,10 +8,9 @@ from logging import Logger
 import pandas as pd
 import pytest
 
-from ikigai.components import FlowStatus
+from ikigai import FlowStatus, Ikigai
 from ikigai.components.dataset import _get_dataset_download_url
-from ikigai.ikigai import Ikigai
-from ikigai.typing.api import DatasetDownloadStatus
+from ikigai.utils.enums import DatasetDownloadStatus
 
 
 def test_dataset_creation(

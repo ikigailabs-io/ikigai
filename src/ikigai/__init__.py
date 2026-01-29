@@ -3,5 +3,13 @@
 # SPDX-License-Identifier: MIT
 
 from ikigai.ikigai import Ikigai
+from ikigai.utils.enums import (
+    AppAccessLevel,
+    FlowStatus,
+)
 
-__all__ = ["Ikigai"]
+__all__ = [
+    "AppAccessLevel",
+    "FlowStatus",
+    "Ikigai",
+]

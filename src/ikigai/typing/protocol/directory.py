@@ -4,15 +4,9 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Protocol, TypedDict
 
-
-class DirectoryType(str, Enum):
-    APP = "PROJECT"
-    DATASET = "DATASET"
-    FLOW = "PIPELINE"
-    MODEL = "MODEL"
+from ikigai.utils.enums import DirectoryType
 
 
 class DirectoryDict(TypedDict):

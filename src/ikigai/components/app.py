@@ -14,13 +14,12 @@ from pydantic import BaseModel, EmailStr, Field, PrivateAttr
 from ikigai import components
 from ikigai.client import Client
 from ikigai.typing.protocol import (
-    AppAccessLevel,
     Directory,
-    DirectoryType,
     NamedDirectoryDict,
 )
 from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.component_browser import ComponentBrowser
+from ikigai.utils.enums import AppAccessLevel, DirectoryType
 from ikigai.utils.named_mapping import NamedMapping
 
 

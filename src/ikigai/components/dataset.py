@@ -10,7 +10,6 @@ import math
 import time
 from collections.abc import Mapping
 from datetime import datetime
-from enum import Enum
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -20,14 +19,13 @@ import requests
 from pydantic import BaseModel, Field, PrivateAttr
 
 from ikigai.client import Client
-from ikigai.typing.api import DatasetDownloadStatus
 from ikigai.typing.protocol import (
     DatasetDict,
     Directory,
-    DirectoryType,
     NamedDirectoryDict,
 )
 from ikigai.utils.compatibility import Self, deprecated
+from ikigai.utils.enums import DatasetDataType, DatasetDownloadStatus, DirectoryType
 from ikigai.utils.named_mapping import NamedMapping
 
 logger = logging.getLogger("ikigai.components")
@@ -274,15 +272,8 @@ class DatasetBuilder:
         return Dataset.from_dict(data=dataset_dict, client=self.__client)
 
 
-class DataType(str, Enum):
-    NUMERIC = "NUMERIC"
-    TEXT = "TEXT"
-    CATEGORICAL = "CATEGORICAL"
-    TIME = "TIME"
-
-
 class ColumnDataType(BaseModel):
-    data_type: DataType
+    data_type: DatasetDataType
     data_formats: dict[str, str]
 
 

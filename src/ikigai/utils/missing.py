@@ -8,7 +8,7 @@ from enum import Enum
 
 
 class MissingType(Enum):
-    _Missing = "Missing"
+    _MISSING = "Missing"
 
 
-MISSING = MissingType._Missing
+MISSING = MissingType._MISSING

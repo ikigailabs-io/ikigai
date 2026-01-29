@@ -2,12 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-from ikigai.typing.protocol.app import AppAccessLevel, AppDict
+from ikigai.typing.protocol.app import AppDict
 from ikigai.typing.protocol.dataset import DatasetDict, DatasetLogDict
 from ikigai.typing.protocol.directory import (
     Directory,
     DirectoryDict,
-    DirectoryType,
     NamedDirectoryDict,
 )
 from ikigai.typing.protocol.flow import (
@@ -36,14 +35,12 @@ from ikigai.typing.protocol.model import (
 )
 
 __all__ = [
-    "AppAccessLevel",
     "AppDict",
     "ArrowDict",
     "DatasetDict",
     "DatasetLogDict",
     "Directory",
     "DirectoryDict",
-    "DirectoryType",
     "FacetDict",
     "FacetSpecsDict",
     "FlowDefinitionDict",

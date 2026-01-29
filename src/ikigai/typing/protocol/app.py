@@ -7,13 +7,6 @@ from __future__ import annotations
 from typing import TypedDict
 
 from ikigai.typing.protocol.directory import DirectoryDict
-from ikigai.utils.compatibility import StrEnum
-
-
-class AppAccessLevel(StrEnum):
-    OWNER = "OWNER"
-    BUILDER = "BUILDER"
-    VIEWER = "VIEWER"
 
 
 class AppDict(TypedDict):

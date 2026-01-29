@@ -21,7 +21,6 @@ from ikigai.typing.api import (
     RunVariablesRequest,
 )
 from ikigai.typing.protocol import (
-    AppAccessLevel,
     AppDict,
     DatasetDict,
     DatasetLogDict,
@@ -38,6 +37,7 @@ from ikigai.typing.protocol import (
     NamedDirectoryDict,
     ScheduleDict,
 )
+from ikigai.utils.enums import AppAccessLevel
 from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.client.api")
