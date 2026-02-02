@@ -206,6 +206,19 @@ class DatasetBrowser:
 
 
 class DatasetBuilder:
+    """
+    Builder class for constructing and uploading datasets.
+
+    Configure a dataset using the `new`, `df`, and `directory` methods, then 
+    call `build` to create and upload the dataset. The resulting `Dataset` 
+    instance is returned.
+
+    Examples
+    --------
+
+    >>> df = pd.DataFrame({"Name": ["Alice", "Bob"], "Age": [25, 30]})
+    >>> new_dataset = app.dataset.new("New Dataset").df(df).build()
+    """
     _app_id: str
     _name: str
     _data: bytes | None
@@ -213,6 +226,8 @@ class DatasetBuilder:
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
+        """
+        """
         self.__client = client
         self._app_id = app_id
         self._name = ""
@@ -279,6 +294,21 @@ class DatasetBuilder:
         return self
 
     def directory(self, directory: Directory) -> Self:
+        """
+        Set the directory where the dataset should be stored.
+
+        Parameters
+        ----------
+
+        directory : Directory
+            The target storage location.
+
+        Returns
+        -------
+
+        DatasetBuilder
+            The builder instance. Enables method chaining.
+        """
         self._directory = directory
         return self
 
@@ -396,6 +426,15 @@ class Dataset(BaseModel):
         return self
 
     def to_dict(self) -> dict:
+        """
+        Convert the dataset metadata to a dictionary representation.
+
+        Returns
+        -------
+
+        dict
+            Dictionary containing the dataset metadata.
+        """
         return {
             "dataset_id": self.dataset_id,
             "name": self.name,
@@ -408,12 +447,34 @@ class Dataset(BaseModel):
         }
 
     def delete(self) -> None:
+        """
+        Delete the dataset.
+
+        Returns
+        -------
+
+        None
+        """
         self.__client.component.delete_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )
         return None
 
     def rename(self, name: str) -> Self:
+        """
+        Rename the dataset.
+
+        Parameters
+        ----------
+
+        name : str
+            New name to assign to the dataset.
+
+        Returns
+        -------
+        Dataset
+            The dataset with the updated name. 
+        """
         _ = self.__client.component.edit_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id, name=name
         )
@@ -422,6 +483,21 @@ class Dataset(BaseModel):
         return self
 
     def move(self, directory: Directory) -> Self:
+        """
+        Move the dataset to a different directory.
+
+        Parameters
+        ----------
+
+        directory : Directory
+            Target directory to which the dataset should be moved.
+
+        Returns
+        -------
+
+        Dataset
+            The updated dataset.
+        """
         _ = self.__client.component.edit_dataset(
             app_id=self.app_id,
             dataset_id=self.dataset_id,
