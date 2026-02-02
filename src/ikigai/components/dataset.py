@@ -206,6 +206,19 @@ class DatasetBrowser:
 
 
 class DatasetBuilder:
+    """
+    Builder class for constructing and uploading datasets.
+
+    Configure a dataset using the `new`, `df`, and `directory` methods, then
+    call `build` to create and upload the dataset. The resulting `Dataset`
+    instance is returned.
+
+    Examples
+    --------
+
+    >>> df = pd.DataFrame({"Name": ["Alice", "Bob"], "Age": [25, 30]})
+    >>> new_dataset = app.dataset.new("New Dataset").df(df).build()
+    """
     _app_id: str
     _name: str
     _data: bytes | None
@@ -213,6 +226,8 @@ class DatasetBuilder:
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
+        """
+        """
         self.__client = client
         self._app_id = app_id
         self._name = ""
@@ -220,10 +235,52 @@ class DatasetBuilder:
         self._directory = None
 
     def new(self, name: str) -> Self:
+        """
+        Create a new dataset in the current app with the specified name.
+
+        Parameters
+        ----------
+
+        name: str
+            Name of the new dataset.
+
+        Returns
+        -------
+
+        DatasetBuilder
+            The builder instance. Enables method chaining.
+
+        Examples
+        --------
+
+        >>> new_dataset = app.dataset.new("New Dataset")
+        """
         self._name = name
         return self
 
     def df(self, data: pd.DataFrame) -> Self:
+        """
+        Set dataset content from a pandas DataFrame.
+
+        Parameters
+        ----------
+
+        data: pandas.DataFrame
+            DataFrame containing the dataset contents to upload.
+
+        Returns
+        -------
+
+        DatasetBuilder
+            The builder instance. Enables method chaining.
+
+        Examples
+        --------
+
+        >>> new_dataset = app.dataset.new("New Dataset")
+        >>> df = pd.DataFrame({"Name": ["Alice", "Bob"], "Age": [25, 30]})
+        >>> new_dataset = new_dataset.df(df).build()
+        """
         buffer = io.BytesIO()
         data.to_csv(buffer, index_label=False, index=False)
         self._data = buffer.getvalue()
@@ -237,10 +294,47 @@ class DatasetBuilder:
         return self
 
     def directory(self, directory: Directory) -> Self:
+        """
+        Set the directory where the dataset should be stored.
+
+        Parameters
+        ----------
+
+        directory : Directory
+            The target storage location.
+
+        Returns
+        -------
+
+        DatasetBuilder
+            The builder instance. Enables method chaining.
+        """
         self._directory = directory
         return self
 
     def build(self) -> Dataset:
+        """
+        Create the dataset and upload its contents.
+
+        This method creates a new dataset using the configured name, directory,
+        and data, and returns a populated `Dataset` instance.
+
+        Returns
+        -------
+
+        Dataset
+            The newly created dataset.
+
+        Raises
+        ------
+
+        ValueError
+            If no dataset contents have been provided.
+        Exception
+            If dataset creation or data upload fails. In this case, the
+            partially created dataset is deleted before re-raising
+            the exception.
+        """
         if self._data is None:
             error_msg = "Dataset is empty"
             raise ValueError(error_msg)
@@ -278,6 +372,41 @@ class ColumnDataType(BaseModel):
 
 
 class Dataset(BaseModel):
+    """
+    A Dataset on the Ikigai platform.
+
+    Attributes
+    ----------
+
+    app_id: str
+        The app this dataset belongs to.
+
+    dataset_id: str
+        Unique identifier of the dataset.
+
+    name: str
+        Name of the dataset.
+
+    filename: str
+        Name of the dataset file.
+
+    file_extension: str
+        File extension of the dataset.
+
+    data_types: dict[str, ColumnDataType]
+        Mapping of column names to their corresponding data types (e.g. numeric,
+        text, categorical, time).
+
+    size: int
+        Size of the dataset in bytes.
+
+    created_at: datetime
+        Datetime indicating when the dataset was created.
+
+    modified_at : datetime
+       Datetime indicating when the dataset was last modified.
+    """
+
     app_id: str = Field(validation_alias="project_id")
     dataset_id: str
     name: str
@@ -297,6 +426,15 @@ class Dataset(BaseModel):
         return self
 
     def to_dict(self) -> dict:
+        """
+        Convert the dataset metadata to a dictionary representation.
+
+        Returns
+        -------
+
+        dict
+            Dictionary containing the dataset metadata.
+        """
         return {
             "dataset_id": self.dataset_id,
             "name": self.name,
@@ -309,12 +447,34 @@ class Dataset(BaseModel):
         }
 
     def delete(self) -> None:
+        """
+        Delete the dataset.
+
+        Returns
+        -------
+
+        None
+        """
         self.__client.component.delete_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )
         return None
 
     def rename(self, name: str) -> Self:
+        """
+        Rename the dataset.
+
+        Parameters
+        ----------
+
+        name : str
+            New name to assign to the dataset.
+
+        Returns
+        -------
+        Dataset
+            The dataset with the updated name.
+        """
         _ = self.__client.component.edit_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id, name=name
         )
@@ -323,6 +483,21 @@ class Dataset(BaseModel):
         return self
 
     def move(self, directory: Directory) -> Self:
+        """
+        Move the dataset to a different directory.
+
+        Parameters
+        ----------
+
+        directory : Directory
+            Target directory to which the dataset should be moved.
+
+        Returns
+        -------
+
+        Dataset
+            The updated dataset.
+        """
         _ = self.__client.component.edit_dataset(
             app_id=self.app_id,
             dataset_id=self.dataset_id,
@@ -331,14 +506,66 @@ class Dataset(BaseModel):
         return self
 
     def df(self, **parser_options) -> pd.DataFrame:
-        download_url = _get_dataset_download_url(
-            client=self.__client,
+        """
+        Load dataset content as a pandas DataFrame.
+
+        Parameters
+        ----------
+
+        **parser_options
+            Additional keyword arguments providing pandas parser options
+            to `pandas.read_csv`. Described in `pandas documentation
+             <http://www.example.com>`_.
+
+        Returns
+        -------
+
+        pandas.DataFrame
+            Dataset contents loaded into a DataFrame.
+
+        Examples
+        --------
+
+        Download the dataset into a pandas DataFrame. Use the `head` method to
+        display the first rows of the dataset. The number of rows to display can
+        be specified as an argument.
+
+        >>> dataset = datasets["[EXAMPLE]"]
+        >>> df = dataset.df()
+
+        >>> df.head(10)
+        """
+        download_url = self.__client.component.get_dataset_download_url(
             app_id=self.app_id,
             dataset_id=self.dataset_id,
         )
         return pd.read_csv(download_url, **parser_options)
 
     def edit_data(self, data: pd.DataFrame) -> None:
+        """
+        Overwrite the dataset content with new data.
+
+        Parameters
+        ----------
+
+        data: pandas.DataFrame
+            DataFrame containing the new data.
+
+        Returns
+        -------
+
+        None
+
+        Examples
+        --------
+
+        Download the dataset as a DataFrame, modify it, and upload the updated
+        DataFrame using `.edit_data()`.
+
+        >>> df = dataset.df()
+        >>> df_updated = df[df.columns[:-1]]
+        >>> dataset.edit_data(df_updated)
+        """
         buffer = io.BytesIO()
         data.to_csv(buffer, index_label=False, index=False)
 
@@ -351,6 +578,15 @@ class Dataset(BaseModel):
         )
 
     def describe(self) -> DatasetDict:
+        """
+        Get details about the dataset.
+
+        Returns
+        -------
+
+        DatasetDict
+            Dictionary containing dataset details.
+        """
         return self.__client.component.get_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )
