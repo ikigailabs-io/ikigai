@@ -167,8 +167,8 @@ class DatasetBuilder:
     """
     Builder class for constructing and uploading datasets.
 
-    Configure a dataset using the `new`, `df`, and `directory` methods, then 
-    call `build` to create and upload the dataset. The resulting `Dataset` 
+    Configure a dataset using the `new`, `df`, and `directory` methods, then
+    call `build` to create and upload the dataset. The resulting `Dataset`
     instance is returned.
 
     Examples
@@ -274,7 +274,7 @@ class DatasetBuilder:
         """
         Create the dataset and upload its contents.
 
-        This method creates a new dataset using the configured name, directory, 
+        This method creates a new dataset using the configured name, directory,
         and data, and returns a populated `Dataset` instance.
 
         Returns
@@ -352,7 +352,7 @@ class Dataset(BaseModel):
         File extension of the dataset.
 
     data_types: dict[str, ColumnDataType]
-        Mapping of column names to their corresponding data types (e.g. numeric, 
+        Mapping of column names to their corresponding data types (e.g. numeric,
         text, categorical, time).
 
     size: int
@@ -431,7 +431,7 @@ class Dataset(BaseModel):
         Returns
         -------
         Dataset
-            The dataset with the updated name. 
+            The dataset with the updated name.
         """
         _ = self.__client.component.edit_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id, name=name
@@ -472,7 +472,7 @@ class Dataset(BaseModel):
 
         **parser_options
             Additional keyword arguments providing pandas parser options
-            to `pandas.read_csv`. Described in `pandas documentation 
+            to `pandas.read_csv`. Described in `pandas documentation
              <http://www.example.com>`_.
 
         Returns
@@ -487,9 +487,9 @@ class Dataset(BaseModel):
         Download the dataset into a pandas DataFrame. Use the `head` method to
         display the first rows of the dataset. The number of rows to display can
         be specified as an argument.
-           
-        >>> dataset = datasets["[EXAMPLE]"]        
-        >>> df = dataset.df()                     
+
+        >>> dataset = datasets["[EXAMPLE]"]
+        >>> df = dataset.df()
 
         >>> df.head(10)
         """
@@ -517,12 +517,12 @@ class Dataset(BaseModel):
         Examples
         --------
 
-        Download the dataset as a DataFrame, modify it, and upload the updated 
+        Download the dataset as a DataFrame, modify it, and upload the updated
         DataFrame using `.edit_data()`.
 
-        >>> df = dataset.df()                     
-        >>> df_updated = df[df.columns[:-1]]      
-        >>> dataset.edit_data(df_updated)         
+        >>> df = dataset.df()
+        >>> df_updated = df[df.columns[:-1]]
+        >>> dataset.edit_data(df_updated)
         """
         buffer = io.BytesIO()
         data.to_csv(buffer, index_label=False, index=False)
