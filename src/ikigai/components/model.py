@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import AliasChoices, BaseModel, Field, PrivateAttr
 
 from ikigai.client.client import Client
-from ikigai.components.specs import SubModelSpec
+from ikigai.specs import SubModelSpec
 from ikigai.typing.protocol import Directory, NamedDirectoryDict
 from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.enums import DirectoryType
