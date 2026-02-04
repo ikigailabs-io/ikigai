@@ -17,8 +17,8 @@ from ikigai.typing.protocol import (
     Directory,
     NamedDirectoryDict,
 )
+from ikigai.typing.protocol.component_browser import ComponentBrowser
 from ikigai.utils.compatibility import Self, deprecated
-from ikigai.utils.component_browser import ComponentBrowser
 from ikigai.utils.enums import AppAccessLevel, DirectoryType
 from ikigai.utils.named_mapping import NamedMapping
 

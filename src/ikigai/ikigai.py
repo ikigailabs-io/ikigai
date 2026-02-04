@@ -9,12 +9,10 @@ from dataclasses import InitVar
 from pydantic import EmailStr, Field, HttpUrl
 from pydantic.dataclasses import dataclass
 
-from ikigai import components
-from ikigai.client import Client
-from ikigai.components import specs
+from ikigai import components, specs
+from ikigai.client import Client, SSLConfig
+from ikigai.typing.protocol.component_browser import ComponentBrowser
 from ikigai.utils.compatibility import deprecated
-from ikigai.utils.component_browser import ComponentBrowser
-from ikigai.utils.config import SSLConfig
 from ikigai.utils.missing import MISSING, MissingType
 from ikigai.utils.named_mapping import NamedMapping
 

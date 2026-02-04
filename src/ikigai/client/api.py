@@ -13,13 +13,13 @@ from typing import Any, cast
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from ikigai.client.session import Session
-from ikigai.typing.api import (
+from ikigai.client.datax import (
     GetComponentsForProjectResponse,
     GetDatasetMultipartUploadUrlsResponse,
     InitializeDatasetDownloadResponse,
     RunVariablesRequest,
 )
+from ikigai.client.session import Session
 from ikigai.typing.protocol import (
     AppDict,
     DatasetDict,

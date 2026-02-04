@@ -20,9 +20,8 @@ from pydantic import (
 )
 from tqdm.auto import tqdm
 
-from ikigai.client import Client
+from ikigai.client import Client, datax
 from ikigai.components.flow_definition import FlowDefinition
-from ikigai.typing.api import RunVariablesRequest
 from ikigai.typing.protocol import (
     Directory,
     FlowDefinitionDict,
@@ -489,7 +488,7 @@ class Flow(BaseModel):
         RunLog
             The final run log of the flow after completion
         """
-        run_variables: RunVariablesRequest = {
+        run_variables: datax.RunVariablesRequest = {
             key: {"value": value}
             for key, value in variables.items()
             if not key.startswith("_")

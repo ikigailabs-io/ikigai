@@ -9,12 +9,7 @@ from typing import Any, Literal, TypedDict
 
 from ikigai.utils.enums import DatasetDownloadStatus
 
-
-class RunVariableValue(TypedDict):
-    value: Any
-
-
-RunVariablesRequest = dict[str, RunVariableValue]
+RunVariablesRequest = dict[str, dict[Literal["value"], Any]]
 
 
 class GetDatasetMultipartUploadUrlsResponse(TypedDict):
