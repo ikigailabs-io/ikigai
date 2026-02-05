@@ -11,10 +11,9 @@ from typing import Any
 
 from pydantic import AliasChoices, BaseModel, Field, PrivateAttr
 
-from ikigai.client.client import Client
+from ikigai.client import Client
 from ikigai.specs import SubModelSpec
-from ikigai.typing import ComponentBrowser, NamedMapping
-from ikigai.typing.protocol import Directory, NamedDirectoryDict
+from ikigai.typing import ComponentBrowser, Directory, NamedDirectoryDict, NamedMapping
 from ikigai.utils.compatibility import Self, deprecated, override
 from ikigai.utils.enums import DirectoryType
 

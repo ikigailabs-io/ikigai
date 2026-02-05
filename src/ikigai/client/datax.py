@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Literal, TypedDict
 
-from ikigai.typing.protocol import DirectoryDict
+from ikigai.typing import DirectoryDict
 from ikigai.utils.compatibility import NotRequired
 from ikigai.utils.enums import DatasetDownloadStatus
 

@@ -4,10 +4,10 @@
 
 from __future__ import annotations
 
-from ikigai.client.datax import FacetDict, FlowDict
+from ikigai.client import datax
 
 
-def flow_versioning_shim(flow: FlowDict, facet_specs: dict) -> FlowDict:
+def flow_versioning_shim(flow: datax.FlowDict, facet_specs: dict) -> datax.FlowDict:
     """
     Shim to improve compatibility with older Flow Definitions
     and migrate them to the latest format.
@@ -37,7 +37,9 @@ def flow_versioning_shim(flow: FlowDict, facet_specs: dict) -> FlowDict:
     return flow
 
 
-def _flow_facet_shim(facet: FacetDict, facet_spec: dict | None) -> FacetDict:
+def _flow_facet_shim(
+    facet: datax.FacetDict, facet_spec: dict | None
+) -> datax.FacetDict:
     """
     Shim to improve compatibility with older Flow Definitions
     Fix the facet structure to match the expected format

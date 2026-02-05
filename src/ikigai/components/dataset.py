@@ -18,10 +18,8 @@ import pandas as pd
 import requests
 from pydantic import BaseModel, Field, PrivateAttr
 
-from ikigai.client import Client
-from ikigai.client.datax import DatasetDict
-from ikigai.typing import ComponentBrowser, NamedMapping
-from ikigai.typing.protocol import Directory, NamedDirectoryDict
+from ikigai.client import Client, datax
+from ikigai.typing import ComponentBrowser, Directory, NamedDirectoryDict, NamedMapping
 from ikigai.utils.compatibility import Self, deprecated, override
 from ikigai.utils.enums import DatasetDataType, DatasetDownloadStatus, DirectoryType
 
@@ -310,7 +308,7 @@ class Dataset(BaseModel):
             data=buffer.getvalue(),
         )
 
-    def describe(self) -> DatasetDict:
+    def describe(self) -> datax.DatasetDict:
         return self.__client.component.get_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )

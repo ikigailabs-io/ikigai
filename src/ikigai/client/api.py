@@ -32,7 +32,7 @@ from ikigai.client.datax import (
     ScheduleDict,
 )
 from ikigai.client.session import Session
-from ikigai.typing.protocol import Directory, ModelType, NamedDirectoryDict
+from ikigai.typing import Directory, ModelType, NamedDirectoryDict
 from ikigai.utils.enums import AppAccessLevel
 from ikigai.utils.missing import MISSING, MissingType
 

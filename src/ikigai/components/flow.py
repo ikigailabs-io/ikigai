@@ -21,11 +21,9 @@ from pydantic import (
 from tqdm.auto import tqdm
 
 from ikigai.client import Client, datax
-from ikigai.client.datax import FlowDefinitionDict, FlowDict, ScheduleDict
 from ikigai.components._flow_definition_shim import flow_versioning_shim
 from ikigai.components.flow_definition import FlowDefinition
-from ikigai.typing import ComponentBrowser, NamedMapping
-from ikigai.typing.protocol import Directory, NamedDirectoryDict
+from ikigai.typing import ComponentBrowser, Directory, NamedDirectoryDict, NamedMapping
 from ikigai.utils.compatibility import Self, deprecated, override
 from ikigai.utils.custom_serializers import (
     TimestampSerializableDatetime,
@@ -77,8 +75,8 @@ class Schedule(BaseModel):
         logger.debug("Creating a %s from %s", cls.__name__, data)
         return cls.model_validate(data)
 
-    def to_dict(self) -> ScheduleDict:
-        return cast(ScheduleDict, self.model_dump())
+    def to_dict(self) -> datax.ScheduleDict:
+        return cast(datax.ScheduleDict, self.model_dump())
 
 
 class FlowBuilder:
@@ -86,7 +84,7 @@ class FlowBuilder:
     _name: str
     _directory: Directory | None
     _high_volume_preference: bool
-    _flow_definition: FlowDefinitionDict
+    _flow_definition: datax.FlowDefinitionDict
     _schedule: Schedule | None
     __client: Client
 
@@ -124,7 +122,7 @@ class FlowBuilder:
         return self
 
     def definition(
-        self, definition: Flow | FlowDefinition | FlowDefinitionDict
+        self, definition: Flow | FlowDefinition | datax.FlowDefinitionDict
     ) -> Self:
         if isinstance(definition, FlowDefinition):
             self._flow_definition = definition.to_dict()
@@ -177,7 +175,7 @@ class FlowBuilder:
 
     def schedule(
         self,
-        schedule: Schedule | ScheduleDict | str,
+        schedule: Schedule | datax.ScheduleDict | str,
     ) -> Self:
         """
         Set the schedule for the flow.
@@ -314,7 +312,7 @@ class Flow(BaseModel):
         return self
 
     def update_schedule(
-        self, schedule: Schedule | ScheduleDict | str | None = None
+        self, schedule: Schedule | datax.ScheduleDict | str | None = None
     ) -> Self:
         """
         Update the schedule for the flow.
@@ -383,7 +381,7 @@ class Flow(BaseModel):
         return self
 
     def update_definition(
-        self, definition: FlowDefinition | FlowDefinitionDict
+        self, definition: FlowDefinition | datax.FlowDefinitionDict
     ) -> Self:
         """
         Update the flow definition.
@@ -461,7 +459,7 @@ class Flow(BaseModel):
 
         return self.__await_run()
 
-    def describe(self) -> FlowDict:
+    def describe(self) -> datax.FlowDict:
         flow = self.__client.component.get_flow(flow_id=self.flow_id)
         # Apply flow_versioning_shim to allow migration of older flows
         # TODO: Remove this shim after "important" flows are migrated

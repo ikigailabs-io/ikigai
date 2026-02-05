@@ -16,8 +16,8 @@ from pydantic import (
     model_validator,
 )
 
-from ikigai.client.datax import FacetSpecsDict
-from ikigai.typing.helpful import Helpful
+from ikigai.client import datax
+from ikigai.typing import Helpful
 from ikigai.utils.compatibility import Self, override
 from ikigai.utils.custom_validators import LowercaseStr
 from ikigai.utils.enums import FacetArgumentType
@@ -307,7 +307,7 @@ class FacetTypes(BaseModel, Helpful):
     model_config = ConfigDict(frozen=True)
 
     @classmethod
-    def from_dict(cls, data: FacetSpecsDict) -> Self:
+    def from_dict(cls, data: datax.FacetSpecsDict) -> Self:
         flattened_data = {
             "INPUT": ChainMap(*data["INPUT"].values()),
             "MID": ChainMap(*data["MID"].values()),

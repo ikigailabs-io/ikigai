@@ -18,13 +18,8 @@ from pydantic import (
     model_validator,
 )
 
-from ikigai.client.datax import (
-    HyperParameterGroupName,
-    HyperParameterName,
-    ModelSpecDict,
-    SubModelSpecDict,
-)
-from ikigai.typing.helpful import Helpful
+from ikigai.client import datax
+from ikigai.typing import Helpful
 from ikigai.utils.compatibility import Self, override
 from ikigai.utils.custom_validators import LowercaseStr
 from ikigai.utils.enums import (
@@ -343,7 +338,7 @@ class SubModelSpec(BaseModel, Helpful):
         return self.name
 
     @classmethod
-    def from_dict(cls, model_type: str, data: SubModelSpecDict) -> Self:
+    def from_dict(cls, model_type: str, data: datax.SubModelSpecDict) -> Self:
         data_dict = {
             **data,
             "model_type": model_type,
@@ -354,7 +349,7 @@ class SubModelSpec(BaseModel, Helpful):
     @cached_property
     def _hyperparameter_groups(
         self,
-    ) -> dict[HyperParameterName, HyperParameterGroupName]:
+    ) -> dict[datax.HyperParameterName, datax.HyperParameterGroupName]:
         # Create a mapping from hyperparameter name to its group
         return {
             hyperparameter.name: hyperparameter.hyperparameter_group
@@ -416,7 +411,7 @@ class ModelSpec(BaseModel, Helpful):
         return self.name
 
     @classmethod
-    def from_dict(cls, data: ModelSpecDict) -> Self:
+    def from_dict(cls, data: datax.ModelSpecDict) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls(
             name=data["name"],
@@ -482,7 +477,7 @@ class ModelTypes(RootModel, Helpful):
     root: dict[LowercaseStr, ModelSpec]
 
     @classmethod
-    def from_list(cls, data: list[ModelSpecDict]) -> Self:
+    def from_list(cls, data: list[datax.ModelSpecDict]) -> Self:
         data_dict = {model_spec["name"]: model_spec for model_spec in data}
         return cls.from_dict(data_dict)
 
