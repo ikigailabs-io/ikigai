@@ -153,6 +153,26 @@ TOTAL                                 475     46     36     10    87%
 
 ### Module Hierarchy
 
+This section documents the dependency structure of the ikigai package.
+Understanding this hierarchy is crucial for maintaining clean imports and
+avoiding circular dependencies. Modules can only import from modules that
+appear to their right in the dependency chain (or below them in the
+submodule hierarchy).
+
+#### Dependency Poset (Text Representation)
+
+The text diagram below shows the partially ordered set
+(poset) of module dependencies. Read it as follows:
+
+- **Top-level chain** (`>`): Modules listed left-to-right show the main
+  dependency order. Each module can import from any module to its right,
+  but not from modules to its left.
+- **Indented submodules** (indentation + `>`): Show internal hierarchies within
+  a parent module, where modules can import from their siblings
+  to the right or below.
+- **Example**: `components` can import from `specs`, `client`, `typing`, or
+  `utils`, but `utils` cannot import from any other ikigai module.
+
 ```txt
 Root > Ikigai > components > specs > client > typing > utils
 
@@ -174,6 +194,19 @@ client >
     session
 
 ```
+
+#### Dependency Graph (Visual Representation)
+
+The Mermaid graph below provides a visual representation of the same dependency
+structure. Read it as follows:
+
+- **Arrows** (`-->`): Indicate "can import from" relationships.
+  If module A has an arrow pointing to module B, then A can import from B.
+- **Top-level flow**: Shows the main module dependency chain from left to right
+  (ikigai → components → specs → client → typing → utils).
+- **Subgraphs** (boxes): Group related modules within a package
+  (e.g., `ikigai.components`, `ikigai.specs`, `ikigai.client`) and show their
+  internal dependency relationships.
 
 ```mermaid
 graph TD
