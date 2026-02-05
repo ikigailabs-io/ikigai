@@ -4,10 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol, TypedDict
-
-from ikigai.typing.protocol.directory import DirectoryDict
-from ikigai.typing.protocol.generic import Empty
+from typing import Protocol
 
 
 class ModelType(Protocol):
@@ -16,82 +13,3 @@ class ModelType(Protocol):
 
     @property
     def sub_model_type(self) -> str: ...
-
-    def help(self) -> str: ...
-
-
-class ModelDict(TypedDict):
-    project_id: str
-    model_id: str
-    name: str
-    latest_version_id: str
-    directory: DirectoryDict
-    model_type: str
-    sub_model_type: str
-    description: str
-    created_at: str
-    modified_at: str
-
-
-class ModelVersionDict(TypedDict):
-    version_id: str
-    model_id: str
-    version: str
-    hyperparameters: dict
-    metrics: dict
-    created_at: str
-    modified_at: str
-
-
-class ModelSpecDict(TypedDict):
-    name: str
-    is_deprecated: bool
-    is_hidden: bool
-    keywords: list[str]
-    sub_model_types: list[SubModelSpecDict]
-
-
-class SubModelSpecDict(TypedDict):
-    name: str
-    is_deprecated: bool
-    is_hidden: bool
-    keywords: list[str]
-    metrics: ModelMetricsSpecDict
-    parameters: dict[str, ModelParameterSpecDict]
-    hyperparameters: dict[str, ModelHyperparameterSpecDict]
-
-
-ModelMetricsSpecDict = dict[str, Empty]
-
-HyperParameterName = str
-HyperParameterGroupName = str
-ModelHyperParameterGroupDict = dict[HyperParameterName, Any]
-ModelHyperParameterGroupType = dict[
-    HyperParameterGroupName, ModelHyperParameterGroupDict
-]
-
-
-class ModelParameterSpecDict(TypedDict):
-    name: str
-    default_value: Any
-    have_options: bool
-    is_deprecated: bool
-    is_hidden: bool
-    is_list: bool
-    options: list[Any]
-    parameter_type: str
-
-
-class ModelHyperparameterSpecDict(TypedDict):
-    name: str
-    default_value: Any
-    have_options: bool
-    have_sub_hyperparameters: bool
-    hyperparameter_group: str | None
-    hyperparameter_type: str
-    is_deprecated: bool
-    is_hidden: bool
-    is_list: bool
-    children: dict[str, ModelHyperparameterSpecDict]
-    options: list[Any]
-    sub_hyperparameter_requirements: list[tuple[Any, list[str]]]

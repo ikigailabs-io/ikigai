@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 from dataclasses import InitVar
 from http import HTTPStatus
-from typing import Any
+from typing import Annotated, Any, TypeAlias
 
 import requests
 from pydantic import AnyUrl, ConfigDict, EmailStr, Field
@@ -15,9 +15,17 @@ from pydantic.dataclasses import dataclass
 from requests import Response
 
 from ikigai.utils.compatibility import HTTPMethod
-from ikigai.utils.config import SSLConfig
 
 logger = logging.getLogger("ikigai.client")
+
+
+PEMfilePath: TypeAlias = Annotated[
+    str, "Path to a PEM file containing SSL certificates"
+]
+CertKeyPair: TypeAlias = Annotated[
+    tuple[str, str], "Tuple containing certificate and key"
+]
+SSLConfig: TypeAlias = bool | PEMfilePath | CertKeyPair
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))

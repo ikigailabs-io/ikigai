@@ -11,44 +11,36 @@ from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field, PrivateAttr
 
-from ikigai import components
 from ikigai.client import Client
-from ikigai.typing.protocol import (
+from ikigai.components.dataset import (
+    Dataset,
+    DatasetBrowser,
+    DatasetBuilder,
+    DatasetDirectory,
+    DatasetDirectoryBuilder,
+)
+from ikigai.components.flow import (
+    Flow,
+    FlowBrowser,
+    FlowBuilder,
+    FlowDirectory,
+    FlowDirectoryBuilder,
+)
+from ikigai.components.model import (
+    Model,
+    ModelBrowser,
+    ModelBuilder,
+    ModelDirectory,
+    ModelDirectoryBuilder,
+)
+from ikigai.typing import (
+    ComponentBrowser,
     Directory,
     NamedDirectoryDict,
+    NamedMapping,
 )
-from ikigai.utils.compatibility import Self, deprecated
-from ikigai.utils.component_browser import ComponentBrowser
-from ikigai.utils.enums import AppAccessLevel, DirectoryType
-from ikigai.utils.named_mapping import NamedMapping
-
-
-class AppBrowser:
-    __client: Client
-
-    def __init__(self, client: Client) -> None:
-        self.__client = client
-
-    @deprecated("Prefer directly loading by name:\n\tikigai.apps['app_name']")
-    def __call__(self) -> NamedMapping[App]:
-        apps = {
-            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
-            for app in self.__client.component.get_apps_for_user()
-        }
-
-        return NamedMapping(apps)
-
-    def __getitem__(self, name: str) -> App:
-        app_dict = self.__client.component.get_app_by_name(name)
-        return components.App.from_dict(data=app_dict, client=self.__client)
-
-    def search(self, query: str) -> NamedMapping[App]:
-        matching_apps = {
-            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
-            for app in self.__client.search.search_projects_for_user(query=query)
-        }
-
-        return NamedMapping(matching_apps)
+from ikigai.utils import AppAccessLevel, DirectoryType
+from ikigai.utils.compatibility import Self, deprecated, override
 
 
 class AppBuilder:
@@ -361,7 +353,7 @@ class App(BaseModel):
     """
 
     @property
-    def datasets(self) -> ComponentBrowser[components.Dataset]:
+    def datasets(self) -> ComponentBrowser[Dataset]:
         """
         Access the datasets associated with the App.
 
@@ -387,22 +379,20 @@ class App(BaseModel):
         >>> datasets = app.datasets
         >>> dataset = datasets['Example Dataset']
         """
-        return components.DatasetBrowser(app_id=self.app_id, client=self.__client)
+        return DatasetBrowser(app_id=self.app_id, client=self.__client)
 
     @property
-    def dataset(self) -> components.DatasetBuilder:
-        return components.DatasetBuilder(client=self.__client, app_id=self.app_id)
+    def dataset(self) -> DatasetBuilder:
+        return DatasetBuilder(client=self.__client, app_id=self.app_id)
 
-    def dataset_directories(self) -> NamedMapping[components.DatasetDirectory]:
+    def dataset_directories(self) -> NamedMapping[DatasetDirectory]:
         directory_dicts = self.__client.component.get_dataset_directories_for_app(
             app_id=self.app_id
         )
         directories = {
             directory.directory_id: directory
             for directory in (
-                components.DatasetDirectory.from_dict(
-                    data=directory_dict, client=self.__client
-                )
+                DatasetDirectory.from_dict(data=directory_dict, client=self.__client)
                 for directory_dict in directory_dicts
             )
         }
@@ -410,13 +400,11 @@ class App(BaseModel):
         return NamedMapping(directories)
 
     @property
-    def dataset_directory(self) -> components.DatasetDirectoryBuilder:
-        return components.DatasetDirectoryBuilder(
-            client=self.__client, app_id=self.app_id
-        )
+    def dataset_directory(self) -> DatasetDirectoryBuilder:
+        return DatasetDirectoryBuilder(client=self.__client, app_id=self.app_id)
 
     @property
-    def flows(self) -> ComponentBrowser[components.Flow]:
+    def flows(self) -> ComponentBrowser[Flow]:
         """
         Access the flows associated with the App.
 
@@ -441,22 +429,20 @@ class App(BaseModel):
         >>> flows = app.flows
         >>> flow = flows['Example Flow']
         """
-        return components.FlowBrowser(app_id=self.app_id, client=self.__client)
+        return FlowBrowser(app_id=self.app_id, client=self.__client)
 
     @property
-    def flow(self) -> components.FlowBuilder:
-        return components.FlowBuilder(client=self.__client, app_id=self.app_id)
+    def flow(self) -> FlowBuilder:
+        return FlowBuilder(client=self.__client, app_id=self.app_id)
 
-    def flow_directories(self) -> NamedMapping[components.FlowDirectory]:
+    def flow_directories(self) -> NamedMapping[FlowDirectory]:
         directory_dicts = self.__client.component.get_flow_directories_for_app(
             app_id=self.app_id
         )
         directories = {
             directory.directory_id: directory
             for directory in (
-                components.FlowDirectory.from_dict(
-                    data=directory_dict, client=self.__client
-                )
+                FlowDirectory.from_dict(data=directory_dict, client=self.__client)
                 for directory_dict in directory_dicts
             )
         }
@@ -464,11 +450,11 @@ class App(BaseModel):
         return NamedMapping(directories)
 
     @property
-    def flow_directory(self) -> components.FlowDirectoryBuilder:
-        return components.FlowDirectoryBuilder(client=self.__client, app_id=self.app_id)
+    def flow_directory(self) -> FlowDirectoryBuilder:
+        return FlowDirectoryBuilder(client=self.__client, app_id=self.app_id)
 
     @property
-    def models(self) -> ComponentBrowser[components.Model]:
+    def models(self) -> ComponentBrowser[Model]:
         """
         Access the models associated with the App.
 
@@ -493,22 +479,20 @@ class App(BaseModel):
         >>> models = app.models
         >>> model = models['model_name']
         """
-        return components.ModelBrowser(app_id=self.app_id, client=self.__client)
+        return ModelBrowser(app_id=self.app_id, client=self.__client)
 
     @property
-    def model(self) -> components.ModelBuilder:
-        return components.ModelBuilder(client=self.__client, app_id=self.app_id)
+    def model(self) -> ModelBuilder:
+        return ModelBuilder(client=self.__client, app_id=self.app_id)
 
-    def model_directories(self) -> NamedMapping[components.ModelDirectory]:
+    def model_directories(self) -> NamedMapping[ModelDirectory]:
         directory_dicts = self.__client.component.get_model_directories_for_app(
             app_id=self.app_id
         )
         directories = {
             directory.directory_id: directory
             for directory in (
-                components.ModelDirectory.from_dict(
-                    data=directory_dict, client=self.__client
-                )
+                ModelDirectory.from_dict(data=directory_dict, client=self.__client)
                 for directory_dict in directory_dicts
             )
         }
@@ -516,10 +500,39 @@ class App(BaseModel):
         return NamedMapping(directories)
 
     @property
-    def model_directory(self) -> components.ModelDirectoryBuilder:
-        return components.ModelDirectoryBuilder(
-            client=self.__client, app_id=self.app_id
-        )
+    def model_directory(self) -> ModelDirectoryBuilder:
+        return ModelDirectoryBuilder(client=self.__client, app_id=self.app_id)
+
+
+class AppBrowser(ComponentBrowser[App]):
+    __client: Client
+
+    def __init__(self, client: Client) -> None:
+        self.__client = client
+
+    @deprecated("Prefer directly loading by name:\n\tikigai.apps['app_name']")
+    @override
+    def __call__(self) -> NamedMapping[App]:
+        apps = {
+            app["project_id"]: App.from_dict(data=app, client=self.__client)
+            for app in self.__client.component.get_apps_for_user()
+        }
+
+        return NamedMapping(apps)
+
+    @override
+    def __getitem__(self, name: str) -> App:
+        app_dict = self.__client.component.get_app_by_name(name)
+        return App.from_dict(data=app_dict, client=self.__client)
+
+    @override
+    def search(self, query: str) -> NamedMapping[App]:
+        matching_apps = {
+            app["project_id"]: App.from_dict(data=app, client=self.__client)
+            for app in self.__client.search.search_projects_for_user(query=query)
+        }
+
+        return NamedMapping(matching_apps)
 
 
 class AppDirectoryBuilder:

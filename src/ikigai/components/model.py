@@ -11,51 +11,13 @@ from typing import Any
 
 from pydantic import AliasChoices, BaseModel, Field, PrivateAttr
 
-from ikigai.client.client import Client
-from ikigai.components.specs import SubModelSpec
-from ikigai.typing.protocol import Directory, NamedDirectoryDict
-from ikigai.utils.compatibility import Self, deprecated
-from ikigai.utils.enums import DirectoryType
-from ikigai.utils.named_mapping import NamedMapping
+from ikigai.client import Client
+from ikigai.specs import SubModelSpec
+from ikigai.typing import ComponentBrowser, Directory, NamedDirectoryDict, NamedMapping
+from ikigai.utils import DirectoryType
+from ikigai.utils.compatibility import Self, deprecated, override
 
 logger = logging.getLogger("ikigai.components")
-
-
-class ModelBrowser:
-    __app_id: str
-    __client: Client
-
-    def __init__(self, app_id: str, client: Client) -> None:
-        self.__app_id = app_id
-        self.__client = client
-
-    @deprecated("Prefer directly loading by name:\n\tapp.models['model_name']")
-    def __call__(self) -> NamedMapping[Model]:
-        models = {
-            model["model_id"]: Model.from_dict(data=model, client=self.__client)
-            for model in self.__client.component.get_models_for_app(
-                app_id=self.__app_id
-            )
-        }
-
-        return NamedMapping(models)
-
-    def __getitem__(self, name: str) -> Model:
-        model_dict = self.__client.component.get_model_by_name(
-            app_id=self.__app_id, name=name
-        )
-
-        return Model.from_dict(data=model_dict, client=self.__client)
-
-    def search(self, query: str) -> NamedMapping[Model]:
-        matching_models = {
-            model["model_id"]: Model.from_dict(data=model, client=self.__client)
-            for model in self.__client.search.search_models_for_project(
-                app_id=self.__app_id, query=query
-            )
-        }
-
-        return NamedMapping(matching_models)
 
 
 class ModelBuilder:
@@ -172,6 +134,46 @@ class Model(BaseModel):
         return self.__client.component.get_model(
             app_id=self.app_id, model_id=self.model_id
         )
+
+
+class ModelBrowser(ComponentBrowser[Model]):
+    __app_id: str
+    __client: Client
+
+    def __init__(self, app_id: str, client: Client) -> None:
+        self.__app_id = app_id
+        self.__client = client
+
+    @deprecated("Prefer directly loading by name:\n\tapp.models['model_name']")
+    @override
+    def __call__(self) -> NamedMapping[Model]:
+        models = {
+            model["model_id"]: Model.from_dict(data=model, client=self.__client)
+            for model in self.__client.component.get_models_for_app(
+                app_id=self.__app_id
+            )
+        }
+
+        return NamedMapping(models)
+
+    @override
+    def __getitem__(self, name: str) -> Model:
+        model_dict = self.__client.component.get_model_by_name(
+            app_id=self.__app_id, name=name
+        )
+
+        return Model.from_dict(data=model_dict, client=self.__client)
+
+    @override
+    def search(self, query: str) -> NamedMapping[Model]:
+        matching_models = {
+            model["model_id"]: Model.from_dict(data=model, client=self.__client)
+            for model in self.__client.search.search_models_for_project(
+                app_id=self.__app_id, query=query
+            )
+        }
+
+        return NamedMapping(matching_models)
 
 
 class ModelVersion(BaseModel):

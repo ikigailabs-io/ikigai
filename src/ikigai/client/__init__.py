@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+from ikigai.client import datax
 from ikigai.client.client import Client
+from ikigai.client.session import SSLConfig
 
-__all__ = ["Client"]
+__all__ = ["Client", "SSLConfig", "datax"]

@@ -4,15 +4,16 @@
 
 from __future__ import annotations
 
-from typing import Generic, Protocol, TypeVar
+import abc
+from typing import Generic, TypeVar
 
-from ikigai.typing.protocol.generic import Named
-from ikigai.utils.named_mapping import NamedMapping
+from ikigai.typing.named_mapping import Named, NamedMapping
 
 T = TypeVar("T", bound=Named)
 
 
-class ComponentBrowser(Generic[T], Protocol):
+class ComponentBrowser(Generic[T], abc.ABC):
+    @abc.abstractmethod
     def __call__(self) -> NamedMapping[T]:
         """
         Get as many components as possible
@@ -27,8 +28,8 @@ class ComponentBrowser(Generic[T], Protocol):
         NamedMapping[T]
             A mapping of component names to components
         """
-        ...
 
+    @abc.abstractmethod
     def __getitem__(self, name: str) -> T:
         """
         Get a component by name
@@ -48,8 +49,8 @@ class ComponentBrowser(Generic[T], Protocol):
         KeyError
             If the component with the given name does not exist
         """
-        ...
 
+    @abc.abstractmethod
     def search(self, query: str) -> NamedMapping[T]:
         """
         Search for a component by name
@@ -64,4 +65,3 @@ class ComponentBrowser(Generic[T], Protocol):
         NamedMapping[T]
             A mapping of component names to components that match the query
         """
-        ...

@@ -4,21 +4,19 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
-
-from pydantic import BeforeValidator, StringConstraints
+from typing import Any
 
 __ONE_HOUR_AS_MINUTES = 60
 __CRON_PARTS = ["minute", "hour", "day", "month", "day_of_week"]
 
 
-def __optional_str(value: Any) -> str | None:
+def optional_str(value: Any) -> str | None:
     if not value:
         return None
     return str(value)
 
 
-def __cron_str(value: Any) -> str:
+def cron_str(value: Any) -> str:
     if not isinstance(value, str):
         error_msg = "Cron must be a string"
         raise TypeError(error_msg)
@@ -44,10 +42,3 @@ def __cron_str(value: Any) -> str:
         raise ValueError(error_msg)
 
     return value.strip()
-
-
-OptionalStr = Annotated[str | None, BeforeValidator(__optional_str)]
-
-LowercaseStr = Annotated[str, StringConstraints(to_lower=True)]
-
-CronStr = Annotated[str, BeforeValidator(__cron_str)]

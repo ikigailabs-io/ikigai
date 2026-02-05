@@ -20,64 +20,22 @@ from pydantic import (
 )
 from tqdm.auto import tqdm
 
-from ikigai.client import Client
+from ikigai.client import Client, datax
+from ikigai.components._flow_definition_shim import flow_versioning_shim
 from ikigai.components.flow_definition import FlowDefinition
-from ikigai.typing.api import RunVariablesRequest
-from ikigai.typing.protocol import (
-    Directory,
-    FlowDefinitionDict,
-    FlowDict,
-    NamedDirectoryDict,
-    ScheduleDict,
-)
-from ikigai.utils.compatibility import Self, deprecated
-from ikigai.utils.custom_serializers import (
+from ikigai.typing import ComponentBrowser, Directory, NamedDirectoryDict, NamedMapping
+from ikigai.typing.pydantic_extensions import (
+    CronStr,
+    OptionalStr,
     TimestampSerializableDatetime,
     TimestampSerializableOptionalDatetime,
 )
-from ikigai.utils.custom_validators import CronStr, OptionalStr
-from ikigai.utils.enums import DirectoryType, FlowStatus
-from ikigai.utils.named_mapping import NamedMapping
-from ikigai.utils.shim import flow_versioning_shim
+from ikigai.utils import DirectoryType, FlowStatus
+from ikigai.utils.compatibility import Self, deprecated, override
 
 logger = logging.getLogger("ikigai.components")
 
 T = TypeVar("T")
-
-
-class FlowBrowser:
-    __app_id: str
-    __client: Client
-
-    def __init__(self, app_id: str, client: Client) -> None:
-        self.__app_id = app_id
-        self.__client = client
-
-    @deprecated("Prefer directly loading by name:\n\tapp.flows['flow_name']")
-    def __call__(self) -> NamedMapping[Flow]:
-        flows = {
-            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
-            for flow in self.__client.component.get_flows_for_app(app_id=self.__app_id)
-        }
-
-        return NamedMapping(flows)
-
-    def __getitem__(self, name: str) -> Flow:
-        flow_dict = self.__client.component.get_flow_by_name(
-            app_id=self.__app_id, name=name
-        )
-
-        return Flow.from_dict(data=flow_dict, client=self.__client)
-
-    def search(self, query: str) -> NamedMapping[Flow]:
-        matched_flows = {
-            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
-            for flow in self.__client.search.search_flows_for_project(
-                app_id=self.__app_id, query=query
-            )
-        }
-
-        return NamedMapping(matched_flows)
 
 
 class Schedule(BaseModel):
@@ -118,8 +76,8 @@ class Schedule(BaseModel):
         logger.debug("Creating a %s from %s", cls.__name__, data)
         return cls.model_validate(data)
 
-    def to_dict(self) -> ScheduleDict:
-        return cast(ScheduleDict, self.model_dump())
+    def to_dict(self) -> datax.ScheduleDict:
+        return cast(datax.ScheduleDict, self.model_dump())
 
 
 class FlowBuilder:
@@ -127,7 +85,7 @@ class FlowBuilder:
     _name: str
     _directory: Directory | None
     _high_volume_preference: bool
-    _flow_definition: FlowDefinitionDict
+    _flow_definition: datax.FlowDefinitionDict
     _schedule: Schedule | None
     __client: Client
 
@@ -165,7 +123,7 @@ class FlowBuilder:
         return self
 
     def definition(
-        self, definition: Flow | FlowDefinition | FlowDefinitionDict
+        self, definition: Flow | FlowDefinition | datax.FlowDefinitionDict
     ) -> Self:
         if isinstance(definition, FlowDefinition):
             self._flow_definition = definition.to_dict()
@@ -218,7 +176,7 @@ class FlowBuilder:
 
     def schedule(
         self,
-        schedule: Schedule | ScheduleDict | str,
+        schedule: Schedule | datax.ScheduleDict | str,
     ) -> Self:
         """
         Set the schedule for the flow.
@@ -355,7 +313,7 @@ class Flow(BaseModel):
         return self
 
     def update_schedule(
-        self, schedule: Schedule | ScheduleDict | str | None = None
+        self, schedule: Schedule | datax.ScheduleDict | str | None = None
     ) -> Self:
         """
         Update the schedule for the flow.
@@ -424,7 +382,7 @@ class Flow(BaseModel):
         return self
 
     def update_definition(
-        self, definition: FlowDefinition | FlowDefinitionDict
+        self, definition: FlowDefinition | datax.FlowDefinitionDict
     ) -> Self:
         """
         Update the flow definition.
@@ -489,7 +447,7 @@ class Flow(BaseModel):
         RunLog
             The final run log of the flow after completion
         """
-        run_variables: RunVariablesRequest = {
+        run_variables: datax.RunVariablesRequest = {
             key: {"value": value}
             for key, value in variables.items()
             if not key.startswith("_")
@@ -502,7 +460,7 @@ class Flow(BaseModel):
 
         return self.__await_run()
 
-    def describe(self) -> FlowDict:
+    def describe(self) -> datax.FlowDict:
         flow = self.__client.component.get_flow(flow_id=self.flow_id)
         # Apply flow_versioning_shim to allow migration of older flows
         # TODO: Remove this shim after "important" flows are migrated
@@ -564,6 +522,44 @@ class Flow(BaseModel):
             progress_bar.update(progress - last_progress)
 
             return run_log
+
+
+class FlowBrowser(ComponentBrowser[Flow]):
+    __app_id: str
+    __client: Client
+
+    def __init__(self, app_id: str, client: Client) -> None:
+        self.__app_id = app_id
+        self.__client = client
+
+    @deprecated("Prefer directly loading by name:\n\tapp.flows['flow_name']")
+    @override
+    def __call__(self) -> NamedMapping[Flow]:
+        flows = {
+            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
+            for flow in self.__client.component.get_flows_for_app(app_id=self.__app_id)
+        }
+
+        return NamedMapping(flows)
+
+    @override
+    def __getitem__(self, name: str) -> Flow:
+        flow_dict = self.__client.component.get_flow_by_name(
+            app_id=self.__app_id, name=name
+        )
+
+        return Flow.from_dict(data=flow_dict, client=self.__client)
+
+    @override
+    def search(self, query: str) -> NamedMapping[Flow]:
+        matched_flows = {
+            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
+            for flow in self.__client.search.search_flows_for_project(
+                app_id=self.__app_id, query=query
+            )
+        }
+
+        return NamedMapping(matched_flows)
 
 
 class FlowDirectoryBuilder:

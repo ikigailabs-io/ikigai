@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Protocol, TypedDict
 
-from ikigai.utils.enums import DirectoryType
+from ikigai.utils import DirectoryType
 
 
 class DirectoryDict(TypedDict):

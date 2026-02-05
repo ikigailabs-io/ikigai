@@ -9,13 +9,11 @@ from dataclasses import InitVar
 from pydantic import EmailStr, Field, HttpUrl
 from pydantic.dataclasses import dataclass
 
-from ikigai import components
-from ikigai.client import Client
+from ikigai import components, specs
+from ikigai.client import Client, SSLConfig
+from ikigai.typing import ComponentBrowser, NamedMapping
 from ikigai.utils.compatibility import deprecated
-from ikigai.utils.component_browser import ComponentBrowser
-from ikigai.utils.config import SSLConfig
 from ikigai.utils.missing import MISSING, MissingType
-from ikigai.utils.named_mapping import NamedMapping
 
 
 @dataclass
@@ -153,7 +151,7 @@ class Ikigai:
         return components.FlowDefinitionBuilder()
 
     @property
-    def facet_types(self) -> components.FacetTypes:
+    def facet_types(self) -> specs.FacetTypes:
         """
         Available facets for use on the Ikigai platform.
 
@@ -163,12 +161,12 @@ class Ikigai:
         components.FacetTypes
             Available facet types.
         """
-        return components.FacetTypes.from_dict(
+        return specs.FacetTypes.from_dict(
             data=self.__client.component.get_facet_specs()
         )
 
     @property
-    def model_types(self) -> components.ModelTypes:
+    def model_types(self) -> specs.ModelTypes:
         """
         Available model types in the Ikigai platform.
 
@@ -178,6 +176,6 @@ class Ikigai:
         components.ModelTypes
             Available model types.
         """
-        return components.ModelTypes.from_list(
+        return specs.ModelTypes.from_list(
             data=self.__client.component.get_model_specs()
         )

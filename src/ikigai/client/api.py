@@ -13,31 +13,27 @@ from typing import Any, cast
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from ikigai.client.session import Session
-from ikigai.typing.api import (
-    GetComponentsForProjectResponse,
-    GetDatasetMultipartUploadUrlsResponse,
-    InitializeDatasetDownloadResponse,
-    RunVariablesRequest,
-)
-from ikigai.typing.protocol import (
+from ikigai.client.datax import (
     AppDict,
     DatasetDict,
     DatasetLogDict,
-    Directory,
     FacetSpecsDict,
     FlowDefinitionDict,
     FlowDict,
     FlowLogDict,
     FlowStatusReportDict,
+    GetComponentsForProjectResponse,
+    GetDatasetMultipartUploadUrlsResponse,
+    InitializeDatasetDownloadResponse,
     ModelDict,
     ModelSpecDict,
-    ModelType,
     ModelVersionDict,
-    NamedDirectoryDict,
+    RunVariablesRequest,
     ScheduleDict,
 )
-from ikigai.utils.enums import AppAccessLevel
+from ikigai.client.session import Session
+from ikigai.typing import Directory, ModelType, NamedDirectoryDict
+from ikigai.utils import AppAccessLevel
 from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.client.api")

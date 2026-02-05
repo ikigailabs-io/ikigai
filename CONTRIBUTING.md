@@ -68,14 +68,15 @@ Let's get a quick run-down of the structure of the project:
 ├── pyproject.toml       // Configuration file for the package
 ├── src/ikigai           // Source code of the package
 │   ├── __about__.py     // Package metadata such as version, ...
-│   ├── __init__.py
+│   ├── __init__.py      // Public API of the package
 │   ├── components
-│   └── ikigai.py        // File containing the main Ikigai client class
-└── tests                // Folder containing tests for the package
+│   ├── ...
+│   └── ikigai.py        // Main Ikigai client class
+└── tests                // Tests for the package
     ├── __init__.py
     ├── conftest.py      // Fixtures & config for all tests
-    ├── components
-    └── test_ikigai.py
+    ├── ...              // Tests for the package
+    └── test_ikigai.py   // Test for the main Ikigai client class
 ```
 
 Now, let's setup the pre-commit hooks to automatically format the code
@@ -149,6 +150,100 @@ tests/conftest.py                      27      1      2      1    93%
 tests/test_ikigai.py                   15      0      0      0   100%
 ---------------------------------------------------------------------
 TOTAL                                 475     46     36     10    87%
+```
+
+### Module Hierarchy
+
+This section documents the dependency structure of the ikigai package.
+Understanding this hierarchy is crucial for maintaining clean imports and
+avoiding circular dependencies. Modules can only import from modules that
+appear to their right in the dependency chain (or below them in the
+submodule hierarchy).
+
+#### Dependency Poset (Text Representation)
+
+The text diagram below shows the partially ordered set
+(poset) of module dependencies. Read it as follows:
+
+- **Top-level chain** (`>`): Modules listed left-to-right show the main
+  dependency order. Each module can import from any module to its right,
+  but not from modules to its left.
+- **Indented submodules** (indentation + `>`): Show internal hierarchies within
+  a parent module, where modules can import from their siblings
+  to the right or below.
+- **Example**: `components` can import from `specs`, `client`, `typing`, or
+  `utils`, but `utils` cannot import from any other ikigai module.
+
+```txt
+Root > Ikigai > components > specs > client > typing > utils
+
+components >
+  app >
+    dataset
+    flow >
+      flow_definition
+      _flow_definition_shim
+    model
+
+specs >
+  facet
+  model
+
+client >
+  client > api >
+    datax
+    session
+
+```
+
+#### Dependency Graph (Visual Representation)
+
+The Mermaid graph below provides a visual representation of the same dependency
+structure. Read it as follows:
+
+- **Arrows** (`-->`): Indicate "can import from" relationships.
+  If module A has an arrow pointing to module B, then A can import from B.
+- **Top-level flow**: Shows the main module dependency chain from left to right
+  (ikigai → components → specs → client → typing → utils).
+- **Subgraphs** (boxes): Group related modules within a package
+  (e.g., `ikigai.components`, `ikigai.specs`, `ikigai.client`) and show their
+  internal dependency relationships.
+
+```mermaid
+graph TD
+    %% Module Level
+    %% Root[.] --> Ikigai
+    Ikigai(ikigai) --> components(ikigai.components)
+    components --> specs(ikigai.specs)
+    specs --> client(ikigai.client)
+    client --> typing(ikigai.typing)
+    typing --> utils(ikigai.utils)
+
+    %% Component SubModule
+    subgraph components[ikigai.components]
+        direction TB;
+        ComponentsApp(app) --> ComponentsDataset(dataset)
+        ComponentsApp --> ComponentsModel(model)
+        ComponentsApp --> ComponentsFlow(flow)
+        ComponentsFlow --> ComponentsFlowDefinition(flow_definition)
+        ComponentsFlow --> ComponentsFlowDefinitionShim(_flow_definition_shim)
+    end
+
+    %% Specs SubModule
+    subgraph specs[ikigai.specs]
+        direction TB;
+        SpecsModel(model);
+        SpecsFacet(facet);
+    end
+
+    %% Client SubModule
+    subgraph client[ikigai.client]
+        direction TB;
+        ClientClient(client) --> ClientAPI(api)
+        ClientAPI --> ClientDatax(datax)
+        ClientAPI --> ClientSession(session)
+    end
+
 ```
 
 ## Tips and Tricks

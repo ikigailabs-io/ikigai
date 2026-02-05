@@ -14,9 +14,8 @@ from requests import Response
 from requests.exceptions import ConnectionError
 
 from ikigai.client.api import ComponentAPI, SearchAPI
-from ikigai.client.session import Session
+from ikigai.client.session import Session, SSLConfig
 from ikigai.utils.compatibility import HTTPMethod
-from ikigai.utils.config import SSLConfig
 
 logger = logging.getLogger("ikigai.client")
 

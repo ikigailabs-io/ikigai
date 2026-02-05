@@ -10,12 +10,12 @@ from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ikigai.components.specs import FacetType
-from ikigai.components.specs import SubModelSpec as ModelType
-from ikigai.typing.protocol import FlowDefinitionDict, ModelHyperParameterGroupType
+from ikigai.client import datax
+from ikigai.specs import FacetType
+from ikigai.specs import SubModelSpec as ModelType
+from ikigai.utils import FacetArgumentType
 from ikigai.utils.compatibility import Self
 from ikigai.utils.data_structures import merge_dicts
-from ikigai.utils.enums import FacetArgumentType
 
 logger = logging.getLogger("ikigai.components")
 
@@ -284,7 +284,7 @@ class ModelFacetBuilder(FacetBuilder):
 
         # Hyperparameter groups are needed for this model type
         #   so group them accordingly
-        hyperparameter_groups: ModelHyperParameterGroupType = defaultdict(dict)
+        hyperparameter_groups: datax.ModelHyperParameterGroupType = defaultdict(dict)
         for hyperparameter_name, hyperparameter_value in hyperparameters.items():
             group = self.__model_type._hyperparameter_groups[hyperparameter_name]
             hyperparameter_group = hyperparameter_groups[group]
@@ -446,6 +446,6 @@ class FlowDefinition(BaseModel):
     variables: dict[str, FlowVariable] = Field(default_factory=dict)
     model_variables: dict = Field(default_factory=dict)
 
-    def to_dict(self) -> FlowDefinitionDict:
+    def to_dict(self) -> datax.FlowDefinitionDict:
         # TODO: Check if this is correct
-        return cast(FlowDefinitionDict, self.model_dump(by_alias=True))
+        return cast(datax.FlowDefinitionDict, self.model_dump(by_alias=True))
