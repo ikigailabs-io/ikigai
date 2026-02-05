@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 from ikigai.ikigai import Ikigai
-from ikigai.utils.enums import (
+from ikigai.utils import (
     AppAccessLevel,
     FlowStatus,
 )

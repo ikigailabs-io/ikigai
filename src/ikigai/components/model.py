@@ -14,8 +14,8 @@ from pydantic import AliasChoices, BaseModel, Field, PrivateAttr
 from ikigai.client import Client
 from ikigai.specs import SubModelSpec
 from ikigai.typing import ComponentBrowser, Directory, NamedDirectoryDict, NamedMapping
+from ikigai.utils import DirectoryType
 from ikigai.utils.compatibility import Self, deprecated, override
-from ikigai.utils.enums import DirectoryType
 
 logger = logging.getLogger("ikigai.components")
 

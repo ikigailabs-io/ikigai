@@ -18,9 +18,9 @@ from pydantic import (
 
 from ikigai.client import datax
 from ikigai.typing import Helpful
+from ikigai.typing.pydantic_extensions import LowercaseStr
+from ikigai.utils import FacetArgumentType
 from ikigai.utils.compatibility import Self, override
-from ikigai.utils.custom_validators import LowercaseStr
-from ikigai.utils.enums import FacetArgumentType
 from ikigai.utils.missing import MISSING, MissingType
 
 

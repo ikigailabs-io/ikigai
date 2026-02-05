@@ -10,7 +10,7 @@ import pytest
 
 from ikigai import FlowStatus, Ikigai
 from ikigai.components.dataset import _get_dataset_download_url
-from ikigai.utils.enums import DatasetDownloadStatus
+from ikigai.utils import DatasetDownloadStatus
 
 
 def test_dataset_creation(

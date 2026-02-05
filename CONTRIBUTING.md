@@ -151,6 +151,30 @@ tests/test_ikigai.py                   15      0      0      0   100%
 TOTAL                                 475     46     36     10    87%
 ```
 
+### Module Hierarchy
+
+```txt
+Root > Ikigai > components > specs > client > typing > utils
+
+components >
+  app >
+    dataset
+    flow >
+      flow_definition
+      _flow_definition_shim
+    model
+
+specs >
+  facet
+  model
+
+client >
+  client > api >
+    datax
+    session
+
+```
+
 ## Tips and Tricks
 
 ### Releasing new version

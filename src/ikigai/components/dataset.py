@@ -20,8 +20,8 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from ikigai.client import Client, datax
 from ikigai.typing import ComponentBrowser, Directory, NamedDirectoryDict, NamedMapping
+from ikigai.utils import DatasetDataType, DatasetDownloadStatus, DirectoryType
 from ikigai.utils.compatibility import Self, deprecated, override
-from ikigai.utils.enums import DatasetDataType, DatasetDownloadStatus, DirectoryType
 
 logger = logging.getLogger("ikigai.components")
 
