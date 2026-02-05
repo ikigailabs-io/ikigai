@@ -11,10 +11,9 @@ from pydantic.dataclasses import dataclass
 
 from ikigai import components, specs
 from ikigai.client import Client, SSLConfig
-from ikigai.typing.protocol.component_browser import ComponentBrowser
+from ikigai.typing import ComponentBrowser, NamedMapping
 from ikigai.utils.compatibility import deprecated
 from ikigai.utils.missing import MISSING, MissingType
-from ikigai.utils.named_mapping import NamedMapping
 
 
 @dataclass

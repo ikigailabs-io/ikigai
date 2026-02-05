@@ -7,13 +7,11 @@ from ikigai.typing.protocol.directory import (
     DirectoryDict,
     NamedDirectoryDict,
 )
-from ikigai.typing.protocol.generic import Named
 from ikigai.typing.protocol.model import ModelType
 
 __all__ = [
     "Directory",
     "DirectoryDict",
     "ModelType",
-    "Named",
     "NamedDirectoryDict",
 ]

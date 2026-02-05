@@ -13,42 +13,13 @@ from pydantic import BaseModel, EmailStr, Field, PrivateAttr
 
 from ikigai import components
 from ikigai.client import Client
+from ikigai.typing import ComponentBrowser, NamedMapping
 from ikigai.typing.protocol import (
     Directory,
     NamedDirectoryDict,
 )
-from ikigai.typing.protocol.component_browser import ComponentBrowser
-from ikigai.utils.compatibility import Self, deprecated
+from ikigai.utils.compatibility import Self, deprecated, override
 from ikigai.utils.enums import AppAccessLevel, DirectoryType
-from ikigai.utils.named_mapping import NamedMapping
-
-
-class AppBrowser:
-    __client: Client
-
-    def __init__(self, client: Client) -> None:
-        self.__client = client
-
-    @deprecated("Prefer directly loading by name:\n\tikigai.apps['app_name']")
-    def __call__(self) -> NamedMapping[App]:
-        apps = {
-            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
-            for app in self.__client.component.get_apps_for_user()
-        }
-
-        return NamedMapping(apps)
-
-    def __getitem__(self, name: str) -> App:
-        app_dict = self.__client.component.get_app_by_name(name)
-        return components.App.from_dict(data=app_dict, client=self.__client)
-
-    def search(self, query: str) -> NamedMapping[App]:
-        matching_apps = {
-            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
-            for app in self.__client.search.search_projects_for_user(query=query)
-        }
-
-        return NamedMapping(matching_apps)
 
 
 class AppBuilder:
@@ -520,6 +491,37 @@ class App(BaseModel):
         return components.ModelDirectoryBuilder(
             client=self.__client, app_id=self.app_id
         )
+
+
+class AppBrowser(ComponentBrowser[App]):
+    __client: Client
+
+    def __init__(self, client: Client) -> None:
+        self.__client = client
+
+    @deprecated("Prefer directly loading by name:\n\tikigai.apps['app_name']")
+    @override
+    def __call__(self) -> NamedMapping[App]:
+        apps = {
+            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
+            for app in self.__client.component.get_apps_for_user()
+        }
+
+        return NamedMapping(apps)
+
+    @override
+    def __getitem__(self, name: str) -> App:
+        app_dict = self.__client.component.get_app_by_name(name)
+        return components.App.from_dict(data=app_dict, client=self.__client)
+
+    @override
+    def search(self, query: str) -> NamedMapping[App]:
+        matching_apps = {
+            app["project_id"]: components.App.from_dict(data=app, client=self.__client)
+            for app in self.__client.search.search_projects_for_user(query=query)
+        }
+
+        return NamedMapping(matching_apps)
 
 
 class AppDirectoryBuilder:

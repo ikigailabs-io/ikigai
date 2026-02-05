@@ -24,54 +24,19 @@ from ikigai.client import Client, datax
 from ikigai.client.datax import FlowDefinitionDict, FlowDict, ScheduleDict
 from ikigai.components._flow_definition_shim import flow_versioning_shim
 from ikigai.components.flow_definition import FlowDefinition
+from ikigai.typing import ComponentBrowser, NamedMapping
 from ikigai.typing.protocol import Directory, NamedDirectoryDict
-from ikigai.utils.compatibility import Self, deprecated
+from ikigai.utils.compatibility import Self, deprecated, override
 from ikigai.utils.custom_serializers import (
     TimestampSerializableDatetime,
     TimestampSerializableOptionalDatetime,
 )
 from ikigai.utils.custom_validators import CronStr, OptionalStr
 from ikigai.utils.enums import DirectoryType, FlowStatus
-from ikigai.utils.named_mapping import NamedMapping
 
 logger = logging.getLogger("ikigai.components")
 
 T = TypeVar("T")
-
-
-class FlowBrowser:
-    __app_id: str
-    __client: Client
-
-    def __init__(self, app_id: str, client: Client) -> None:
-        self.__app_id = app_id
-        self.__client = client
-
-    @deprecated("Prefer directly loading by name:\n\tapp.flows['flow_name']")
-    def __call__(self) -> NamedMapping[Flow]:
-        flows = {
-            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
-            for flow in self.__client.component.get_flows_for_app(app_id=self.__app_id)
-        }
-
-        return NamedMapping(flows)
-
-    def __getitem__(self, name: str) -> Flow:
-        flow_dict = self.__client.component.get_flow_by_name(
-            app_id=self.__app_id, name=name
-        )
-
-        return Flow.from_dict(data=flow_dict, client=self.__client)
-
-    def search(self, query: str) -> NamedMapping[Flow]:
-        matched_flows = {
-            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
-            for flow in self.__client.search.search_flows_for_project(
-                app_id=self.__app_id, query=query
-            )
-        }
-
-        return NamedMapping(matched_flows)
 
 
 class Schedule(BaseModel):
@@ -558,6 +523,44 @@ class Flow(BaseModel):
             progress_bar.update(progress - last_progress)
 
             return run_log
+
+
+class FlowBrowser(ComponentBrowser[Flow]):
+    __app_id: str
+    __client: Client
+
+    def __init__(self, app_id: str, client: Client) -> None:
+        self.__app_id = app_id
+        self.__client = client
+
+    @deprecated("Prefer directly loading by name:\n\tapp.flows['flow_name']")
+    @override
+    def __call__(self) -> NamedMapping[Flow]:
+        flows = {
+            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
+            for flow in self.__client.component.get_flows_for_app(app_id=self.__app_id)
+        }
+
+        return NamedMapping(flows)
+
+    @override
+    def __getitem__(self, name: str) -> Flow:
+        flow_dict = self.__client.component.get_flow_by_name(
+            app_id=self.__app_id, name=name
+        )
+
+        return Flow.from_dict(data=flow_dict, client=self.__client)
+
+    @override
+    def search(self, query: str) -> NamedMapping[Flow]:
+        matched_flows = {
+            flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
+            for flow in self.__client.search.search_flows_for_project(
+                app_id=self.__app_id, query=query
+            )
+        }
+
+        return NamedMapping(matched_flows)
 
 
 class FlowDirectoryBuilder:

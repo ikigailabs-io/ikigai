@@ -8,7 +8,6 @@ from collections.abc import Mapping
 from typing import Any, Literal, TypedDict
 
 from ikigai.typing.protocol import DirectoryDict
-from ikigai.typing.protocol.generic import Empty
 from ikigai.utils.compatibility import NotRequired
 from ikigai.utils.enums import DatasetDownloadStatus
 
@@ -299,7 +298,11 @@ class SubModelSpecDict(TypedDict):
     hyperparameters: dict[str, ModelHyperparameterSpecDict]
 
 
-ModelMetricsSpecDict = dict[str, Empty]
+class EmptyDict(TypedDict):
+    pass
+
+
+ModelMetricsSpecDict = dict[str, EmptyDict]
 
 
 class ModelParameterSpecDict(TypedDict):

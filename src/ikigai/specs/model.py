@@ -24,13 +24,13 @@ from ikigai.client.datax import (
     ModelSpecDict,
     SubModelSpecDict,
 )
+from ikigai.typing.helpful import Helpful
 from ikigai.utils.compatibility import Self, override
 from ikigai.utils.custom_validators import LowercaseStr
 from ikigai.utils.enums import (
     ModelHyperparameterType,
     ModelParameterType,
 )
-from ikigai.utils.helpful import Helpful
 from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.components.specs")

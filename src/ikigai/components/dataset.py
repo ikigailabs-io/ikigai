@@ -20,10 +20,10 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from ikigai.client import Client
 from ikigai.client.datax import DatasetDict
+from ikigai.typing import ComponentBrowser, NamedMapping
 from ikigai.typing.protocol import Directory, NamedDirectoryDict
-from ikigai.utils.compatibility import Self, deprecated
+from ikigai.utils.compatibility import Self, deprecated, override
 from ikigai.utils.enums import DatasetDataType, DatasetDownloadStatus, DirectoryType
-from ikigai.utils.named_mapping import NamedMapping
 
 logger = logging.getLogger("ikigai.components")
 
@@ -163,43 +163,6 @@ def _get_dataset_download_url(client: Client, app_id: str, dataset_id: str) -> s
         raise RuntimeError(error_msg)
 
     return response["url"]
-
-
-class DatasetBrowser:
-    __app_id: str
-    __client: Client
-
-    def __init__(self, app_id: str, client: Client) -> None:
-        self.__app_id = app_id
-        self.__client = client
-
-    @deprecated("Prefer directly loading by name:\n\tapp.datasets['dataset_name']")
-    def __call__(self) -> NamedMapping[Dataset]:
-        datasets = {
-            dataset["dataset_id"]: Dataset.from_dict(data=dataset, client=self.__client)
-            for dataset in self.__client.component.get_datasets_for_app(
-                app_id=self.__app_id
-            )
-        }
-
-        return NamedMapping(datasets)
-
-    def __getitem__(self, name: str) -> Dataset:
-        dataset_dict = self.__client.component.get_dataset_by_name(
-            app_id=self.__app_id, name=name
-        )
-
-        return Dataset.from_dict(data=dataset_dict, client=self.__client)
-
-    def search(self, query: str) -> NamedMapping[Dataset]:
-        matching_datasets = {
-            dataset["dataset_id"]: Dataset.from_dict(data=dataset, client=self.__client)
-            for dataset in self.__client.search.search_datasets_for_project(
-                app_id=self.__app_id, query=query
-            )
-        }
-
-        return NamedMapping(matching_datasets)
 
 
 class DatasetBuilder:
@@ -351,6 +314,46 @@ class Dataset(BaseModel):
         return self.__client.component.get_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )
+
+
+class DatasetBrowser(ComponentBrowser[Dataset]):
+    __app_id: str
+    __client: Client
+
+    def __init__(self, app_id: str, client: Client) -> None:
+        self.__app_id = app_id
+        self.__client = client
+
+    @deprecated("Prefer directly loading by name:\n\tapp.datasets['dataset_name']")
+    @override
+    def __call__(self) -> NamedMapping[Dataset]:
+        datasets = {
+            dataset["dataset_id"]: Dataset.from_dict(data=dataset, client=self.__client)
+            for dataset in self.__client.component.get_datasets_for_app(
+                app_id=self.__app_id
+            )
+        }
+
+        return NamedMapping(datasets)
+
+    @override
+    def __getitem__(self, name: str) -> Dataset:
+        dataset_dict = self.__client.component.get_dataset_by_name(
+            app_id=self.__app_id, name=name
+        )
+
+        return Dataset.from_dict(data=dataset_dict, client=self.__client)
+
+    @override
+    def search(self, query: str) -> NamedMapping[Dataset]:
+        matching_datasets = {
+            dataset["dataset_id"]: Dataset.from_dict(data=dataset, client=self.__client)
+            for dataset in self.__client.search.search_datasets_for_project(
+                app_id=self.__app_id, query=query
+            )
+        }
+
+        return NamedMapping(matching_datasets)
 
 
 class DatasetDirectoryBuilder:
