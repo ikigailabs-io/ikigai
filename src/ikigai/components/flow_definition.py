@@ -10,9 +10,9 @@ from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ikigai.client.datax import FlowDefinitionDict, ModelHyperParameterGroupType
 from ikigai.specs import FacetType
 from ikigai.specs import SubModelSpec as ModelType
-from ikigai.typing.protocol import FlowDefinitionDict, ModelHyperParameterGroupType
 from ikigai.utils.compatibility import Self
 from ikigai.utils.data_structures import merge_dicts
 from ikigai.utils.enums import FacetArgumentType

@@ -14,29 +14,25 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from ikigai.client.datax import (
-    GetComponentsForProjectResponse,
-    GetDatasetMultipartUploadUrlsResponse,
-    InitializeDatasetDownloadResponse,
-    RunVariablesRequest,
-)
-from ikigai.client.session import Session
-from ikigai.typing.protocol import (
     AppDict,
     DatasetDict,
     DatasetLogDict,
-    Directory,
     FacetSpecsDict,
     FlowDefinitionDict,
     FlowDict,
     FlowLogDict,
     FlowStatusReportDict,
+    GetComponentsForProjectResponse,
+    GetDatasetMultipartUploadUrlsResponse,
+    InitializeDatasetDownloadResponse,
     ModelDict,
     ModelSpecDict,
-    ModelType,
     ModelVersionDict,
-    NamedDirectoryDict,
+    RunVariablesRequest,
     ScheduleDict,
 )
+from ikigai.client.session import Session
+from ikigai.typing.protocol import Directory, ModelType, NamedDirectoryDict
 from ikigai.utils.enums import AppAccessLevel
 from ikigai.utils.missing import MISSING, MissingType
 

@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from ikigai.typing.protocol.flow import FacetDict, FlowDict
+from ikigai.client.datax import FacetDict, FlowDict
 
 
 def flow_versioning_shim(flow: FlowDict, facet_specs: dict) -> FlowDict:

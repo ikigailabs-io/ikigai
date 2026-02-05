@@ -16,14 +16,10 @@ from pydantic import (
     model_validator,
 )
 
-from ikigai.typing.protocol import (
-    FacetSpecsDict,
-)
+from ikigai.client.datax import FacetSpecsDict
 from ikigai.utils.compatibility import Self, override
 from ikigai.utils.custom_validators import LowercaseStr
-from ikigai.utils.enums import (
-    FacetArgumentType,
-)
+from ikigai.utils.enums import FacetArgumentType
 from ikigai.utils.helpful import Helpful
 from ikigai.utils.missing import MISSING, MissingType
 

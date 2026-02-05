@@ -18,7 +18,7 @@ from pydantic import (
     model_validator,
 )
 
-from ikigai.typing.protocol import (
+from ikigai.client.datax import (
     HyperParameterGroupName,
     HyperParameterName,
     ModelSpecDict,

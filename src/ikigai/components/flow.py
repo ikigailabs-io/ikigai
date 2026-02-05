@@ -21,14 +21,10 @@ from pydantic import (
 from tqdm.auto import tqdm
 
 from ikigai.client import Client, datax
+from ikigai.client.datax import FlowDefinitionDict, FlowDict, ScheduleDict
+from ikigai.components._flow_definition_shim import flow_versioning_shim
 from ikigai.components.flow_definition import FlowDefinition
-from ikigai.typing.protocol import (
-    Directory,
-    FlowDefinitionDict,
-    FlowDict,
-    NamedDirectoryDict,
-    ScheduleDict,
-)
+from ikigai.typing.protocol import Directory, NamedDirectoryDict
 from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.custom_serializers import (
     TimestampSerializableDatetime,
@@ -37,7 +33,6 @@ from ikigai.utils.custom_serializers import (
 from ikigai.utils.custom_validators import CronStr, OptionalStr
 from ikigai.utils.enums import DirectoryType, FlowStatus
 from ikigai.utils.named_mapping import NamedMapping
-from ikigai.utils.shim import flow_versioning_shim
 
 logger = logging.getLogger("ikigai.components")
 

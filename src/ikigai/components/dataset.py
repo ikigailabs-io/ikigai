@@ -19,11 +19,8 @@ import requests
 from pydantic import BaseModel, Field, PrivateAttr
 
 from ikigai.client import Client
-from ikigai.typing.protocol import (
-    DatasetDict,
-    Directory,
-    NamedDirectoryDict,
-)
+from ikigai.client.datax import DatasetDict
+from ikigai.typing.protocol import Directory, NamedDirectoryDict
 from ikigai.utils.compatibility import Self, deprecated
 from ikigai.utils.enums import DatasetDataType, DatasetDownloadStatus, DirectoryType
 from ikigai.utils.named_mapping import NamedMapping
