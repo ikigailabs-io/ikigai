@@ -68,14 +68,15 @@ Let's get a quick run-down of the structure of the project:
 ├── pyproject.toml       // Configuration file for the package
 ├── src/ikigai           // Source code of the package
 │   ├── __about__.py     // Package metadata such as version, ...
-│   ├── __init__.py
+│   ├── __init__.py      // Public API of the package
 │   ├── components
-│   └── ikigai.py        // File containing the main Ikigai client class
-└── tests                // Folder containing tests for the package
+│   ├── ...
+│   └── ikigai.py        // Main Ikigai client class
+└── tests                // Tests for the package
     ├── __init__.py
     ├── conftest.py      // Fixtures & config for all tests
-    ├── components
-    └── test_ikigai.py
+    ├── ...              // Tests for the package
+    └── test_ikigai.py   // Test for the main Ikigai client class
 ```
 
 Now, let's setup the pre-commit hooks to automatically format the code
