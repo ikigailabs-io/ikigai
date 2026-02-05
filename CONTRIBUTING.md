@@ -175,6 +175,43 @@ client >
 
 ```
 
+```mermaid
+graph TD
+    %% Module Level
+    %% Root[.] --> Ikigai
+    Ikigai(ikigai) --> components(ikigai.components)
+    components --> specs(ikigai.specs)
+    specs --> client(ikigai.client)
+    client --> typing(ikigai.typing)
+    typing --> utils(ikigai.utils)
+
+    %% Component SubModule
+    subgraph components[ikigai.components]
+        direction TB;
+        ComponentsApp(app) --> ComponentsDataset(dataset)
+        ComponentsApp --> ComponentsModel(model)
+        ComponentsApp --> ComponentsFlow(flow)
+        ComponentsFlow --> ComponentsFlowDefinition(flow_definition)
+        ComponentsFlow --> ComponentsFlowDefinitionShim(_flow_definition_shim)
+    end
+
+    %% Specs SubModule
+    subgraph specs[ikigai.specs]
+        direction TB;
+        SpecsModel(model);
+        SpecsFacet(facet);
+    end
+
+    %% Client SubModule
+    subgraph client[ikigai.client]
+        direction TB;
+        ClientClient(client) --> ClientAPI(api)
+        ClientAPI --> ClientDatax(datax)
+        ClientAPI --> ClientSession(session)
+    end
+
+```
+
 ## Tips and Tricks
 
 ### Releasing new version
