@@ -714,7 +714,7 @@ class DatasetDirectory(BaseModel):
     """
     A dataset directory within an app.
 
-    Provides methods to navigate the dataset directory hierarchy and retrieve 
+    Provides methods to navigate the dataset directory hierarchy and retrieve
     its contents.
 
     Attributes
