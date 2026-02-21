@@ -2,10 +2,13 @@
 #
 # SPDX-License-Identifier: MIT
 
+from ikigai.specs.custom_facet import CustomFacetArgumentSpec, CustomFacetType
 from ikigai.specs.facet import FacetType, FacetTypes
 from ikigai.specs.model import ModelTypes, SubModelSpec
 
 __all__ = [
+    "CustomFacetArgumentSpec",
+    "CustomFacetType",
     "FacetType",
     "FacetTypes",
     "ModelTypes",

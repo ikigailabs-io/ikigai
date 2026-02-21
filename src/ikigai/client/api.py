@@ -15,6 +15,8 @@ from pydantic.dataclasses import dataclass
 
 from ikigai.client.datax import (
     AppDict,
+    CustomFacetDict,
+    CustomFacetVersionDict,
     DatasetDict,
     DatasetLogDict,
     FacetSpecsDict,
@@ -183,6 +185,45 @@ class ComponentAPI:
             },
         ).json()
         return resp["project_id"]
+
+    """
+    Custom Facet APIs
+    """
+
+    def get_custom_facet(self, custom_facet_id: str) -> CustomFacetDict:
+        custom_facet_dict = self.__session.get(
+            path="/component/get-custom-facet",
+            params={"custom_facet_id": custom_facet_id},
+        ).json()["custom_facet"]
+
+        return cast(CustomFacetDict, custom_facet_dict)
+
+    def get_custom_facet_by_name(self, name: str) -> CustomFacetDict:
+        custom_facet_dict = self.__session.get(
+            path="/component/get-custom-facet", params={"name": name}
+        ).json()["custom_facet"]
+
+        return cast(CustomFacetDict, custom_facet_dict)
+
+    def get_custom_facets_for_user(self) -> list[CustomFacetDict]:
+        custom_facet_dicts = self.__session.get(
+            path="/component/get-custom-facets-for-user",
+        ).json()["custom_facets"]
+
+        return cast(list[CustomFacetDict], custom_facet_dicts)
+
+    """
+    Custom Facet Version APIs
+    """
+
+    def get_custom_facet_versions(
+        self, custom_facet_id: str
+    ) -> list[CustomFacetVersionDict]:
+        custom_facet_version_dicts = self.__session.get(
+            path="/component/get-custom-facet-versions",
+            params={"custom_facet_id": custom_facet_id},
+        ).json()["versions"]
+        return cast(list[CustomFacetVersionDict], custom_facet_version_dicts)
 
     """
     Dataset APIs
@@ -890,6 +931,15 @@ class SearchAPI:
             logger.warning(warning)
 
         return cast(list[AppDict], app_dicts)
+
+    def search_custom_facets_for_user(self, query: str) -> list[CustomFacetDict]:
+        response = self.__session.get(
+            path="/search/search-custom-facets-for-user",
+            params={"query": query},
+        ).json()
+
+        custom_facet_dicts = response["custom_facets"]
+        return cast(list[CustomFacetDict], custom_facet_dicts)
 
     def search_datasets_for_project(self, app_id: str, query: str) -> list[DatasetDict]:
         response = self.__session.get(

@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026-present ikigailabs.io <harsh@ikigailabs.io>
 #
 # SPDX-License-Identifier: MIT
+from __future__ import annotations
 
 from ikigai.utils.compatibility import StrEnum
 
@@ -12,6 +13,28 @@ class AppAccessLevel(StrEnum):
     OWNER = "OWNER"
     BUILDER = "BUILDER"
     VIEWER = "VIEWER"
+
+
+# -------------------------------------------------------------------------------------
+# Custom Facet Related Enums
+
+
+class CustomFacetArgumentType(StrEnum):
+    BOOLEAN = "bool"
+    INTEGER = "int"
+    STRING = "str"
+    FLOAT = "float"
+
+    def to_facet_argument_type(self) -> FacetArgumentType:
+        match self:
+            case CustomFacetArgumentType.BOOLEAN:
+                return FacetArgumentType.BOOLEAN
+            case CustomFacetArgumentType.INTEGER:
+                return FacetArgumentType.NUMBER
+            case CustomFacetArgumentType.STRING:
+                return FacetArgumentType.TEXT
+            case CustomFacetArgumentType.FLOAT:
+                return FacetArgumentType.NUMBER
 
 
 # -------------------------------------------------------------------------------------

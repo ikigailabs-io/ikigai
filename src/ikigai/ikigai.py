@@ -59,9 +59,9 @@ class Ikigai:
     @property
     def apps(self) -> ComponentBrowser[components.App]:
         """
-        Access the Apps associated with the Ikigai account user.
+        Access the Apps associated with the user.
 
-        Returns a `ComponentBrowser[App]` to access the account user's apps.
+        Returns a `ComponentBrowser[App]` to access the user's apps.
 
         Returns
         -------
@@ -98,7 +98,35 @@ class Ikigai:
         """
         return components.AppBuilder(client=self.__client)
 
-    @deprecated("Use ikigai.app_directories() instead")
+    @property
+    def custom_facets(self) -> ComponentBrowser[components.CustomFacet]:
+        """
+        Access the custom facets associated with the user.
+
+        Returns a `ComponentBrowser[CustomFacet]` to access the user's custom facets.
+
+        Returns
+        -------
+
+        ComponentBrowser[components.CustomFacet]
+            Browser for Custom Facets.
+
+        Examples
+        --------
+
+        Use `search(query: str)` to retrieve custom facets matching a query.
+
+        >>> custom_facets = ikigai.custom_facets
+        >>> custom_facet = custom_facets.search("Examp")
+
+        Retrieve a custom facet by name.
+
+        >>> custom_facets = ikigai.custom_facets
+        >>> custom_facet = custom_facets["Example Custom Facet"]
+        """
+        return components.CustomFacetBrowser(client=self.__client)
+
+    @deprecated("Use ikigai.app_directories() instead, will be removed in v0.4.0")
     def directories(self) -> NamedMapping[components.AppDirectory]:
         return self.app_directories()
 

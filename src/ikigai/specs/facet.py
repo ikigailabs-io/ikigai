@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections import ChainMap
 from collections.abc import Generator, Mapping
+from itertools import chain
 from typing import Any
 
 from pydantic import (
@@ -243,11 +244,6 @@ class FacetType(BaseModel, Helpful):
     def is_ml_facet(self) -> bool:
         return self.facet_info.facet_group.upper() == "MACHINE_LEARNING"
 
-    def check_arguments(self, arguments: dict) -> None:
-        # TODO: Add facet spec checking here,
-        #  right now we let platform inform the user on create/edit
-        ...
-
 
 class FacetTypes(BaseModel, Helpful):
     class ChainGroup(RootModel, Helpful):
@@ -315,6 +311,16 @@ class FacetTypes(BaseModel, Helpful):
         }
 
         return cls.model_validate(flattened_data)
+
+    def find_by_uid(self, uid: str) -> FacetType:
+        facet_iterator = chain(
+            self.INPUT.root.values(), self.MID.root.values(), self.OUTPUT.root.values()
+        )
+        for facet_type in facet_iterator:
+            if facet_type.facet_info.facet_uid == uid:
+                return facet_type
+        error_msg = f"Facet type with UID {uid} not found"
+        raise KeyError(error_msg)
 
     @override
     def _help(self) -> Generator[str]:
