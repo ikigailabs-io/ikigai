@@ -18,9 +18,9 @@ from pydantic import (
 )
 
 from ikigai.client import datax
-from ikigai.typing import Helpful
+from ikigai.typing import Helpful, NamedMapping
 from ikigai.typing.pydantic_extensions import LowercaseStr
-from ikigai.utils import FacetArgumentType
+from ikigai.utils import CustomFacetArgumentType, FacetArgumentType
 from ikigai.utils.compatibility import Self, override
 from ikigai.utils.missing import MISSING, MissingType
 
@@ -333,3 +333,64 @@ class FacetTypes(BaseModel, Helpful):
         # OUTPUT Chain
         yield "OUTPUT"
         yield from (f"  {chain_help}" for chain_help in self.OUTPUT._help())
+
+
+class CustomFacetArgumentSpec(BaseModel):
+    name: str
+    argument_type: CustomFacetArgumentType
+    value: Any
+
+
+class CustomFacetType(FacetType):
+    custom_facet_id: str
+    version_id: str
+    custom_facet_arguments: dict[str, ArgumentSpec]
+
+    @classmethod
+    def from_facet_type(
+        cls,
+        facet_type: FacetType,
+        custom_facet_id: str,
+        version_id: str,
+        custom_facet_argument_specs: NamedMapping[CustomFacetArgumentSpec],
+    ) -> Self:
+        return cls.model_validate(
+            {
+                "facet_info": facet_type.facet_info,
+                "is_deprecated": facet_type.is_deprecated,
+                "is_hidden": facet_type.is_hidden,
+                "facet_requirement": facet_type.facet_requirement,
+                "facet_arguments": {
+                    **facet_type.facet_arguments,
+                    "custom_facet_id": (
+                        facet_type.facet_arguments["custom_facet_id"].model_copy(
+                            update={"options": [custom_facet_id]}
+                        )
+                    ),
+                    "version_id": (
+                        facet_type.facet_arguments["version_id"].model_copy(
+                            update={"options": [version_id]}
+                        )
+                    ),
+                },
+                "custom_facet_id": custom_facet_id,
+                "version_id": version_id,
+                "custom_facet_arguments": {
+                    name: ArgumentSpec(
+                        name=name,
+                        argument_type=argument_spec.argument_type.to_facet_argument_type(),
+                        default_value=argument_spec.value,
+                        children={},
+                        have_sub_arguments=False,
+                        is_deprecated=False,
+                        is_hidden=False,
+                        is_list=False,
+                        is_required=True,
+                        options=None,
+                    )
+                    for name, argument_spec in custom_facet_argument_specs.items()
+                },
+                "in_arrow_arguments": facet_type.in_arrow_arguments,
+                "out_arrow_arguments": facet_type.out_arrow_arguments,
+            }
+        )
