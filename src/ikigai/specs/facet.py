@@ -338,7 +338,7 @@ class FacetTypes(BaseModel, Helpful):
 class CustomFacetArgumentSpec(BaseModel):
     name: str
     argument_type: CustomFacetArgumentType
-    value: Any
+    value: str | int | float | bool
 
     def to_dict(self) -> datax.CustomFacetArgumentDict:
         return {

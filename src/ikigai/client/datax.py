@@ -61,7 +61,7 @@ class CustomFacetDict(TypedDict):
 
 class CustomFacetArgumentDict(TypedDict):
     name: str
-    argument_type: str
+    argument_type: Literal["bool", "int", "str", "float"]
     value: bool | int | str | float
 
 
