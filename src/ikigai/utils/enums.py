@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
-from ikigai.utils.compatibility import StrEnum
+from typing import Any
+
+from ikigai.utils.compatibility import Self, StrEnum
 
 # -------------------------------------------------------------------------------------
 # App Related Enums
@@ -24,6 +26,11 @@ class CustomFacetArgumentType(StrEnum):
     INTEGER = "int"
     STRING = "str"
     FLOAT = "float"
+
+    @classmethod
+    def from_value(cls, value: Any) -> Self:
+        type_name = type(value).__name__
+        return cls(type_name)
 
     def to_facet_argument_type(self) -> FacetArgumentType:
         match self:

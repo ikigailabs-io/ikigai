@@ -126,6 +126,19 @@ class Ikigai:
         """
         return components.CustomFacetBrowser(client=self.__client)
 
+    @property
+    def custom_facet(self) -> components.CustomFacetBuilder:
+        """
+        Get a Builder to create a new Custom Facet.
+
+        Returns
+        -------
+
+        components.CustomFacetBuilder
+            A new Custom Facet builder.
+        """
+        return components.CustomFacetBuilder(client=self.__client)
+
     @deprecated("Use ikigai.app_directories() instead, will be removed in v0.4.0")
     def directories(self) -> NamedMapping[components.AppDirectory]:
         return self.app_directories()

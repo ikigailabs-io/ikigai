@@ -15,6 +15,7 @@ from pydantic.dataclasses import dataclass
 
 from ikigai.client.datax import (
     AppDict,
+    CustomFacetArgumentDict,
     CustomFacetDict,
     CustomFacetVersionDict,
     DatasetDict,
@@ -39,6 +40,26 @@ from ikigai.utils import AppAccessLevel
 from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.client.api")
+
+
+@dataclass
+class AccessAPI:
+    # Init only vars
+    session: InitVar[Session]
+
+    __session: Session = Field(init=False)
+
+    def __post_init__(self, session: Session) -> None:
+        self.__session = session
+
+    def generate_rootkit_token(self, script: str) -> str:
+        # This is a weird endpoint, technically it should be under ComponentAPI
+        # but it is more about giving privileges to a user to run arbitrary code.
+        resp = self.__session.post(
+            path="/component/generate-rootkit-token",
+            json={"script": script},
+        ).json()
+        return resp["token"]
 
 
 @dataclass
@@ -189,6 +210,34 @@ class ComponentAPI:
     """
     Custom Facet APIs
     """
+
+    def create_custom_facet(
+        self,
+        name: str,
+        chain_group: str,
+        description: str,
+        tags: list[str],
+        python_script: str,
+        libraries: list[str],
+        rootkit_token: str,
+        arguments: list[CustomFacetArgumentDict],
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/create-custom-facet",
+            json={
+                "custom_facet": {
+                    "name": name,
+                    "chain_group": chain_group,
+                    "description": description,
+                    "tags": tags,
+                    "python_script": python_script,
+                    "libraries": libraries,
+                    "rootkit_token": rootkit_token,
+                    "arguments": arguments,
+                }
+            },
+        ).json()
+        return resp["custom_facet_id"]
 
     def get_custom_facet(self, custom_facet_id: str) -> CustomFacetDict:
         custom_facet_dict = self.__session.get(

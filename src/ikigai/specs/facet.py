@@ -340,6 +340,13 @@ class CustomFacetArgumentSpec(BaseModel):
     argument_type: CustomFacetArgumentType
     value: Any
 
+    def to_dict(self) -> datax.CustomFacetArgumentDict:
+        return {
+            "name": self.name,
+            "argument_type": self.argument_type.value,
+            "value": self.value,
+        }
+
 
 class CustomFacetType(FacetType):
     custom_facet_id: str

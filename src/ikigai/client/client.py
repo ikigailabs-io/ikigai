@@ -13,7 +13,7 @@ from pydantic.dataclasses import dataclass
 from requests import Response
 from requests.exceptions import ConnectionError
 
-from ikigai.client.api import ComponentAPI, SearchAPI
+from ikigai.client.api import AccessAPI, ComponentAPI, SearchAPI
 from ikigai.client.session import Session, SSLConfig
 from ikigai.utils.compatibility import HTTPMethod
 
@@ -29,6 +29,7 @@ class Client:
     ssl: InitVar[SSLConfig]
 
     __session: Session = Field(init=False)
+    __access_api: AccessAPI = Field(init=False)
     __component_api: ComponentAPI = Field(init=False)
     __search_api: SearchAPI = Field(init=False)
 
@@ -38,6 +39,7 @@ class Client:
         self.__session = Session(
             user_email=user_email, api_key=api_key, base_url=base_url, ssl=ssl
         )
+        self.__access_api = AccessAPI(session=self.__session)
         self.__component_api = ComponentAPI(session=self.__session)
         self.__search_api = SearchAPI(session=self.__session)
 
@@ -73,6 +75,10 @@ class Client:
         return self.__session.request(method=HTTPMethod.POST, path=path, json=json)
 
     # APIs
+
+    @property
+    def access(self) -> AccessAPI:
+        return self.__access_api
 
     @property
     def component(self) -> ComponentAPI:
