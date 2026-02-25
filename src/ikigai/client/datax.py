@@ -54,14 +54,21 @@ class GetComponentsForProjectResponse(TypedDict):
 class CustomFacetDict(TypedDict):
     custom_facet_id: str
     name: str
+    chain_group: str
     facet_uid: str
+    description: str
+    tags: list[str]
+    python_script: str
+    libraries: list[str]
+    rootkit_token: str
+    arguments: list[CustomFacetArgumentDict]
     created_at: str
     modified_at: str
 
 
 class CustomFacetArgumentDict(TypedDict):
     name: str
-    argument_type: Literal["bool", "int", "str", "float"]
+    type: Literal["bool", "int", "str", "float"]
     value: bool | int | str | float
 
 

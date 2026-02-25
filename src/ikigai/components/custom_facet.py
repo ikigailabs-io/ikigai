@@ -5,15 +5,16 @@
 from __future__ import annotations
 
 import ast
+import textwrap
 from collections.abc import Mapping
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, Field, PrivateAttr
+from pydantic import AliasChoices, BaseModel, Field, PrivateAttr, field_validator
 
-from ikigai.client import Client
+from ikigai.client import Client, datax
 from ikigai.specs import (
     CustomFacetArgumentSpec,
     CustomFacetType,
@@ -100,9 +101,26 @@ class CustomFacetBuilder:
         self._tags = tags
         return self
 
-    def script(self, script: str | Path, system_access: bool = False) -> Self:
+    def script(
+        self,
+        script: str | Path,
+        *,
+        requirements: list[str] | Path | None = None,
+        system_access: bool = False,
+        arguments: dict[str, str | int | float | bool] | None = None,
+    ) -> Self:
         """
-        Set the draft script for the custom facet
+        Set the script and related dependencies for the custom facet
+
+        You can specify the script and any PyPI libraries,
+        as well as the arguments that are required to run the script.
+        By default, the script has limited access to filesystem and environment,
+        but you can request for more access to the environment, filesystem, and syscalls
+        by setting the system_access flag to True.
+
+        Note
+        -----
+        The user must have rootkit access to request system access.
 
         Parameters
         ----------
@@ -111,6 +129,11 @@ class CustomFacetBuilder:
             Can either be the text of the script or
             a path to a file containing the script.
 
+        requirements : list[str] | Path | None
+            The requirements for the custom facet.
+            Can either be a path to a file containing the requirements in pip format,
+            or be a list of strings each representing a single requirement.
+
         system_access : bool, optional
             Whether to grant system access to the custom facet, by default False.
             If True, the custom facet will have unrestricted access to the
@@ -118,10 +141,31 @@ class CustomFacetBuilder:
             Creating a custom facet with system access will fail if
             the user does not have rootkit access.
 
+        arguments : dict[str, str | int | float | bool]
+            The arguments for the custom facet script and their default values.
+
         Examples
         --------
-        >>> builder.script("result = data  # no-op")
-        >>> builder.script(Path("./script.py"))
+        >>> script_file = Path("./script.py")
+        >>> builder = ikigai.custom_facet.new(...)
+        >>> builder.script(script=script_file)
+
+        >>> builder = ikigai.custom_facet.new(...)
+        >>> builder.script(
+        ...    script="result = data  # no-op",
+        ...    requirements=["scikit-learn", "pandas==1.5.2"],
+        ...    system_access=True,
+        ...    arguments={"input-1": "input-1"},
+        ... )
+
+        >>> script_file = Path("./script.py")
+        >>> builder = ikigai.custom_facet.new(...)
+        >>> builder.script(
+        ...    script=script_file,
+        ...    requirements=Path("requirements.txt"),
+        ...    system_access=True,
+        ...    arguments={"input-1": "input-1", "input-2": "input-2"},
+        ... )
 
         Returns
         -------
@@ -131,61 +175,21 @@ class CustomFacetBuilder:
         if isinstance(script, Path):
             with script.open("r") as fp:
                 script = fp.read()
-
+        script = textwrap.dedent(script)
         # Validate the script syntax againt ikigai platform's python version
         # IPLT-11330: See if we can avoid hardcoding the python version
         ast.parse(script, feature_version=(3, 10))
-
         self._script = script
-        self._system_access = system_access
-        return self
 
-    def requirements(self, requirements: list[str] | Path | str) -> Self:
-        """
-        Specify the library requirements for the custom facet.
-
-        Parameters
-        ----------
-        requirements : list[str] | Path | str
-            The requirements for the custom facet.
-            Can either be a path to a file containing the requirements in pip format,
-            or be a list of strings each representing a single requirement,
-            or a string path to a file containing the requirements.
-
-        Examples
-        --------
-        >>> builder.requirements(["scikit-learn", "pandas==1.5.2"])
-        >>> builder.requirements(Path("requirements.txt"))
-        >>> builder.requirements("./requirements.txt")
-
-        Returns
-        -------
-        Self
-            The CustomFacetBuilder instance with the library requirements set.
-        """
-        if isinstance(requirements, str):
-            requirements = Path(requirements)
+        if requirements is None:
+            requirements = []
         if isinstance(requirements, Path):
             with requirements.open("r") as fp:
                 requirements = fp.readlines()
-
         self._requirements = requirements
-        return self
 
-    def arguments(self, **arguments: str | int | float | bool) -> Self:
-        """
-        Specify the arguments for the custom facet.
-
-        Parameters
-        ----------
-        arguments : **str | int | float | bool
-            The arguments for the custom facet.
-
-        Returns
-        -------
-        Self
-            The CustomFacetBuilder instance with the arguments defined.
-        """
+        if arguments is None:
+            arguments = {}
         self._arguments = {
             name: CustomFacetArgumentSpec(
                 name=name,
@@ -194,6 +198,8 @@ class CustomFacetBuilder:
             )
             for name, value in arguments.items()
         }
+
+        self._system_access = system_access
         return self
 
     def build(self) -> CustomFacet:
@@ -215,9 +221,7 @@ class CustomFacetBuilder:
 
         # If rootkit is required, generate it from the script
         rootkit_token = (
-            self.__client.access.generate_rootkit_token(
-                script=self._script,
-            )
+            self.__client.access.generate_rootkit_token(script=self._script)
             if self._system_access
             else ""
         )
@@ -227,7 +231,7 @@ class CustomFacetBuilder:
 
         custom_facet_id = self.__client.component.create_custom_facet(
             name=self._name,
-            chain_group=self._facet_type.facet_info.facet_group,
+            chain_group=self._facet_type.facet_info.chain_group,
             description=self._description,
             tags=self._tags,
             python_script=self._script,
@@ -245,19 +249,183 @@ class CustomFacetBuilder:
 class CustomFacet(BaseModel):
     custom_facet_id: str
     name: str
-    facet_spec: FacetType
+    facet_type: FacetType
+    description: str
+    arguments: dict[str, CustomFacetArgumentSpec]
     created_at: datetime
     modified_at: datetime
     __client: Client = PrivateAttr()
+
+    @field_validator("arguments", mode="before")
+    @classmethod
+    def validate_arguments(cls, v: list[dict]) -> dict[str, CustomFacetArgumentSpec]:
+        return {
+            argument["name"]: CustomFacetArgumentSpec.model_validate(argument)
+            for argument in v
+        }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], client: Client) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         facet_types = FacetTypes.from_dict(client.component.get_facet_specs())
         facet_type = facet_types.find_by_uid(uid=data["facet_uid"])
-        self = cls.model_validate({**data, "facet_spec": facet_type})
+        self = cls.model_validate({**data, "facet_type": facet_type})
         self.__client = client
         return self
+
+    """
+    Operations on Custom Facet
+    """
+
+    def rename(self, name: str) -> Self:
+        """
+        Rename the custom facet.
+
+        Parameters
+        ----------
+        name : str
+            The new name for the custom facet.
+
+        Returns
+        -------
+        Self
+            The CustomFacet instance with the name set.
+        """
+        self.__client.component.edit_custom_facet(
+            custom_facet_id=self.custom_facet_id,
+            chain_group=self.facet_type.facet_info.chain_group,
+            name=name,
+        )
+        self.name = name
+        return self
+
+    def update_description(self, description: str) -> Self:
+        """
+        Update the description for the custom facet.
+
+        Parameters
+        ----------
+        description : str
+            The new description for the custom facet.
+
+        Returns
+        -------
+        Self
+            The CustomFacet instance with the new description.
+        """
+        self.__client.component.edit_custom_facet(
+            custom_facet_id=self.custom_facet_id,
+            chain_group=self.facet_type.facet_info.chain_group,
+            description=description,
+        )
+        self.description = description
+        return self
+
+    def update_script(
+        self,
+        script: str | Path,
+        *,
+        requirements: list[str] | Path | None = None,
+        system_access: bool = False,
+        arguments: dict[str, str | int | float | bool] | None = None,
+    ) -> Self:
+        """
+        Update the script and related dependencies for the custom facet
+
+        You can specify the script and any PyPI libraries,
+        as well as the arguments that are required to run the script.
+        By default, the script has limited access to filesystem and environment,
+        but you can request for more access to the environment, filesystem, and syscalls
+        by setting the system_access flag to True.
+
+        Note
+        -----
+        The user must have rootkit access to request system access.
+
+        Parameters
+        ----------
+        script : str | Path
+            The draft script for the custom facet.
+            Can either be the text of the script or
+            a path to a file containing the script.
+
+        requirements : list[str] | Path | None
+            The requirements for the custom facet.
+            Can either be a path to a file containing the requirements in pip format,
+            or be a list of strings each representing a single requirement.
+
+        system_access : bool, optional
+            Whether to grant system access to the custom facet, by default False.
+            If True, the custom facet will have unrestricted access to the
+            python environment and libraries.
+            Creating a custom facet with system access will fail if
+            the user does not have rootkit access.
+
+        arguments : dict[str, str | int | float | bool]
+            The arguments for the custom facet script and their default values.
+
+        Returns
+        -------
+        Self
+            The updated CustomFacet instance.
+        """
+        if isinstance(script, Path):
+            with script.open("r") as fp:
+                script = fp.read()
+        script = textwrap.dedent(script)
+        # Validate the script syntax againt ikigai platform's python version
+        # IPLT-11330: See if we can avoid hardcoding the python version
+        ast.parse(script, feature_version=(3, 10))
+
+        if requirements is None:
+            requirements = []
+        if isinstance(requirements, Path):
+            with requirements.open("r") as fp:
+                requirements = fp.readlines()
+
+        if arguments is None:
+            arguments = {}
+        new_arguments = {
+            name: CustomFacetArgumentSpec(
+                name=name,
+                argument_type=CustomFacetArgumentType.from_value(value),
+                value=value,
+            )
+            for name, value in arguments.items()
+        }
+
+        # If rootkit is required, generate it from the script
+        rootkit_token = (
+            self.__client.access.generate_rootkit_token(script=script)
+            if system_access
+            else ""
+        )
+
+        # Update the custom facet
+        arguments_list = [argument.to_dict() for argument in new_arguments.values()]
+
+        self.__client.component.edit_custom_facet(
+            custom_facet_id=self.custom_facet_id,
+            chain_group=self.facet_type.facet_info.chain_group,
+            python_script=script,
+            libraries=requirements,
+            rootkit_token=rootkit_token,
+            arguments=arguments_list,
+        )
+
+        self.arguments = new_arguments
+        return self
+
+    def describe(self) -> datax.CustomFacetDict:
+        return self.__client.component.get_custom_facet(
+            custom_facet_id=self.custom_facet_id
+        )
+
+    def delete(self) -> None:
+        self.__client.component.delete_custom_facet(
+            custom_facet_id=self.custom_facet_id
+        )
+        return None
 
     def versions(self) -> NamedMapping[CustomFacetVersion]:
         version_dicts = self.__client.component.get_custom_facet_versions(
@@ -267,7 +435,7 @@ class CustomFacet(BaseModel):
             version.version_id: version
             for version in (
                 CustomFacetVersion.from_dict(
-                    data=version_dict, facet_type=self.facet_spec, client=self.__client
+                    data=version_dict, facet_type=self.facet_type, client=self.__client
                 )
                 for version_dict in version_dicts
             )
@@ -280,9 +448,9 @@ class CustomFacet(BaseModel):
                 "version": "",
                 "version_id": "",
                 "custom_facet_id": self.custom_facet_id,
-                "arguments": [],
+                "arguments": self.arguments,
             },
-            facet_type=self.facet_spec,
+            facet_type=self.facet_type,
             client=self.__client,
         )
 
@@ -307,7 +475,8 @@ class CustomFacetBrowser(ComponentBrowser[CustomFacet]):
         return NamedMapping(custom_facets)
 
     def __getitem__(self, name: str) -> CustomFacet:
-        custom_facet_dict = self.__client.component.get_custom_facet_by_name(name)
+        custom_facet_dict = self.__client.component.get_custom_facet_by_name(name=name)
+
         return CustomFacet.from_dict(data=custom_facet_dict, client=self.__client)
 
     def search(self, query: str) -> NamedMapping[CustomFacet]:
@@ -327,9 +496,26 @@ class CustomFacetVersion(BaseModel):
     name: str = Field(validation_alias=AliasChoices("name", "version"))
     version_id: str
     custom_facet_id: str
-    arguments: NamedMapping[CustomFacetArgumentSpec]
+    arguments: dict[str, CustomFacetArgumentSpec]
     __facet_type: CustomFacetType = PrivateAttr()
     __client: Client = PrivateAttr()
+
+    @field_validator("arguments", mode="before")
+    @classmethod
+    def validate_arguments(
+        cls, v: list[dict] | dict[str, CustomFacetArgumentSpec]
+    ) -> dict[str, CustomFacetArgumentSpec]:
+        if isinstance(v, dict):
+            return v
+
+        if not isinstance(v, list):
+            error_msg = "Expected a list of argument dictionaries"
+            raise ValueError(error_msg)
+
+        return {
+            argument["name"]: CustomFacetArgumentSpec.model_validate(argument)
+            for argument in v
+        }
 
     @classmethod
     def from_dict(

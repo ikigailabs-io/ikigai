@@ -261,6 +261,55 @@ class ComponentAPI:
 
         return cast(list[CustomFacetDict], custom_facet_dicts)
 
+    def edit_custom_facet(
+        self,
+        custom_facet_id: str,
+        chain_group: str,
+        name: str | MissingType = MISSING,
+        description: str | MissingType = MISSING,
+        tags: list[str] | MissingType = MISSING,
+        python_script: str | MissingType = MISSING,
+        libraries: list[str] | MissingType = MISSING,
+        rootkit_token: str | MissingType = MISSING,
+        arguments: list[CustomFacetArgumentDict] | MissingType = MISSING,
+    ) -> str:
+        custom_facet: dict[str, Any] = {
+            "custom_facet_id": custom_facet_id,
+            "chain_group": chain_group,
+        }
+
+        if name is not MISSING:
+            custom_facet["name"] = name
+        if description is not MISSING:
+            custom_facet["description"] = description
+        if tags is not MISSING:
+            custom_facet["tags"] = tags
+        if python_script is not MISSING:
+            custom_facet["python_script"] = python_script
+        if libraries is not MISSING:
+            custom_facet["libraries"] = libraries
+        if rootkit_token is not MISSING:
+            custom_facet["rootkit_token"] = rootkit_token
+        if arguments is not MISSING:
+            custom_facet["arguments"] = arguments
+
+        resp = self.__session.post(
+            path="/component/edit-custom-facet",
+            json={
+                "custom_facet": custom_facet,
+                "save_as_version": False,
+            },
+        ).json()
+
+        return resp["custom_facet_id"]
+
+    def delete_custom_facet(self, custom_facet_id: str) -> None:
+        self.__session.post(
+            path="/component/delete-custom-facet",
+            json={"custom_facet": {"custom_facet_id": custom_facet_id}},
+        ).json()
+        return None
+
     """
     Custom Facet Version APIs
     """

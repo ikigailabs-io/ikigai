@@ -32,16 +32,22 @@ class CustomFacetArgumentType(StrEnum):
         type_name = type(value).__name__
         return cls(type_name)
 
+    @property
+    def python_type(self) -> type[bool | int | str | float]:
+        return {
+            CustomFacetArgumentType.BOOLEAN: bool,
+            CustomFacetArgumentType.INTEGER: int,
+            CustomFacetArgumentType.STRING: str,
+            CustomFacetArgumentType.FLOAT: float,
+        }[self]
+
     def to_facet_argument_type(self) -> FacetArgumentType:
-        match self:
-            case CustomFacetArgumentType.BOOLEAN:
-                return FacetArgumentType.BOOLEAN
-            case CustomFacetArgumentType.INTEGER:
-                return FacetArgumentType.NUMBER
-            case CustomFacetArgumentType.STRING:
-                return FacetArgumentType.TEXT
-            case CustomFacetArgumentType.FLOAT:
-                return FacetArgumentType.NUMBER
+        return {
+            CustomFacetArgumentType.BOOLEAN: FacetArgumentType.BOOLEAN,
+            CustomFacetArgumentType.INTEGER: FacetArgumentType.NUMBER,
+            CustomFacetArgumentType.STRING: FacetArgumentType.TEXT,
+            CustomFacetArgumentType.FLOAT: FacetArgumentType.NUMBER,
+        }[self]
 
 
 # -------------------------------------------------------------------------------------

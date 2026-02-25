@@ -160,6 +160,11 @@ def df_ml_classification1(faker: Faker) -> pd.DataFrame:
 
 
 @pytest.fixture()
+def custom_facet_name(random_name: str) -> str:
+    return f"custom-facet-{random_name}"
+
+
+@pytest.fixture()
 def dataset_name(random_name: str) -> str:
     return f"dats-{random_name}"
 

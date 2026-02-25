@@ -11,6 +11,7 @@ from typing import Any, cast, override
 from pydantic import BaseModel, ConfigDict, Field
 
 from ikigai.client import datax
+from ikigai.components.custom_facet import CustomFacetVersion
 from ikigai.specs import CustomFacetType, FacetType
 from ikigai.specs import SubModelSpec as ModelType
 from ikigai.utils import FacetArgumentType
@@ -223,6 +224,9 @@ class FacetBuilder:
         self._arguments = merge_dicts(self._arguments, arguments)
         return self
 
+    def _build_arguments(self) -> dict[str, Any]:
+        return self._arguments
+
     def _build(self, facet_id: str) -> tuple[Facet, list[Arrow]]:
         if self.__facet is not None:
             if self.__arrows is None:
@@ -237,7 +241,7 @@ class FacetBuilder:
             facet_id=facet_id,
             facet_uid=self._facet_type.facet_uid,
             name=self.__name,
-            arguments=self._arguments,
+            arguments=self._build_arguments(),
         )
 
         self.__arrows = [
@@ -258,15 +262,17 @@ class CustomFacetFacetBuilder(FacetBuilder):
     def __init__(
         self,
         builder: FlowDefinitionBuilder,
-        facet_type: CustomFacetType,
+        custom_facet_version: CustomFacetVersion,
         name: str = "",
     ) -> None:
-        super().__init__(builder=builder, facet_type=facet_type, name=name)
-        self.__custom_facet_type = facet_type
+        super().__init__(
+            builder=builder, facet_type=custom_facet_version.facet_type, name=name
+        )
+        self.__custom_facet_type = custom_facet_version.facet_type
         self._custom_facet_arguments = {}
         super().arguments(
-            custom_facet_id=facet_type.custom_facet_id,
-            version_id=facet_type.version_id,
+            custom_facet_id=custom_facet_version.custom_facet_id,
+            version_id=custom_facet_version.version_id,
         )
 
     @override
@@ -310,16 +316,7 @@ class CustomFacetFacetBuilder(FacetBuilder):
         return self
 
     @override
-    def _build(self, facet_id: str) -> tuple[Facet, list[Arrow]]:
-        if self.__facet is not None:
-            if self.__arrows is None:
-                error_msg = (
-                    "Facet built but arrows missing, this should not happen. "
-                    "Please report a bug."
-                )
-                raise RuntimeError(error_msg)
-            return self.__facet, self.__arrows
-
+    def _build_arguments(self) -> dict[str, Any]:
         custom_facet_arguments = [
             {
                 "name": name,
@@ -333,20 +330,10 @@ class CustomFacetFacetBuilder(FacetBuilder):
             for name, value in self._custom_facet_arguments.items()
         ]
 
-        self.__facet = Facet(
-            facet_id=facet_id,
-            facet_uid=self._facet_type.facet_uid,
-            name=self.__name,
-            arguments={
-                **(self._arguments),
-                "arguments": custom_facet_arguments,
-            },
-        )
-
-        self.__arrows = [
-            arrow_builder._build() for arrow_builder in self.__arrow_builders
-        ]
-        return self.__facet, self.__arrows
+        return {
+            **(self._arguments),
+            "arguments": custom_facet_arguments,
+        }
 
 
 class ModelFacetBuilder(FacetBuilder):
@@ -482,6 +469,20 @@ class FlowDefinitionBuilder:
         ).arguments(**args)
         self._facets.append(facet_builder)
         return facet_builder
+
+    def custom_facet(
+        self,
+        custom_facet_version: CustomFacetVersion,
+        name: str = "",
+        args: dict[str, Any] | None = None,
+    ) -> CustomFacetFacetBuilder:
+        if args is None:
+            args = {}
+        custom_facet_builder = CustomFacetFacetBuilder(
+            builder=self, custom_facet_version=custom_facet_version, name=name
+        ).arguments(**args)
+        self._facets.append(custom_facet_builder)
+        return custom_facet_builder
 
     def model_facet(
         self,

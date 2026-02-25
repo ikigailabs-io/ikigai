@@ -10,15 +10,17 @@ from itertools import chain
 from typing import Any
 
 from pydantic import (
+    AliasChoices,
     BaseModel,
     ConfigDict,
+    Field,
     RootModel,
     field_validator,
     model_validator,
 )
 
 from ikigai.client import datax
-from ikigai.typing import Helpful, NamedMapping
+from ikigai.typing import Helpful
 from ikigai.typing.pydantic_extensions import LowercaseStr
 from ikigai.utils import CustomFacetArgumentType, FacetArgumentType
 from ikigai.utils.compatibility import Self, override
@@ -154,8 +156,9 @@ class ArgumentSpec(BaseModel, Helpful):
 
 class FacetInfo(BaseModel):
     facet_uid: str
-    facet_type: str
+    chain_group: str
     facet_group: str
+    facet_type: str
 
 
 class FacetType(BaseModel, Helpful):
@@ -173,7 +176,12 @@ class FacetType(BaseModel, Helpful):
         "facet_arguments", "in_arrow_arguments", "out_arrow_arguments", mode="before"
     )
     @classmethod
-    def validate_arguments(cls, v: list[dict]) -> dict[str, ArgumentSpec]:
+    def validate_arguments(
+        cls, v: list[dict] | dict[str, ArgumentSpec]
+    ) -> dict[str, ArgumentSpec]:
+        if isinstance(v, dict):
+            return v
+
         if not isinstance(v, list):
             error_msg = "Expected a list of argument dictionaries"
             raise ValueError(error_msg)
@@ -337,14 +345,21 @@ class FacetTypes(BaseModel, Helpful):
 
 class CustomFacetArgumentSpec(BaseModel):
     name: str
-    argument_type: CustomFacetArgumentType
+    argument_type: CustomFacetArgumentType = Field(
+        validation_alias=AliasChoices("type", "argument_type"),
+    )
     value: str | int | float | bool
+
+    @model_validator(mode="after")
+    def validate_value(self) -> Self:
+        self.value = self.argument_type.python_type(self.value)
+        return self
 
     def to_dict(self) -> datax.CustomFacetArgumentDict:
         return {
             "name": self.name,
-            "argument_type": self.argument_type.value,
-            "value": self.value,
+            "type": self.argument_type.value,
+            "value": str(self.value),
         }
 
 
@@ -359,7 +374,7 @@ class CustomFacetType(FacetType):
         facet_type: FacetType,
         custom_facet_id: str,
         version_id: str,
-        custom_facet_argument_specs: NamedMapping[CustomFacetArgumentSpec],
+        custom_facet_argument_specs: dict[str, CustomFacetArgumentSpec],
     ) -> Self:
         return cls.model_validate(
             {
