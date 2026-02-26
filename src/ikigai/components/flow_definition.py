@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Any, cast, override
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -15,7 +15,7 @@ from ikigai.components.custom_facet import CustomFacetVersion
 from ikigai.specs import CustomFacetType, FacetType
 from ikigai.specs import SubModelSpec as ModelType
 from ikigai.utils import FacetArgumentType
-from ikigai.utils.compatibility import Self
+from ikigai.utils.compatibility import Self, override
 from ikigai.utils.data_structures import merge_dicts
 
 logger = logging.getLogger("ikigai.components")
