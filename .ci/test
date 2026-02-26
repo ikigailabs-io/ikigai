@@ -56,9 +56,10 @@ pipeline {
                     stage('Run Tests') {
                         steps{
                             script {
+                                def CREDENTIALS_ID = "PCL-test-env-${PCL_TEST_ENV}"
                                 def REPORTS_DIRECTORY = "reports/${PYTHON_VERSION}"
                                 sh "mkdir -p ${REPORTS_DIRECTORY}"
-                                withCredentials([file(credentialsId: 'PCL-test-env-first-prod', variable: 'TEST_ENV_FILE_PATH')]) {
+                                withCredentials([file(credentialsId: CREDENTIALS_ID, variable: 'TEST_ENV_FILE_PATH')]) {
                                     sh "mv ${TEST_ENV_FILE_PATH} test-env.toml"
 
                                     sh """
