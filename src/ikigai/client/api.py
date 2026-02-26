@@ -314,14 +314,54 @@ class ComponentAPI:
     Custom Facet Version APIs
     """
 
+    def get_custom_facet_version(
+        self, custom_facet_id: str, version_id: str
+    ) -> CustomFacetVersionDict:
+        resp = self.__session.get(
+            path="/component/get-version-for-custom-facet",
+            params={"custom_facet_id": custom_facet_id, "version_id": version_id},
+        ).json()
+        return cast(CustomFacetVersionDict, resp["custom_facet_version"])
+
     def get_custom_facet_versions(
         self, custom_facet_id: str
     ) -> list[CustomFacetVersionDict]:
         custom_facet_version_dicts = self.__session.get(
-            path="/component/get-custom-facet-versions",
+            path="/component/get-versions-for-custom-facet",
             params={"custom_facet_id": custom_facet_id},
         ).json()["versions"]
         return cast(list[CustomFacetVersionDict], custom_facet_version_dicts)
+
+    def create_custom_facet_version(
+        self,
+        custom_facet_id: str,
+        version: str,
+        description: str,
+        python_script: str,
+        libraries: list[str],
+        rootkit_token: str,
+        arguments: list[CustomFacetArgumentDict],
+    ) -> str:
+        response = self.__session.post(
+            path="/component/edit-custom-facet",
+            json={
+                "save_as_version": True,
+                "custom_facet_version": {
+                    "custom_facet_id": custom_facet_id,
+                    "version": version,
+                    "python_script": python_script,
+                    "libraries": libraries,
+                    "rootkit_token": rootkit_token,
+                    "arguments": arguments,
+                    "description": description,
+                },
+            },
+        ).json()
+
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return response["version_id"]
 
     """
     Dataset APIs

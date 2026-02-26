@@ -5,7 +5,6 @@
 
 from contextlib import ExitStack
 
-import pandas as pd
 import pytest
 
 from ikigai import FlowStatus, Ikigai
@@ -50,7 +49,7 @@ def test_custom_facet_editing(
     facet_types = ikigai.facet_types
     custom_facet = (
         ikigai.custom_facet.new(
-            name=custom_facet_name, facet_type=facet_types.INPUT.CUSTOM_FACET
+            name=custom_facet_name, facet_type=facet_types.MID.CUSTOM_FACET
         )
         .script(script="result = data  # no-op", arguments={"input": "input-1"})
         .build()
@@ -81,7 +80,7 @@ def test_custom_facet_editing(
     assert (
         custom_facet_after_edit.facet_type
         == custom_facet.facet_type
-        == facet_types.INPUT.CUSTOM_FACET
+        == facet_types.MID.CUSTOM_FACET
     )
 
     assert custom_facet_after_edit.arguments == custom_facet.arguments
@@ -95,8 +94,6 @@ def test_custom_facet_unpinned_version_run(
     custom_facet_name: str,
     app_name: str,
     flow_name: str,
-    dataset_name: str,
-    df1: pd.DataFrame,
     cleanup: ExitStack,
 ) -> None:
     app = (
@@ -157,3 +154,128 @@ def test_custom_facet_unpinned_version_run(
     assert len(output_data) > 1
     assert output_data["col1"].tolist() == list(range(10))
     assert output_data["col2"].tolist() == [2] * 10
+
+
+def test_custom_facet_version_creation(
+    ikigai: Ikigai,
+    custom_facet_name: str,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = (
+        ikigai.app.new(name=app_name)
+        .description("App to test custom facet version creation")
+        .build()
+    )
+    cleanup.callback(app.delete)
+
+    facet_types = ikigai.facet_types
+    custom_facet = (
+        ikigai.custom_facet.new(
+            name=custom_facet_name, facet_type=facet_types.INPUT.CUSTOM_FACET
+        )
+        .script(script="data = data  # bad-script")
+        .build()
+    )
+    cleanup.callback(custom_facet.delete)
+
+    unpinned_version = custom_facet.unpinned()
+
+    # Create a flow with the unpinned version, try running it to see if it fails
+    flow_definition_unpinned = (
+        ikigai.builder.custom_facet(custom_facet_version=unpinned_version)
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(
+            dataset_name=f"output-{flow_name}-unpinned", file_type="csv", header=True
+        )
+        .build()
+    )
+    flow_unpinned = (
+        app.flow.new(name=f"{flow_name}-unpinned")
+        .definition(definition=flow_definition_unpinned)
+        .build()
+    )
+    cleanup.callback(flow_unpinned.delete)
+
+    log_unpinned_1 = flow_unpinned.run()
+    assert log_unpinned_1.status == FlowStatus.FAILED, log_unpinned_1.data
+    assert log_unpinned_1.erroneous_facet_id, log_unpinned_1
+    assert log_unpinned_1.data, log_unpinned_1
+
+    # Create a version 1 of the custom facet
+    version_1 = custom_facet.create_version(name="version-1")
+
+    # Create a flow with the version 1, try running it to see if it fails
+    flow_definition_1 = (
+        ikigai.builder.custom_facet(custom_facet_version=version_1)
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(dataset_name=f"output-{flow_name}-1", file_type="csv", header=True)
+        .build()
+    )
+    flow_1 = (
+        app.flow.new(name=f"{flow_name}-1")
+        .definition(definition=flow_definition_1)
+        .build()
+    )
+
+    log_1 = flow_1.run()
+    assert log_1.status == FlowStatus.FAILED, log_1.data
+    assert log_1.erroneous_facet_id, log_1
+    assert log_1.data, log_1
+
+    # Unpinned version should still fail
+    log_unpinned_2 = flow_unpinned.run()
+    assert log_unpinned_2.status == FlowStatus.FAILED, log_unpinned_2.data
+    assert log_unpinned_2.erroneous_facet_id, log_unpinned_2
+    assert log_unpinned_2.data, log_unpinned_2
+
+    # Update the custom facet script to fix the error
+    custom_facet.update_script(
+        script="""
+        import numpy as np
+        import pandas as pd
+
+        # Create a dummy dataframe
+        df = pd.DataFrame({
+            "col1": np.arange(10),
+            "col2": [1] * 10,
+        })
+
+        # Output the dummy dataframe
+        result = df
+        """
+    )
+
+    # Unpinned version should still fail since latest version is still bad
+    log_unpinned_3 = flow_unpinned.run()
+    assert log_unpinned_3.status == FlowStatus.FAILED, log_unpinned_3.data
+    assert log_unpinned_3.erroneous_facet_id, log_unpinned_3
+    assert log_unpinned_3.data, log_unpinned_3
+
+    # Create a version 2 of the custom facet
+    version_2 = custom_facet.create_version(name="version-2")
+
+    # Create a flow with the version 2, try running it to see if it succeeds
+    flow_definition_2 = (
+        ikigai.builder.custom_facet(custom_facet_version=version_2)
+        .facet(facet_type=facet_types.OUTPUT.EXPORTED, name="output")
+        .arguments(dataset_name=f"output-{flow_name}-2", file_type="csv", header=True)
+        .build()
+    )
+    flow_2 = (
+        app.flow.new(name=f"{flow_name}-2")
+        .definition(definition=flow_definition_2)
+        .build()
+    )
+
+    log_2 = flow_2.run()
+    assert log_2.status == FlowStatus.SUCCESS, log_2.data
+    assert log_2.erroneous_facet_id is None, log_2
+    assert not log_2.data
+
+    # Unpinned version should now succeed
+    log_unpinned_4 = flow_unpinned.run()
+    assert log_unpinned_4.status == FlowStatus.SUCCESS, log_unpinned_4.data
+    assert log_unpinned_4.erroneous_facet_id is None, log_unpinned_4
+    assert not log_unpinned_4.data

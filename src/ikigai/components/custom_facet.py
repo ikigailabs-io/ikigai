@@ -251,6 +251,11 @@ class CustomFacet(BaseModel):
     name: str
     facet_type: FacetType
     description: str
+    script: str = Field(validation_alias=AliasChoices("script", "python_script"))
+    requirements: list[str] = Field(
+        validation_alias=AliasChoices("requirements", "libraries")
+    )
+    rootkit_token: str
     arguments: dict[str, CustomFacetArgumentSpec]
     created_at: datetime
     modified_at: datetime
@@ -413,6 +418,9 @@ class CustomFacet(BaseModel):
             arguments=arguments_list,
         )
 
+        self.script = script
+        self.requirements = requirements
+        self.rootkit_token = rootkit_token
         self.arguments = new_arguments
         return self
 
@@ -426,6 +434,30 @@ class CustomFacet(BaseModel):
             custom_facet_id=self.custom_facet_id
         )
         return None
+
+    def create_version(self, name: str) -> CustomFacetVersion:
+        arguments_list = [argument.to_dict() for argument in self.arguments.values()]
+
+        custom_facet_version_id = self.__client.component.create_custom_facet_version(
+            custom_facet_id=self.custom_facet_id,
+            version=name,
+            description=self.description,
+            python_script=self.script,
+            libraries=self.requirements,
+            rootkit_token=self.rootkit_token,
+            arguments=arguments_list,
+        )
+
+        custom_facet_version_dict = self.__client.component.get_custom_facet_version(
+            custom_facet_id=self.custom_facet_id,
+            version_id=custom_facet_version_id,
+        )
+
+        return CustomFacetVersion.from_dict(
+            data=custom_facet_version_dict,
+            facet_type=self.facet_type,
+            client=self.__client,
+        )
 
     def versions(self) -> NamedMapping[CustomFacetVersion]:
         version_dicts = self.__client.component.get_custom_facet_versions(

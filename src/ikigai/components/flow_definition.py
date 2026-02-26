@@ -265,6 +265,13 @@ class CustomFacetFacetBuilder(FacetBuilder):
         custom_facet_version: CustomFacetVersion,
         name: str = "",
     ) -> None:
+        if custom_facet_version.version_id == "":
+            logger.warning(
+                "Creating an unpinned custom facet, the flow may fail to run if the "
+                "custom facet script's input/output format or arguments change. Prefer "
+                "using a pinned version instead."
+            )
+
         super().__init__(
             builder=builder, facet_type=custom_facet_version.facet_type, name=name
         )
