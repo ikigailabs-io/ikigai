@@ -71,6 +71,20 @@ class FacetBuilder:
             facet_type=facet_type, name=name, args=args
         ).add_arrow(self, **arrow_args)
 
+    def custom_facet(
+        self,
+        custom_facet_version: CustomFacetVersion,
+        name: str = "",
+        args: dict[str, Any] | None = None,
+        arrow_args: dict[str, Any] | None = None,
+    ) -> CustomFacetFacetBuilder:
+        if arrow_args is None:
+            arrow_args = {}
+
+        return self._builder.custom_facet(
+            custom_facet_version=custom_facet_version, name=name, args=args
+        ).add_arrow(self, **arrow_args)
+
     def model_facet(
         self,
         facet_type: FacetType,
