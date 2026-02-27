@@ -304,18 +304,22 @@ class CustomFacetAccess(BaseModel):
         """
         Revoke access to the Custom Facet.
 
-        Note
-        -----
+        Parameters
+        ----------
 
-        Ikigai does not support revoking access to a custom facet.
-        Please file a feature request if you need this.
+        email: EmailStr
+            Email address of the user to revoke access from.
 
+        Returns
+        -------
+        Self
+            Access manager for the Custom Facet.
         """
-        error_msg = (
-            "Revoking access to a custom facet is not supported, please file a feature "
-            "request if you need this"
+        self.__client.component.revoke_custom_facet_access(
+            custom_facet_id=self.__custom_facet_id,
+            email=email,
         )
-        raise NotImplementedError(error_msg)
+        return self
 
 
 class CustomFacet(BaseModel):

@@ -393,6 +393,17 @@ class ComponentAPI:
         ).json()
         return cast(str, resp["custom_facet_id"])
 
+    def revoke_custom_facet_access(self, custom_facet_id: str, email: str) -> str:
+        resp = self.__session.post(
+            path="/component/edit-custom-facet-access-level",
+            json={
+                "custom_facet": {"custom_facet_id": custom_facet_id},
+                "user": {"email": email},
+                "access_level": "NO_ACCESS",
+            },
+        ).json()
+        return cast(str, resp["custom_facet_id"])
+
     """
     Dataset APIs
     """
