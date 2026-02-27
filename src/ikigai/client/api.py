@@ -326,10 +326,14 @@ class ComponentAPI:
     def get_custom_facet_versions(
         self, custom_facet_id: str
     ) -> list[CustomFacetVersionDict]:
-        custom_facet_version_dicts = self.__session.get(
+        response = self.__session.get(
             path="/component/get-versions-for-custom-facet",
             params={"custom_facet_id": custom_facet_id},
-        ).json()["versions"]
+        ).json()
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        custom_facet_version_dicts = response["custom_facet_versions"]
         return cast(list[CustomFacetVersionDict], custom_facet_version_dicts)
 
     def create_custom_facet_version(
