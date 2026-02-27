@@ -42,7 +42,6 @@ class CustomFacetBuilder:
     _description: str
     _script: str
     _requirements: list[str]
-    _tags: list[str]
     _system_access: bool
     _arguments: dict[str, CustomFacetArgumentSpec]
     __client: Client
@@ -66,7 +65,6 @@ class CustomFacetBuilder:
         self._description = ""
         self._script = ""
         self._requirements = []
-        self._tags = []
         self._system_access = False
         self._arguments = {}
 
@@ -90,23 +88,6 @@ class CustomFacetBuilder:
             The CustomFacetBuilder instance with the description set.
         """
         self._description = description
-        return self
-
-    def tags(self, tags: list[str]) -> Self:
-        """
-        Specify the tags for the custom facet.
-
-        Parameters
-        ----------
-        tags : list[str]
-            The tags for the custom facet.
-
-        Returns
-        -------
-        Self
-            The CustomFacetBuilder instance with the tags set.
-        """
-        self._tags = tags
         return self
 
     def script(
@@ -241,7 +222,7 @@ class CustomFacetBuilder:
             name=self._name,
             chain_group=self._facet_type.facet_info.chain_group,
             description=self._description,
-            tags=self._tags,
+            tags=[],
             python_script=self._script,
             libraries=self._requirements,
             rootkit_token=rootkit_token,
@@ -580,12 +561,38 @@ class CustomFacet(BaseModel):
         return NamedMapping(versions)
 
     def unpinned(self) -> CustomFacetVersion:
+        latest_version = next(
+            iter(
+                sorted(
+                    self.versions().values(), key=lambda x: x.created_at, reverse=True
+                )
+            ),
+            None,
+        )
+
+        description = latest_version.description if latest_version else self.description
+        arguments = [
+            argument.to_dict()
+            for argument in (
+                latest_version.arguments if latest_version else self.arguments
+            ).values()
+        ]
+        created_at = str(
+            int(
+                (
+                    latest_version.created_at if latest_version else self.created_at
+                ).timestamp()
+            )
+        )
+
         return CustomFacetVersion.from_dict(
             data={
                 "version": "",
                 "version_id": "",
                 "custom_facet_id": self.custom_facet_id,
-                "arguments": self.arguments,
+                "description": description,
+                "arguments": arguments,
+                "created_at": created_at,
             },
             facet_type=self.facet_type,
             client=self.__client,
@@ -633,18 +640,15 @@ class CustomFacetVersion(BaseModel):
     name: str = Field(validation_alias=AliasChoices("name", "version"))
     version_id: str
     custom_facet_id: str
+    description: str
     arguments: dict[str, CustomFacetArgumentSpec]
+    created_at: datetime
     __facet_type: CustomFacetType = PrivateAttr()
     __client: Client = PrivateAttr()
 
     @field_validator("arguments", mode="before")
     @classmethod
-    def validate_arguments(
-        cls, v: list[dict] | dict[str, CustomFacetArgumentSpec]
-    ) -> dict[str, CustomFacetArgumentSpec]:
-        if isinstance(v, dict):
-            return v
-
+    def validate_arguments(cls, v: list[dict]) -> dict[str, CustomFacetArgumentSpec]:
         if not isinstance(v, list):
             error_msg = "Expected a list of argument dictionaries"
             raise ValueError(error_msg)
@@ -656,7 +660,7 @@ class CustomFacetVersion(BaseModel):
 
     @classmethod
     def from_dict(
-        cls, data: Mapping[str, Any], facet_type: FacetType, client: Client
+        cls, data: datax.CustomFacetVersionDict, facet_type: FacetType, client: Client
     ) -> Self:
         logger.debug("Creating a %s from %s", cls.__name__, data)
         self = cls.model_validate(data)

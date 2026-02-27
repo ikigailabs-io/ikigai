@@ -76,6 +76,7 @@ class CustomFacetVersionDict(TypedDict):
     version: str
     version_id: str
     custom_facet_id: str
+    description: str
     arguments: list[CustomFacetArgumentDict]
     created_at: str
 

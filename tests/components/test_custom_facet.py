@@ -4,13 +4,14 @@
 
 
 from contextlib import ExitStack
+from pathlib import Path
 
 import pytest
 
 from ikigai import FlowStatus, Ikigai
 
 
-def test_custom_facet_creation(
+def test_custom_facet_creation_1(
     ikigai: Ikigai,
     custom_facet_name: str,
     cleanup: ExitStack,
@@ -41,6 +42,79 @@ def test_custom_facet_creation(
     assert input_argument.value == "input-1"
 
 
+def test_custom_facet_creation_2(
+    ikigai: Ikigai,
+    custom_facet_name: str,
+    tmp_path: Path,
+    cleanup: ExitStack,
+) -> None:
+    requirements_file = tmp_path / "requirements.txt"
+    requirements_file.write_text("ikigai\npandas==1.5.2\n")
+
+    script_file = tmp_path / "script.py"
+    script_file.write_text(
+        """
+        import ikigai
+
+        result = data  # no-op
+        """
+    )
+
+    # Also test system_access flag but only for pre-setup user
+    system_access = ikigai.user_email == "harsh+github-ci@ikigailabs.io"
+
+    facet_types = ikigai.facet_types
+    custom_facet = (
+        ikigai.custom_facet.new(
+            name=custom_facet_name, facet_type=facet_types.MID.CUSTOM_FACET
+        )
+        .script(
+            script_file, requirements=requirements_file, system_access=system_access
+        )
+        .description("A test custom facet")
+        .build()
+    )
+    cleanup.callback(custom_facet.delete)
+
+    assert custom_facet.name == custom_facet_name
+
+
+def test_custom_facet_creation_browsing(
+    ikigai: Ikigai,
+    custom_facet_name: str,
+    custom_facet_name_2: str,
+    custom_facet_name_3: str,
+    cleanup: ExitStack,
+) -> None:
+    facet_types = ikigai.facet_types
+    custom_facet_1 = ikigai.custom_facet.new(
+        name=custom_facet_name, facet_type=facet_types.MID.CUSTOM_FACET
+    ).build()
+    cleanup.callback(custom_facet_1.delete)
+
+    custom_facet_2 = (
+        ikigai.custom_facet.new(
+            name=custom_facet_name_2, facet_type=facet_types.MID.CUSTOM_FACET
+        )
+        .script(script="result = data  # no-op")
+        .build()
+    )
+    cleanup.callback(custom_facet_2.delete)
+
+    custom_facet_3 = (
+        ikigai.custom_facet.new(
+            name=custom_facet_name_3, facet_type=facet_types.MID.CUSTOM_FACET
+        )
+        .script(script="result = data  # no-op")
+        .build()
+    )
+    cleanup.callback(custom_facet_3.delete)
+
+    assert custom_facet_1 in ikigai.custom_facets.search(custom_facet_name)
+    assert custom_facet_2 in ikigai.custom_facets.search(custom_facet_name_2)
+    assert custom_facet_3 in ikigai.custom_facets.search(custom_facet_name_3)
+
+
 def test_custom_facet_editing(
     ikigai: Ikigai,
     custom_facet_name: str,
@@ -52,15 +126,18 @@ def test_custom_facet_editing(
             name=custom_facet_name, facet_type=facet_types.MID.CUSTOM_FACET
         )
         .script(script="result = data  # no-op", arguments={"input": "input-1"})
+        .description("A custom facet for testing editing operations")
         .build()
     )
     cleanup.callback(custom_facet.delete)
 
-    custom_facet.rename(name=f"updated-{custom_facet_name}")
-    custom_facet.update_description(description="An updated test custom facet")
-    custom_facet.update_script(
-        script="result = data  # no-op",
-        arguments={"updated-input": "input-2"},
+    (
+        custom_facet.rename(name=f"updated-{custom_facet_name}")
+        .update_description(description="An updated test custom facet")
+        .update_script(
+            script="result = data  # no-op",
+            arguments={"updated-input": "input-2"},
+        )
     )
 
     # Check the custom facet after editing -- we should get the same custom facet back
