@@ -36,7 +36,7 @@ from ikigai.client.datax import (
 )
 from ikigai.client.session import Session
 from ikigai.typing import Directory, ModelType, NamedDirectoryDict
-from ikigai.utils import AppAccessLevel
+from ikigai.utils import AppAccessLevel, CustomFacetAccessLevel
 from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.client.api")
@@ -362,6 +362,32 @@ class ComponentAPI:
             logger.warning(warning)
 
         return response["version_id"]
+
+    def grant_custom_facet_access(
+        self, custom_facet_id: str, email: str, access_level: CustomFacetAccessLevel
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/share-custom-facet",
+            json={
+                "custom_facet": {"custom_facet_id": custom_facet_id},
+                "user": {"email": email},
+                "access_level": access_level,
+            },
+        ).json()
+        return cast(str, resp["custom_facet_id"])
+
+    def update_custom_facet_access(
+        self, custom_facet_id: str, email: str, access_level: CustomFacetAccessLevel
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/edit-custom-facet-access-level",
+            json={
+                "custom_facet": {"custom_facet_id": custom_facet_id},
+                "user": {"email": email},
+                "access_level": access_level,
+            },
+        ).json()
+        return cast(str, resp["custom_facet_id"])
 
     """
     Dataset APIs

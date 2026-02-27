@@ -8,11 +8,19 @@ import ast
 import textwrap
 from collections.abc import Mapping
 from datetime import datetime
+from functools import cached_property
 from logging import getLogger
 from pathlib import Path
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, Field, PrivateAttr, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    EmailStr,
+    Field,
+    PrivateAttr,
+    field_validator,
+)
 
 from ikigai.client import Client, datax
 from ikigai.specs import (
@@ -22,7 +30,7 @@ from ikigai.specs import (
     FacetTypes,
 )
 from ikigai.typing import ComponentBrowser, NamedMapping
-from ikigai.utils import CustomFacetArgumentType
+from ikigai.utils import CustomFacetAccessLevel, CustomFacetArgumentType
 from ikigai.utils.compatibility import Self, deprecated
 
 logger = getLogger("ikigai.components")
@@ -246,6 +254,89 @@ class CustomFacetBuilder:
         return CustomFacet.from_dict(data=custom_facet_dict, client=self.__client)
 
 
+class CustomFacetAccess(BaseModel):
+    """
+    Access manager for the Custom Facet.
+
+    Grant/Update/Revoke access to the Custom Facet.
+    """
+
+    __custom_facet_id: str = PrivateAttr()
+    __client: Client = PrivateAttr()
+
+    def __init__(self, *, custom_facet_id: str, client: Client) -> None:
+        super().__init__()
+        self.__custom_facet_id = custom_facet_id
+        self.__client = client
+
+    def grant(self, email: EmailStr, access_level: CustomFacetAccessLevel) -> Self:
+        """
+        Grant access to the Custom Facet.
+
+        Parameters
+        ----------
+
+        email: EmailStr
+            Email address of the user to grant access to.
+
+        access_level: CustomFacetAccessLevel
+            Access level to grant to the user.
+
+        Returns
+        -------
+        Self
+            Access manager for the Custom Facet.
+        """
+        self.__client.component.grant_custom_facet_access(
+            custom_facet_id=self.__custom_facet_id,
+            email=email,
+            access_level=access_level,
+        )
+        return self
+
+    def update(self, email: EmailStr, access_level: CustomFacetAccessLevel) -> Self:
+        """
+        Update access to the Custom Facet.
+
+        Parameters
+        ----------
+
+        email: EmailStr
+            Email address of the user to update access for.
+
+        access_level: CustomFacetAccessLevel
+            New access level for the user.
+
+        Returns
+        -------
+        Self
+            Access manager for the Custom Facet.
+        """
+        self.__client.component.update_custom_facet_access(
+            custom_facet_id=self.__custom_facet_id,
+            email=email,
+            access_level=access_level,
+        )
+        return self
+
+    def revoke(self, email: EmailStr) -> Self:
+        """
+        Revoke access to the Custom Facet.
+
+        Note
+        -----
+
+        Ikigai does not support revoking access to a custom facet.
+        Please file a feature request if you need this.
+
+        """
+        error_msg = (
+            "Revoking access to a custom facet is not supported, please file a feature "
+            "request if you need this"
+        )
+        raise NotImplementedError(error_msg)
+
+
 class CustomFacet(BaseModel):
     custom_facet_id: str
     name: str
@@ -423,6 +514,20 @@ class CustomFacet(BaseModel):
         self.rootkit_token = rootkit_token
         self.arguments = new_arguments
         return self
+
+    @cached_property
+    def access(self) -> CustomFacetAccess:
+        """
+        Manage access to the Custom Facet.
+
+        Returns
+        -------
+        CustomFacetAccess
+            Access manager for the Custom Facet.
+        """
+        return CustomFacetAccess(
+            custom_facet_id=self.custom_facet_id, client=self.__client
+        )
 
     def describe(self) -> datax.CustomFacetDict:
         return self.__client.component.get_custom_facet(

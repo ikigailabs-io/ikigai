@@ -21,6 +21,13 @@ class AppAccessLevel(StrEnum):
 # Custom Facet Related Enums
 
 
+class CustomFacetAccessLevel(StrEnum):
+    ADMIN = "ADMIN"
+    EDITOR = "EDIT"
+    VIEWER = "VIEW"
+    RUNNER = "RUN"
+
+
 class CustomFacetArgumentType(StrEnum):
     BOOLEAN = "bool"
     INTEGER = "int"
