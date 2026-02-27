@@ -47,6 +47,18 @@ def random_name() -> str:
 
 
 @pytest.fixture()
+def random_name_2() -> str:
+    name_length = int(random.triangular(low=5, high=20, mode=20))
+    return "".join(random.choices(_ALPHABET, k=name_length))
+
+
+@pytest.fixture()
+def random_name_3() -> str:
+    name_length = int(random.triangular(low=5, high=20, mode=20))
+    return "".join(random.choices(_ALPHABET, k=name_length))
+
+
+@pytest.fixture()
 def cleanup() -> Generator[ExitStack, None, None]:
     exit_stack = ExitStack()
     try:

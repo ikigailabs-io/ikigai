@@ -279,3 +279,41 @@ def test_custom_facet_version_creation(
     assert log_unpinned_4.status == FlowStatus.SUCCESS, log_unpinned_4.data
     assert log_unpinned_4.erroneous_facet_id is None, log_unpinned_4
     assert not log_unpinned_4.data
+
+
+def test_custom_facet_version_browsing(
+    ikigai: Ikigai,
+    custom_facet_name: str,
+    custom_facet_version_name_1: str,
+    custom_facet_version_name_2: str,
+    custom_facet_version_name_3: str,
+    cleanup: ExitStack,
+) -> None:
+    facet_types = ikigai.facet_types
+    custom_facet = (
+        ikigai.custom_facet.new(
+            name=custom_facet_name, facet_type=facet_types.MID.CUSTOM_FACET
+        )
+        .script(script="result = data  # no-op")
+        .build()
+    )
+    cleanup.callback(custom_facet.delete)
+
+    created_versions = {
+        custom_facet_version_name_1: custom_facet.create_version(
+            name=custom_facet_version_name_1
+        ),
+        custom_facet_version_name_2: custom_facet.create_version(
+            name=custom_facet_version_name_2
+        ),
+        custom_facet_version_name_3: custom_facet.create_version(
+            name=custom_facet_version_name_3
+        ),
+    }
+
+    versions = custom_facet.versions()
+    assert len(versions) == len(created_versions)
+
+    assert all(
+        created_version in versions for created_version in created_versions.values()
+    )

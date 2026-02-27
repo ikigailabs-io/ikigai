@@ -165,18 +165,43 @@ def custom_facet_name(random_name: str) -> str:
 
 
 @pytest.fixture()
+def custom_facet_name_2(random_name_2: str) -> str:
+    return f"custom-facet-{random_name_2}"
+
+
+@pytest.fixture()
+def custom_facet_name_3(random_name_3: str) -> str:
+    return f"custom-facet-{random_name_3}"
+
+
+@pytest.fixture()
+def custom_facet_version_name_1(random_name: str) -> str:
+    return f"version-{random_name}"
+
+
+@pytest.fixture()
+def custom_facet_version_name_2(random_name_2: str) -> str:
+    return f"version-{random_name_2}"
+
+
+@pytest.fixture()
+def custom_facet_version_name_3(random_name_3: str) -> str:
+    return f"version-{random_name_3}"
+
+
+@pytest.fixture()
 def dataset_name(random_name: str) -> str:
     return f"dats-{random_name}"
 
 
 @pytest.fixture()
 def dataset_directory_name_1(random_name: str) -> str:
-    return f"dats-dir-1-{random_name}"
+    return f"dats-dir-{random_name}"
 
 
 @pytest.fixture()
-def dataset_directory_name_2(random_name: str) -> str:
-    return f"dats-dir-2-{random_name}"
+def dataset_directory_name_2(random_name_2: str) -> str:
+    return f"dats-dir-{random_name_2}"
 
 
 @pytest.fixture()
@@ -186,12 +211,12 @@ def flow_name(random_name: str) -> str:
 
 @pytest.fixture()
 def flow_directory_name_1(random_name: str) -> str:
-    return f"flow-dir-1-{random_name}"
+    return f"flow-dir-{random_name}"
 
 
 @pytest.fixture()
-def flow_directory_name_2(random_name: str) -> str:
-    return f"flow-dir-2-{random_name}"
+def flow_directory_name_2(random_name_2: str) -> str:
+    return f"flow-dir-{random_name_2}"
 
 
 @pytest.fixture()
