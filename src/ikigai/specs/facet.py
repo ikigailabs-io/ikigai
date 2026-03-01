@@ -6,11 +6,14 @@ from __future__ import annotations
 
 from collections import ChainMap
 from collections.abc import Generator, Mapping
+from itertools import chain
 from typing import Any
 
 from pydantic import (
+    AliasChoices,
     BaseModel,
     ConfigDict,
+    Field,
     RootModel,
     field_validator,
     model_validator,
@@ -19,7 +22,7 @@ from pydantic import (
 from ikigai.client import datax
 from ikigai.typing import Helpful
 from ikigai.typing.pydantic_extensions import LowercaseStr
-from ikigai.utils import FacetArgumentType
+from ikigai.utils import CustomFacetArgumentType, FacetArgumentType
 from ikigai.utils.compatibility import Self, override
 from ikigai.utils.missing import MISSING, MissingType
 
@@ -153,8 +156,9 @@ class ArgumentSpec(BaseModel, Helpful):
 
 class FacetInfo(BaseModel):
     facet_uid: str
-    facet_type: str
+    chain_group: str
     facet_group: str
+    facet_type: str
 
 
 class FacetType(BaseModel, Helpful):
@@ -172,7 +176,12 @@ class FacetType(BaseModel, Helpful):
         "facet_arguments", "in_arrow_arguments", "out_arrow_arguments", mode="before"
     )
     @classmethod
-    def validate_arguments(cls, v: list[dict]) -> dict[str, ArgumentSpec]:
+    def validate_arguments(
+        cls, v: list[dict] | dict[str, ArgumentSpec]
+    ) -> dict[str, ArgumentSpec]:
+        if isinstance(v, dict):
+            return v
+
         if not isinstance(v, list):
             error_msg = "Expected a list of argument dictionaries"
             raise ValueError(error_msg)
@@ -243,11 +252,6 @@ class FacetType(BaseModel, Helpful):
     def is_ml_facet(self) -> bool:
         return self.facet_info.facet_group.upper() == "MACHINE_LEARNING"
 
-    def check_arguments(self, arguments: dict) -> None:
-        # TODO: Add facet spec checking here,
-        #  right now we let platform inform the user on create/edit
-        ...
-
 
 class FacetTypes(BaseModel, Helpful):
     class ChainGroup(RootModel, Helpful):
@@ -316,6 +320,16 @@ class FacetTypes(BaseModel, Helpful):
 
         return cls.model_validate(flattened_data)
 
+    def find_by_uid(self, uid: str) -> FacetType:
+        facet_iterator = chain(
+            self.INPUT.root.values(), self.MID.root.values(), self.OUTPUT.root.values()
+        )
+        for facet_type in facet_iterator:
+            if facet_type.facet_info.facet_uid == uid:
+                return facet_type
+        error_msg = f"Facet type with UID {uid} not found"
+        raise KeyError(error_msg)
+
     @override
     def _help(self) -> Generator[str]:
         # INPUT Chain
@@ -327,3 +341,78 @@ class FacetTypes(BaseModel, Helpful):
         # OUTPUT Chain
         yield "OUTPUT"
         yield from (f"  {chain_help}" for chain_help in self.OUTPUT._help())
+
+
+class CustomFacetArgumentSpec(BaseModel):
+    name: str
+    argument_type: CustomFacetArgumentType = Field(
+        validation_alias=AliasChoices("type", "argument_type"),
+    )
+    value: str | int | float | bool
+
+    @model_validator(mode="after")
+    def validate_value(self) -> Self:
+        self.value = self.argument_type.python_type(self.value)
+        return self
+
+    def to_dict(self) -> datax.CustomFacetArgumentDict:
+        return {
+            "name": self.name,
+            "type": self.argument_type.value,
+            "value": str(self.value),
+        }
+
+
+class CustomFacetType(FacetType):
+    custom_facet_id: str
+    version_id: str
+    custom_facet_arguments: dict[str, ArgumentSpec]
+
+    @classmethod
+    def from_facet_type(
+        cls,
+        facet_type: FacetType,
+        custom_facet_id: str,
+        version_id: str,
+        custom_facet_argument_specs: dict[str, CustomFacetArgumentSpec],
+    ) -> Self:
+        return cls.model_validate(
+            {
+                "facet_info": facet_type.facet_info,
+                "is_deprecated": facet_type.is_deprecated,
+                "is_hidden": facet_type.is_hidden,
+                "facet_requirement": facet_type.facet_requirement,
+                "facet_arguments": {
+                    **facet_type.facet_arguments,
+                    "custom_facet_id": (
+                        facet_type.facet_arguments["custom_facet_id"].model_copy(
+                            update={"options": [custom_facet_id]}
+                        )
+                    ),
+                    "version_id": (
+                        facet_type.facet_arguments["version_id"].model_copy(
+                            update={"options": [version_id]}
+                        )
+                    ),
+                },
+                "custom_facet_id": custom_facet_id,
+                "version_id": version_id,
+                "custom_facet_arguments": {
+                    name: ArgumentSpec(
+                        name=name,
+                        argument_type=argument_spec.argument_type.to_facet_argument_type(),
+                        default_value=argument_spec.value,
+                        children={},
+                        have_sub_arguments=False,
+                        is_deprecated=False,
+                        is_hidden=False,
+                        is_list=False,
+                        is_required=True,
+                        options=None,
+                    )
+                    for name, argument_spec in custom_facet_argument_specs.items()
+                },
+                "in_arrow_arguments": facet_type.in_arrow_arguments,
+                "out_arrow_arguments": facet_type.out_arrow_arguments,
+            }
+        )

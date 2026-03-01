@@ -4,6 +4,8 @@
 
 from ikigai.utils.enums import (
     AppAccessLevel,
+    CustomFacetAccessLevel,
+    CustomFacetArgumentType,
     DatasetDataType,
     DatasetDownloadStatus,
     DirectoryType,
@@ -15,6 +17,8 @@ from ikigai.utils.enums import (
 
 __all__: list[str] = [
     "AppAccessLevel",
+    "CustomFacetAccessLevel",
+    "CustomFacetArgumentType",
     "DatasetDataType",
     "DatasetDownloadStatus",
     "DirectoryType",

@@ -48,6 +48,40 @@ class GetComponentsForProjectResponse(TypedDict):
 
 
 # -------------------------------------------------------------------------------------
+# Custom Facet Related Data Exchange Types
+
+
+class CustomFacetDict(TypedDict):
+    custom_facet_id: str
+    name: str
+    chain_group: str
+    facet_uid: str
+    description: str
+    tags: list[str]
+    python_script: str
+    libraries: list[str]
+    rootkit_token: str
+    arguments: list[CustomFacetArgumentDict]
+    created_at: str
+    modified_at: str
+
+
+class CustomFacetArgumentDict(TypedDict):
+    name: str
+    type: Literal["bool", "int", "str", "float"]
+    value: bool | int | str | float
+
+
+class CustomFacetVersionDict(TypedDict):
+    version: str
+    version_id: str
+    custom_facet_id: str
+    description: str
+    arguments: list[CustomFacetArgumentDict]
+    created_at: str
+
+
+# -------------------------------------------------------------------------------------
 # Dataset Related Data Exchange Types
 
 

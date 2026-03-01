@@ -15,6 +15,9 @@ from pydantic.dataclasses import dataclass
 
 from ikigai.client.datax import (
     AppDict,
+    CustomFacetArgumentDict,
+    CustomFacetDict,
+    CustomFacetVersionDict,
     DatasetDict,
     DatasetLogDict,
     FacetSpecsDict,
@@ -33,10 +36,30 @@ from ikigai.client.datax import (
 )
 from ikigai.client.session import Session
 from ikigai.typing import Directory, ModelType, NamedDirectoryDict
-from ikigai.utils import AppAccessLevel
+from ikigai.utils import AppAccessLevel, CustomFacetAccessLevel
 from ikigai.utils.missing import MISSING, MissingType
 
 logger = logging.getLogger("ikigai.client.api")
+
+
+@dataclass
+class AccessAPI:
+    # Init only vars
+    session: InitVar[Session]
+
+    __session: Session = Field(init=False)
+
+    def __post_init__(self, session: Session) -> None:
+        self.__session = session
+
+    def generate_rootkit_token(self, script: str) -> str:
+        # This is a weird endpoint, technically it should be under ComponentAPI
+        # but it is more about giving privileges to a user to run arbitrary code.
+        resp = self.__session.post(
+            path="/component/generate-rootkit-token",
+            json={"script": script},
+        ).json()
+        return resp["token"]
 
 
 @dataclass
@@ -183,6 +206,203 @@ class ComponentAPI:
             },
         ).json()
         return resp["project_id"]
+
+    """
+    Custom Facet APIs
+    """
+
+    def create_custom_facet(
+        self,
+        name: str,
+        chain_group: str,
+        description: str,
+        tags: list[str],
+        python_script: str,
+        libraries: list[str],
+        rootkit_token: str,
+        arguments: list[CustomFacetArgumentDict],
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/create-custom-facet",
+            json={
+                "custom_facet": {
+                    "name": name,
+                    "chain_group": chain_group,
+                    "description": description,
+                    "tags": tags,
+                    "python_script": python_script,
+                    "libraries": libraries,
+                    "rootkit_token": rootkit_token,
+                    "arguments": arguments,
+                }
+            },
+        ).json()
+        return resp["custom_facet_id"]
+
+    def get_custom_facet(self, custom_facet_id: str) -> CustomFacetDict:
+        custom_facet_dict = self.__session.get(
+            path="/component/get-custom-facet",
+            params={"custom_facet_id": custom_facet_id},
+        ).json()["custom_facet"]
+
+        return cast(CustomFacetDict, custom_facet_dict)
+
+    def get_custom_facet_by_name(self, name: str) -> CustomFacetDict:
+        custom_facet_dict = self.__session.get(
+            path="/component/get-custom-facet", params={"name": name}
+        ).json()["custom_facet"]
+
+        return cast(CustomFacetDict, custom_facet_dict)
+
+    def get_custom_facets_for_user(self) -> list[CustomFacetDict]:
+        custom_facet_dicts = self.__session.get(
+            path="/component/get-custom-facets-for-user",
+        ).json()["custom_facets"]
+
+        return cast(list[CustomFacetDict], custom_facet_dicts)
+
+    def edit_custom_facet(
+        self,
+        custom_facet_id: str,
+        chain_group: str,
+        name: str | MissingType = MISSING,
+        description: str | MissingType = MISSING,
+        tags: list[str] | MissingType = MISSING,
+        python_script: str | MissingType = MISSING,
+        libraries: list[str] | MissingType = MISSING,
+        rootkit_token: str | MissingType = MISSING,
+        arguments: list[CustomFacetArgumentDict] | MissingType = MISSING,
+    ) -> str:
+        custom_facet: dict[str, Any] = {
+            "custom_facet_id": custom_facet_id,
+            "chain_group": chain_group,
+        }
+
+        if name is not MISSING:
+            custom_facet["name"] = name
+        if description is not MISSING:
+            custom_facet["description"] = description
+        if tags is not MISSING:
+            custom_facet["tags"] = tags
+        if python_script is not MISSING:
+            custom_facet["python_script"] = python_script
+        if libraries is not MISSING:
+            custom_facet["libraries"] = libraries
+        if rootkit_token is not MISSING:
+            custom_facet["rootkit_token"] = rootkit_token
+        if arguments is not MISSING:
+            custom_facet["arguments"] = arguments
+
+        resp = self.__session.post(
+            path="/component/edit-custom-facet",
+            json={
+                "custom_facet": custom_facet,
+                "save_as_version": False,
+            },
+        ).json()
+
+        return resp["custom_facet_id"]
+
+    def delete_custom_facet(self, custom_facet_id: str) -> None:
+        self.__session.post(
+            path="/component/delete-custom-facet",
+            json={"custom_facet": {"custom_facet_id": custom_facet_id}},
+        ).json()
+        return None
+
+    """
+    Custom Facet Version APIs
+    """
+
+    def get_custom_facet_version(
+        self, custom_facet_id: str, version_id: str
+    ) -> CustomFacetVersionDict:
+        resp = self.__session.get(
+            path="/component/get-version-for-custom-facet",
+            params={"custom_facet_id": custom_facet_id, "version_id": version_id},
+        ).json()
+        return cast(CustomFacetVersionDict, resp["custom_facet_version"])
+
+    def get_custom_facet_versions(
+        self, custom_facet_id: str
+    ) -> list[CustomFacetVersionDict]:
+        response = self.__session.get(
+            path="/component/get-versions-for-custom-facet",
+            params={"custom_facet_id": custom_facet_id},
+        ).json()
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        custom_facet_version_dicts = response["custom_facet_versions"]
+        return cast(list[CustomFacetVersionDict], custom_facet_version_dicts)
+
+    def create_custom_facet_version(
+        self,
+        custom_facet_id: str,
+        version: str,
+        description: str,
+        python_script: str,
+        libraries: list[str],
+        rootkit_token: str,
+        arguments: list[CustomFacetArgumentDict],
+    ) -> str:
+        response = self.__session.post(
+            path="/component/edit-custom-facet",
+            json={
+                "save_as_version": True,
+                "custom_facet_version": {
+                    "custom_facet_id": custom_facet_id,
+                    "version": version,
+                    "python_script": python_script,
+                    "libraries": libraries,
+                    "rootkit_token": rootkit_token,
+                    "arguments": arguments,
+                    "description": description,
+                },
+            },
+        ).json()
+
+        if warning := response["limit_warning"]:
+            logger.warning(warning)
+
+        return response["version_id"]
+
+    def grant_custom_facet_access(
+        self, custom_facet_id: str, email: str, access_level: CustomFacetAccessLevel
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/share-custom-facet",
+            json={
+                "custom_facet": {"custom_facet_id": custom_facet_id},
+                "user": {"email": email},
+                "access_level": access_level,
+            },
+        ).json()
+        return cast(str, resp["custom_facet_id"])
+
+    def update_custom_facet_access(
+        self, custom_facet_id: str, email: str, access_level: CustomFacetAccessLevel
+    ) -> str:
+        resp = self.__session.post(
+            path="/component/edit-custom-facet-access-level",
+            json={
+                "custom_facet": {"custom_facet_id": custom_facet_id},
+                "user": {"email": email},
+                "access_level": access_level,
+            },
+        ).json()
+        return cast(str, resp["custom_facet_id"])
+
+    def revoke_custom_facet_access(self, custom_facet_id: str, email: str) -> str:
+        resp = self.__session.post(
+            path="/component/edit-custom-facet-access-level",
+            json={
+                "custom_facet": {"custom_facet_id": custom_facet_id},
+                "user": {"email": email},
+                "access_level": "NO_ACCESS",
+            },
+        ).json()
+        return cast(str, resp["custom_facet_id"])
 
     """
     Dataset APIs
@@ -890,6 +1110,15 @@ class SearchAPI:
             logger.warning(warning)
 
         return cast(list[AppDict], app_dicts)
+
+    def search_custom_facets_for_user(self, query: str) -> list[CustomFacetDict]:
+        response = self.__session.get(
+            path="/search/search-custom-facets-for-user",
+            params={"query": query},
+        ).json()
+
+        custom_facet_dicts = response["custom_facets"]
+        return cast(list[CustomFacetDict], custom_facet_dicts)
 
     def search_datasets_for_project(self, app_id: str, query: str) -> list[DatasetDict]:
         response = self.__session.get(

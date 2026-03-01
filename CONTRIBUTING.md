@@ -181,7 +181,8 @@ components >
   app >
     dataset
     flow >
-      flow_definition
+      flow_definition >
+        custom_facet
       _flow_definition_shim
     model
 
@@ -226,6 +227,7 @@ graph TD
         ComponentsApp --> ComponentsModel(model)
         ComponentsApp --> ComponentsFlow(flow)
         ComponentsFlow --> ComponentsFlowDefinition(flow_definition)
+        ComponentsFlowDefinition --> ComponentsCustomFacet(custom_facet)
         ComponentsFlow --> ComponentsFlowDefinitionShim(_flow_definition_shim)
     end
 

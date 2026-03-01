@@ -9,6 +9,11 @@ from ikigai.components.app import (
     AppDirectory,
     AppDirectoryBuilder,
 )
+from ikigai.components.custom_facet import (
+    CustomFacet,
+    CustomFacetBrowser,
+    CustomFacetBuilder,
+)
 from ikigai.components.dataset import (
     Dataset,
     DatasetBrowser,
@@ -39,6 +44,9 @@ __all__ = [
     "AppBuilder",
     "AppDirectory",
     "AppDirectoryBuilder",
+    "CustomFacet",
+    "CustomFacetBrowser",
+    "CustomFacetBuilder",
     "Dataset",
     "DatasetBrowser",
     "DatasetBuilder",

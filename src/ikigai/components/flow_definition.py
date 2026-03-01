@@ -11,10 +11,11 @@ from typing import Any, cast
 from pydantic import BaseModel, ConfigDict, Field
 
 from ikigai.client import datax
-from ikigai.specs import FacetType
+from ikigai.components.custom_facet import CustomFacetVersion
+from ikigai.specs import CustomFacetType, FacetType
 from ikigai.specs import SubModelSpec as ModelType
 from ikigai.utils import FacetArgumentType
-from ikigai.utils.compatibility import Self
+from ikigai.utils.compatibility import Self, override
 from ikigai.utils.data_structures import merge_dicts
 
 logger = logging.getLogger("ikigai.components")
@@ -68,6 +69,20 @@ class FacetBuilder:
 
         return self._builder.facet(
             facet_type=facet_type, name=name, args=args
+        ).add_arrow(self, **arrow_args)
+
+    def custom_facet(
+        self,
+        custom_facet_version: CustomFacetVersion,
+        name: str = "",
+        args: dict[str, Any] | None = None,
+        arrow_args: dict[str, Any] | None = None,
+    ) -> CustomFacetFacetBuilder:
+        if arrow_args is None:
+            arrow_args = {}
+
+        return self._builder.custom_facet(
+            custom_facet_version=custom_facet_version, name=name, args=args
         ).add_arrow(self, **arrow_args)
 
     def model_facet(
@@ -223,6 +238,9 @@ class FacetBuilder:
         self._arguments = merge_dicts(self._arguments, arguments)
         return self
 
+    def _build_arguments(self) -> dict[str, Any]:
+        return self._arguments
+
     def _build(self, facet_id: str) -> tuple[Facet, list[Arrow]]:
         if self.__facet is not None:
             if self.__arrows is None:
@@ -233,14 +251,11 @@ class FacetBuilder:
                 raise RuntimeError(error_msg)
             return self.__facet, self.__arrows
 
-        # Check if the facet spec is satisfied
-        self._facet_type.check_arguments(arguments=self._arguments)
-
         self.__facet = Facet(
             facet_id=facet_id,
             facet_uid=self._facet_type.facet_uid,
             name=self.__name,
-            arguments=self._arguments,
+            arguments=self._build_arguments(),
         )
 
         self.__arrows = [
@@ -252,6 +267,94 @@ class FacetBuilder:
         flow_definition = self._builder.build()
         logger.debug("Built flow definition: %s", flow_definition.to_dict())
         return flow_definition
+
+
+class CustomFacetFacetBuilder(FacetBuilder):
+    __custom_facet_type: CustomFacetType
+    _custom_facet_arguments: dict[str, Any]
+
+    def __init__(
+        self,
+        builder: FlowDefinitionBuilder,
+        custom_facet_version: CustomFacetVersion,
+        name: str = "",
+    ) -> None:
+        if custom_facet_version.version_id == "":
+            logger.warning(
+                "Creating an unpinned custom facet, the flow may fail to run if the "
+                "custom facet script's input/output format or arguments change. Prefer "
+                "using a pinned version instead."
+            )
+
+        super().__init__(
+            builder=builder, facet_type=custom_facet_version.facet_type, name=name
+        )
+        self.__custom_facet_type = custom_facet_version.facet_type
+        self._custom_facet_arguments = {}
+        super().arguments(
+            custom_facet_id=custom_facet_version.custom_facet_id,
+            version_id=custom_facet_version.version_id,
+        )
+
+    @override
+    def arguments(self, **arguments: Any) -> Self:
+        # if the argument is present in the facet spec, then try to add it directly.
+        facet_arguments = {
+            name: value
+            for name, value in arguments.items()
+            if name in self._facet_type.facet_arguments and name != "arguments"
+        }
+        # if the argument is not present in the facet spec,
+        #   then consider it as a custom facet argument.
+        custom_arguments = {
+            name: value
+            for name, value in arguments.items()
+            if name not in self._facet_type.facet_arguments
+        }
+
+        # Add the facet arguments to the facet using the parent class
+        super().arguments(**facet_arguments)
+
+        # Validate the custom facet arguments and update the custom facet arguments
+        self._validate_custom_arguments(**custom_arguments)
+        return self._update_custom_arguments(**custom_arguments)
+
+    def _validate_custom_arguments(self, **custom_arguments: Any) -> None:
+        facet_name = self._facet_type.name.title()
+        for arg_name, arg_value in custom_arguments.items():
+            if arg_name not in self.__custom_facet_type.custom_facet_arguments:
+                error_msg = f"Argument '{arg_name}' is not valid for {facet_name} facet"
+                raise ValueError(error_msg)
+
+            # Argument is present in custom facet spec, validate it
+            arg_spec = self.__custom_facet_type.custom_facet_arguments[arg_name]
+            arg_spec.validate_value(facet=facet_name, value=arg_value)
+
+    def _update_custom_arguments(self, **custom_arguments: Any) -> Self:
+        self._custom_facet_arguments = merge_dicts(
+            self._custom_facet_arguments, custom_arguments
+        )
+        return self
+
+    @override
+    def _build_arguments(self) -> dict[str, Any]:
+        custom_facet_arguments = [
+            {
+                "name": name,
+                "value": value,
+                "type": (
+                    self.__custom_facet_type.custom_facet_arguments[
+                        name
+                    ].argument_type.value
+                ),
+            }
+            for name, value in self._custom_facet_arguments.items()
+        ]
+
+        return {
+            **(self._arguments),
+            "arguments": custom_facet_arguments,
+        }
 
 
 class ModelFacetBuilder(FacetBuilder):
@@ -387,6 +490,20 @@ class FlowDefinitionBuilder:
         ).arguments(**args)
         self._facets.append(facet_builder)
         return facet_builder
+
+    def custom_facet(
+        self,
+        custom_facet_version: CustomFacetVersion,
+        name: str = "",
+        args: dict[str, Any] | None = None,
+    ) -> CustomFacetFacetBuilder:
+        if args is None:
+            args = {}
+        custom_facet_builder = CustomFacetFacetBuilder(
+            builder=self, custom_facet_version=custom_facet_version, name=name
+        ).arguments(**args)
+        self._facets.append(custom_facet_builder)
+        return custom_facet_builder
 
     def model_facet(
         self,
