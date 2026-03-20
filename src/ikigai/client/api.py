@@ -511,6 +511,7 @@ class ComponentAPI:
         dataset_id: str,
         name: str | MissingType = MISSING,
         directory: Directory | MissingType = MISSING,
+        agent_access: bool | MissingType = MISSING,
     ) -> str:
         dataset: dict[str, Any] = {
             "project_id": app_id,
@@ -521,7 +522,8 @@ class ComponentAPI:
             dataset["name"] = name
         if directory is not MISSING:
             dataset["directory"] = directory.to_dict()
-
+        if agent_access is not MISSING:
+            dataset["agent_access"] = agent_access
         resp = self.__session.post(
             path="/component/edit-dataset",
             json={
@@ -686,6 +688,7 @@ class ComponentAPI:
         high_volume_preference: bool | None = None,
         flow_definition: FlowDefinitionDict | None = None,
         schedule: ScheduleDict | None | MissingType = MISSING,
+        agent_access: bool | MissingType = MISSING,
     ) -> str:
         pipeline: dict[str, Any] = {
             "project_id": app_id,
@@ -711,6 +714,8 @@ class ComponentAPI:
                     "start_time": "1",
                     "end_time": "1",
                 }
+        if agent_access is not MISSING:
+            pipeline["agent_access"] = agent_access
 
         resp = self.__session.post(
             path="/component/edit-pipeline", json={"pipeline": pipeline}
