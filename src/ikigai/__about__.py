@@ -2,4 +2,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-__version__ = "0.4.1.dev0+1774923746"
+__version__ = "0.4.1.dev0+1774925029"
