@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections import ChainMap
 from collections.abc import Generator, Mapping
 from itertools import chain
-from typing import Any
+from typing import Any, Literal, cast
 
 from pydantic import (
     AliasChoices,
@@ -356,9 +356,10 @@ class CustomFacetArgumentSpec(BaseModel):
         return self
 
     def to_dict(self) -> datax.CustomFacetArgumentDict:
+        _type = self.argument_type.value
         return {
             "name": self.name,
-            "type": self.argument_type.value,
+            "type": cast(Literal["bool", "int", "str", "float"], _type),
             "value": str(self.value),
         }
 

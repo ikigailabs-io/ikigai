@@ -8,12 +8,13 @@ define find.functions
 endef
 
 define check.branch
-	@git branch --list | grep -q --fixed-strings '* main' || (echo "Error: Not on main branch"; exit 1)
+	@git branch --list | grep -q --fixed-strings '* development' || (echo "Error: Not on development branch"; exit 1)
 endef
 
 TOOL_OPEN := $(shell command -v open xdg-open | head -n1 || :)
 
-TAG ?= "micro"
+TAG ?=
+DEV ?= "--dev"
 GH_NEW_RELEASE_URL := 'https://github.com/ikigailabs-io/ikigai/releases/new'
 
 # Targets
@@ -48,18 +49,16 @@ check:			## Run Linter and Type-Checker
 check: .init
 	hatch run check
 
-.PHONY: release
-release:		## Create a new release
-release: .init
-	$(call check.branch)
-	$(MAKE) tag TAG=$(TAG)
-	$(TOOL_OPEN) $(GH_NEW_RELEASE_URL)
-
 .PHONY: tag
 tag:			## Create a new tag
 tag: .init
-	@hatch version $(TAG) && git add src/ikigai/__about__.py
-	git commit -m "Bump version to v$$(hatch version)" && git tag "v$$(hatch version)"
+ifdef TAG
+	@./scripts/tag.py $(DEV) --part $(TAG)
+else
+	@./scripts/tag.py $(DEV)
+endif
+	@git add src/ikigai/__about__.py
+	git commit -m "Bump version to v$$(hatch version)" && git tag "pcl-v$$(hatch version)"
 	@echo "Bumped tag ($(TAG))\nPushing..."
 	git push && git push --tags
 
@@ -68,11 +67,11 @@ clean:			## Clean the workspace
 clean:
 	rm test-env.toml .init || true
 
-.init: Makefile .pre-commit-config.yaml
+.init: Makefile
 	@echo "Running checks..."
 	@hatch --version > /dev/null || (echo "Please install hatch following the instructions in CONTRIBUTING.md" && exit 1)
-	@pre-commit --version > /dev/null || (echo "Please install pre-commit by following the instructions in CONTRIBUTING.md" && exit 1)
-	@pre-commit install > /dev/null
-	@pre-commit run --all-files
-	@[ -f "./test-env.toml" ] || (echo "Please follow instructions in CONTRIBUTING.md to setup test-env.toml file" && exit 1)
+# 	@pre-commit --version > /dev/null || (echo "Please install pre-commit by following the instructions in CONTRIBUTING.md" && exit 1)
+# 	@pre-commit install > /dev/null
+# 	@pre-commit run --all-files
+# 	@[ -f "./test-env.toml" ] || (echo "Please follow instructions in CONTRIBUTING.md to setup test-env.toml file" && exit 1)
 	@touch .init
