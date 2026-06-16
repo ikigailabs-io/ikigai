@@ -344,7 +344,6 @@ class ModelParameterSpecDict(TypedDict):
     default_value: Any
     have_options: bool
     is_deprecated: bool
-    is_required: bool
     is_hidden: bool
     is_list: bool
     options: list[Any]
@@ -359,7 +358,6 @@ class ModelHyperparameterSpecDict(TypedDict):
     hyperparameter_group: str | None
     hyperparameter_type: str
     is_deprecated: bool
-    is_required: bool
     is_hidden: bool
     is_list: bool
     children: dict[str, ModelHyperparameterSpecDict]

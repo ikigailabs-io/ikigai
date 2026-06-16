@@ -68,7 +68,6 @@ class ModelParameterSpec(BaseModel, Helpful):
     default_value: Any | None = None
     have_options: bool
     is_deprecated: bool
-    is_required: bool
     is_hidden: bool
     is_list: bool
     options: list | None = None
@@ -91,12 +90,6 @@ class ModelParameterSpec(BaseModel, Helpful):
         return f"Parameter '{self.name}' for {model} {expectation}{actuals_str}"
 
     def validate_value(self, model: str, value: Any) -> None:
-        if value is None:
-            if not self.is_required:
-                return None
-            error_msg = self.__validation_error_message(model, "is required", value)
-            raise ValueError(error_msg)
-
         if self.is_list:
             return self.__validate_list_value(model, value)
 
@@ -163,7 +156,6 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
     hyperparameter_group: str | None
     hyperparameter_type: ModelHyperparameterType
     is_deprecated: bool
-    is_required: bool
     is_hidden: bool
     is_list: bool
     children: dict[str, ModelHyperparameterSpec]
@@ -210,12 +202,6 @@ class ModelHyperparameterSpec(BaseModel, Helpful):
         return f"Hyperparameter '{self.name}' for {model} {expectation}{actuals_str}"
 
     def validate_value(self, model: str, value: Any) -> None:
-        if value is None:
-            if not self.is_required:
-                return None
-            error_msg = self.__validation_error_message(model, "is required", value)
-            raise ValueError(error_msg)
-
         if self.is_list:
             return self.__validate_list_value(model, value)
 
