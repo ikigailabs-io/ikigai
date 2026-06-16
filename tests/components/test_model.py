@@ -323,3 +323,19 @@ def test_model_builder_parameter_typechecking_list(
             facet_type=facet_types.MID.PREDICT,
             model_type=model_types.AI_CAST.BASE,
         ).parameters(identifier_columns="not-a-list")
+
+
+def test_hyperparameter_spec_is_required(
+    ikigai: Ikigai,
+) -> None:
+    # from ticket IPLT-11861 #
+
+    facet_types = ikigai.facet_types
+    model_types = ikigai.model_types
+    builder = ikigai.builder
+
+    # identifier_columns is required, not optional
+    builder.facet(facet_type=facet_types.INPUT.IMPORTED).model_facet(
+        facet_type=facet_types.MID.TIME_SERIES_ANALYSIS,
+        model_type=model_types.CHANGE_POINT_DETECTION.BASE,
+    ).hyperparameters(window_size=None)

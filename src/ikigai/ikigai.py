@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import InitVar
 
-from pydantic import EmailStr, Field, HttpUrl
+from pydantic import ConfigDict, EmailStr, Field, HttpUrl
 from pydantic.dataclasses import dataclass
 
 from ikigai import components, specs
@@ -16,7 +16,8 @@ from ikigai.utils.compatibility import deprecated
 from ikigai.utils.missing import MISSING, MissingType
 
 
-@dataclass
+# Config to avoid extra '/' in url paths: https://pydantic.dev/articles/pydantic-v2-12-release#preserve-empty-url-paths
+@dataclass(config=ConfigDict(url_preserve_empty_path=True))
 class Ikigai:
     """
     Main Ikigai class to interact with the Ikigai platform.

@@ -8,7 +8,7 @@ import logging
 from dataclasses import InitVar
 from typing import Any
 
-from pydantic import EmailStr, Field, HttpUrl
+from pydantic import ConfigDict, EmailStr, Field, HttpUrl
 from pydantic.dataclasses import dataclass
 from requests import Response
 from requests.exceptions import ConnectionError
@@ -20,7 +20,8 @@ from ikigai.utils.compatibility import HTTPMethod
 logger = logging.getLogger("ikigai.client")
 
 
-@dataclass
+# Config to avoid extra '/' in url paths: https://pydantic.dev/articles/pydantic-v2-12-release#preserve-empty-url-paths
+@dataclass(config=ConfigDict(url_preserve_empty_path=True))
 class Client:
     # Init only vars
     user_email: InitVar[EmailStr]

@@ -10,7 +10,7 @@ from http import HTTPStatus
 from typing import Annotated, Any, TypeAlias
 
 import requests
-from pydantic import AnyUrl, ConfigDict, EmailStr, Field
+from pydantic import ConfigDict, EmailStr, Field, HttpUrl
 from pydantic.dataclasses import dataclass
 from requests import Response
 
@@ -28,14 +28,16 @@ CertKeyPair: TypeAlias = Annotated[
 SSLConfig: TypeAlias = bool | PEMfilePath | CertKeyPair
 
 
-@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+@dataclass(
+    config=ConfigDict(arbitrary_types_allowed=True, url_preserve_empty_path=True)
+)
 class Session:
     # Init only vars
     user_email: InitVar[EmailStr]
     api_key: InitVar[str]
     ssl: InitVar[SSLConfig]
 
-    base_url: AnyUrl
+    base_url: HttpUrl
     __session: requests.Session = Field(init=False)
 
     def __post_init__(self, user_email: EmailStr, api_key: str, ssl: SSLConfig) -> None:
