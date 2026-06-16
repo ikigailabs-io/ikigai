@@ -365,3 +365,21 @@ def test_iplt_7641_datasets(
     with pytest.raises(KeyError):
         directory_datasets[dataset_1.name]
     assert directory_datasets[dataset_2.name]
+
+
+def test_dataset_agent_access(
+    ikigai: Ikigai,
+    app_name: str,
+    dataset_name: str,
+    df1: pd.DataFrame,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("A test app").build()
+    cleanup.callback(app.delete)
+    dataset = app.dataset.new(name=dataset_name).df(df1).build()
+    dataset.update_agent_access(agent_access=True)
+    assert dataset.agent_access is True
+    assert app.datasets[dataset.name].agent_access is True
+    dataset.update_agent_access(agent_access=False)
+    assert dataset.agent_access is False
+    assert app.datasets[dataset.name].agent_access is False

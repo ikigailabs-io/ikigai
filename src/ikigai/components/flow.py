@@ -272,6 +272,7 @@ class Flow(BaseModel):
     schedule: Schedule | None = None
     created_at: datetime
     modified_at: datetime
+    agent_access: bool | None = None
     __client: Client = PrivateAttr()
 
     @field_validator("schedule", mode="before")
@@ -298,6 +299,7 @@ class Flow(BaseModel):
             "schedule": self.schedule.to_dict() if self.schedule else None,
             "created_at": self.created_at,
             "modified_at": self.modified_at,
+            "agent_access": self.agent_access,
         }
 
     def delete(self) -> None:
@@ -522,6 +524,15 @@ class Flow(BaseModel):
             progress_bar.update(progress - last_progress)
 
             return run_log
+
+    def update_agent_access(self, agent_access: bool) -> Self:
+        _ = self.__client.component.edit_flow(
+            app_id=self.app_id,
+            flow_id=self.flow_id,
+            agent_access=agent_access,
+        )
+        self.agent_access = agent_access
+        return self
 
 
 class FlowBrowser(ComponentBrowser[Flow]):
