@@ -51,7 +51,7 @@ def get_next_dev_version(
     if part == VersionPart.PATCH:
         patch += 1
 
-    return f"{major}.{minor}.{patch}-dev+{timestamp}"
+    return f"{major}.{minor}.{patch}.dev{timestamp}"
 
 
 def parse_args():
