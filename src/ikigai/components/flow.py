@@ -41,16 +41,28 @@ T = TypeVar("T")
 class Schedule(BaseModel):
     """
     Schedule for a flow.
-    """
+
+    A schedule defines when a flow is executed automatically.
+
+    Attributes
+    ----------
 
     name: str
-    """Name of the schedule."""
+        Name of the schedule.
+
     start_time: TimestampSerializableDatetime
-    """Start time of the schedule."""
-    end_time: TimestampSerializableOptionalDatetime = None
-    """End time of the schedule. If None, the schedule will run indefinitely."""
+        Start time of the schedule.
+
+    end_time: TimestampSerializableOptionalDatetime
+        End time of the schedule. If `None`, the schedule will run indefinitely.
+
     cron: CronStr
-    """Cron expression for the schedule."""
+        Cron expression for the schedule.
+    """
+    name: str
+    start_time: TimestampSerializableDatetime
+    end_time: TimestampSerializableOptionalDatetime = None
+    cron: CronStr
 
     @field_validator("end_time", "start_time", mode="before")
     @classmethod
@@ -77,10 +89,35 @@ class Schedule(BaseModel):
         return cls.model_validate(data)
 
     def to_dict(self) -> datax.ScheduleDict:
+        """
+        Convert the Schedule to a dictionary representation.
+
+        Returns
+        -------
+
+        datax.ScheduleDict
+            Dictionary containing the Schedule attributes.
+        """
         return cast(datax.ScheduleDict, self.model_dump())
 
 
 class FlowBuilder:
+    """
+    Builder for constructing a flow definition.
+
+    Instantiate a flow builder, use it to add and configure facets, and then
+    build the flow definition.
+
+    Examples
+    --------
+
+    >>> flow = (
+    ...     app.flow  # FlowBuilder instance
+    ...     .new(name=flow_name)
+    ...     .definition(flow_definition)
+    ...     .build()
+    ... )
+    """
     _app_id: str
     _name: str
     _directory: Directory | None
@@ -91,23 +128,26 @@ class FlowBuilder:
 
     def __init__(self, client: Client, app_id: str) -> None:
         """
-        Initialize the FlowBuilder
+        Initialize the FlowBuilder.
 
         Note
         ----
+
         The FlowBuilder initialization should only happen internally via
         the App object.
 
         Parameters
         ----------
-        client : Client
-            The Ikigai client to use for API interactions
 
-        app_id : str
-            The ID of the App to which the flow will belong
+        client: Client
+            The Ikigai client to use for API interactions.
+
+        app_id: str
+            ID of the App that the flow belongs to.
 
         Returns
         -------
+
         None
         """
         self.__client = client
@@ -119,12 +159,70 @@ class FlowBuilder:
         self._schedule = None
 
     def new(self, name: str) -> Self:
+        """
+        Set the name of the flow.
+
+        Parameters
+        ----------
+
+        name: str
+            Name of the flow.
+
+        Returns
+        -------
+
+        Self
+            The FlowBuilder instance. Enables method chaining.
+        """
         self._name = name
         return self
 
     def definition(
         self, definition: Flow | FlowDefinition | datax.FlowDefinitionDict
     ) -> Self:
+        """
+        Set the flow definition for the builder.
+
+        Parameters
+        ----------
+
+        definition: Flow | FlowDefinition | FlowDefinitionDict
+            The flow definition.
+
+        Returns
+        -------
+
+        Self
+            The FlowBuilder instance. Enables method chaining.
+
+        Raises
+        ------
+
+        ValueError
+            If attempting to build a flow from a different app.
+
+        TypeError
+            If the type is invalid.
+
+        Examples
+        --------
+
+        >>> flow_builder = ikigai.builder
+        >>> facet_types = ikigai.facet_types
+        >>> facet_1 = (
+        ...     flow_builder.facet(facet_type=facet_types.INPUT.Imported)
+        ...     .arguments(dataset_id="my-input-dataset-id")
+        ...     .arguments(
+        ...         file_type="csv",
+        ...         header=True,
+        ...         use_raw_file=False,
+        ...     )
+        ... )
+        >>> flow_definition = facet_1.build()
+        >>> flow = app.flow.new(name=flow_name).definition(
+        ...     flow_definition
+        ... ).build()
+        """
         if isinstance(definition, FlowDefinition):
             self._flow_definition = definition.to_dict()
             return self
@@ -132,7 +230,7 @@ class FlowBuilder:
         if isinstance(definition, Flow):
             if definition.app_id != self._app_id:
                 error_msg = (
-                    "Building flow from a diferent app is not supported\n"
+                    "Building flow from a different app is not supported\n"
                     "source_app != destination_app "
                     f"({definition.app_id} != {self._app_id})"
                 )
@@ -152,24 +250,42 @@ class FlowBuilder:
         raise TypeError(error_msg)
 
     def directory(self, directory: Directory) -> Self:
+        """
+        Set the directory where the flow will be stored.
+
+        Parameters
+        ----------
+
+        directory: Directory
+            The target storage location.
+
+        Returns
+        -------
+
+        FlowBuilder
+            The FlowBuilder instance. Enables method chaining.
+        """
         self._directory = directory
         return self
 
     def high_volume_preference(self, optimize: bool) -> Self:
         """
-        Set the high volume preference flag for the flow.
+        Set the high-volume preference flag for the flow.
 
         Parameters
         ----------
-        optimize : bool
-            The high volume preference to set for the flow.
-            True if the flow should be optimized for high volume data processing,
-            False otherwise.
+
+        optimize: bool
+            Whether to enable high-volume optimization for the flow. If
+            ``True``, the flow is optimized for high-volume data processing;
+            otherwise, optimization is disabled.
 
         Returns
         -------
+
         Self
-            The FlowBuilder instance with high volume preference set.
+            The FlowBuilder instance with high volume preference set. Enables
+            method chaining.
         """
         self._high_volume_preference = optimize
         return self
@@ -179,18 +295,27 @@ class FlowBuilder:
         schedule: Schedule | datax.ScheduleDict | str,
     ) -> Self:
         """
-        Set the schedule for the flow.
+        Set the execution schedule for the flow.
 
         Parameters
         ----------
-        schedule : Schedule | ScheduleDict | str
-            The schedule to set for the flow. Can be provided as a Schedule object,
-            a Schedule dictionary, or a cron string.
+
+        schedule: Schedule | datax.ScheduleDict | str
+            The execution schedule to set for the flow. Can be provided as a
+            Schedule object, a Schedule dictionary, or a cron string.
 
         Returns
         -------
+
         Self
-            The FlowBuilder instance with schedule set.
+            The FlowBuilder instance with the schedule set. Enables method
+            chaining.
+
+        Raises
+        ------
+
+        TypeError
+            If the type is invalid.
         """
         if isinstance(schedule, str):
             self._schedule = Schedule(
@@ -217,15 +342,25 @@ class FlowBuilder:
 
     def build(self) -> Flow:
         """
-        Build the Flow object
+        Build the Flow object.
 
-        Creates the flow in the Ikigai platform using the provided
-        parameters and returns the corresponding Flow object.
+        Create the flow in the Ikigai platform using the provided
+        parameters and return the resulting Flow object.
 
         Returns
         -------
         Flow
-            The created Flow object
+            The created Flow object.
+
+        Examples
+        --------
+
+        >>> flow = (
+        ...     app.flow  # app.flow returns a FlowBuilder instance
+        ...     .new(name=flow_name)
+        ...     .definition(flow_definition)
+        ...     .build()
+        ... )
         """
         flow_id = self.__client.component.create_flow(
             app_id=self._app_id,
@@ -243,6 +378,23 @@ class FlowBuilder:
 
 
 class FlowStatusReport(BaseModel):
+    """
+    The current execution status of a flow.
+
+    Attributes
+    ----------
+
+    status: FlowStatus
+        Current status of the flow. Possible values are ``SCHEDULED``,
+        ``RUNNING``, ``STOPPING``, ``STOPPED``, ``FAILED``, ``IDLE``,
+        ``UNKNOWN``, and ``SUCCESS``.
+
+    progress: int or None
+        Completion progress, if available.
+
+    message: str
+        Additional status information.
+    """
     status: FlowStatus
     progress: int | None = Field(default=None)
     message: str
@@ -253,6 +405,30 @@ class FlowStatusReport(BaseModel):
 
 
 class RunLog(BaseModel):
+    """
+    A log entry from a flow execution.
+
+    Attributes
+    ----------
+
+    log_id: str
+        Unique identifier for the log entry.
+
+    status: FlowStatus
+        Execution status at the time of logging.
+
+    user: EmailStr
+        User who triggered the run.
+
+    erroneous_facet_id: OptionalStr
+        Identifier of the facet that caused an error, if any.
+
+    data: str
+        Log message.
+
+    timestamp: datetime
+        Datetime indicating when the log entry was created.
+    """
     log_id: str
     status: FlowStatus
     user: EmailStr
@@ -266,6 +442,12 @@ class RunLog(BaseModel):
 
 
 class Flow(BaseModel):
+    """
+    A Flow on the Ikigai platform.
+
+    Provides methods to manage lifecycle, execution, scheduling,
+    and metadata updates.
+    """
     app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
     flow_id: str = Field(validation_alias=AliasChoices("flow_id", "pipeline_id"))
     name: str
@@ -301,10 +483,33 @@ class Flow(BaseModel):
         }
 
     def delete(self) -> None:
+        """
+        Delete the flow.
+
+        Returns
+        -------
+
+        None
+        """
         self.__client.component.delete_flow(app_id=self.app_id, flow_id=self.flow_id)
         return None
 
     def rename(self, name: str) -> Self:
+        """
+        Rename the flow.
+
+        Parameters
+        ----------
+
+        name: str
+            New name for the flow.
+
+        Returns
+        -------
+
+        Flow
+            The updated flow instance.
+        """
         self.__client.component.edit_flow(
             app_id=self.app_id, flow_id=self.flow_id, name=name
         )
@@ -320,13 +525,14 @@ class Flow(BaseModel):
 
         Parameters
         ----------
-        schedule : Schedule | ScheduleDict | str | None
-            The schedule to set for the flow.
-            Can be provided as a Schedule object, a Schedule dictionary, or a
-            cron string. Pass None to remove existing schedule.
+
+        schedule: Schedule | datax.ScheduleDict | str | None
+            The execution schedule to set for the flow. Can be provided as a
+            Schedule object, a Schedule dictionary, or a cron string.
 
         Returns
         -------
+
         Self
             The updated Flow object.
         """
@@ -353,6 +559,21 @@ class Flow(BaseModel):
         return self
 
     def move(self, directory: Directory) -> Self:
+        """
+        Move the flow to a different directory.
+
+        Parameters
+        ----------
+
+        directory: Directory
+            Target directory to which the flow should be moved.
+
+        Returns
+        -------
+
+        Flow
+            The updated flow instance.
+        """
         self.__client.component.edit_flow(
             app_id=self.app_id, flow_id=self.flow_id, directory=directory
         )
@@ -360,17 +581,19 @@ class Flow(BaseModel):
 
     def update_high_volume_preference(self, optimize: bool) -> Self:
         """
-        Update the high volume preference of the flow.
+        Update the high-volume preference flag for the flow.
 
         Parameters
         ----------
-        optimize : bool
-            The new high volume preference to set for the flow.
-            True if the flow should be optimized for high volume data processing,
-            False otherwise.
+
+        optimize: bool
+            Whether to enable high-volume optimization for the flow. If
+            ``True``, the flow is optimized for high-volume data processing;
+            otherwise, optimization is disabled.
 
         Returns
         -------
+
         Self
             The updated Flow object.
         """
@@ -385,15 +608,13 @@ class Flow(BaseModel):
         self, definition: FlowDefinition | datax.FlowDefinitionDict
     ) -> Self:
         """
-        Update the flow definition.
-
-        Replaces the existing flow definition with the provided one.
+        Update the flow definition using the provided definition.
 
         Parameters
         ----------
-        definition : FlowDefinition | FlowDefinitionDict
-            The new flow definition to set. Can be provided as a FlowDefinition
-            object or as a dictionary.
+
+        definition: FlowDefinition | datax.FlowDefinitionDict
+            The new flow definition.
 
         Returns
         -------
@@ -410,6 +631,14 @@ class Flow(BaseModel):
         return self
 
     def status(self) -> FlowStatusReport:
+        """
+        The current execution status of a flow.
+
+        Returns
+        -------
+        FlowStatusReport
+            Current flow status information.
+        """
         resp = self.__client.component.is_flow_runing(
             app_id=self.app_id, flow_id=self.flow_id
         )
@@ -418,6 +647,25 @@ class Flow(BaseModel):
     def run_logs(
         self, max_count: int = 1, since: datetime | None = None
     ) -> list[RunLog]:
+        """
+        View a flow object's run logs.
+
+        Parameters
+        ----------
+
+        max_count: int
+            Maximum number of logs to fetch. By default, returns the most recent
+            log.
+
+        since: datetime
+            Filter logs newer than this datetime.
+
+        Returns
+        -------
+
+        list[RunLog]
+            A list of ``RunLog`` objects associated with the flow.
+        """
         log_dicts = self.__client.component.get_flow_log(
             app_id=self.app_id, flow_id=self.flow_id, max_count=max_count
         )
@@ -429,23 +677,25 @@ class Flow(BaseModel):
 
     def run(self, **variables) -> RunLog:
         """
-        Run the flow
+        Run the flow and wait for it to complete.
 
-        This function will run the flow and wait for it to complete.
-        It will accept any number of keyword arguments which will be passed as run
+        Accepts any number of keyword arguments, which are passed as run
         variables to the flow.
 
         Parameters
         ----------
-        **variables : dict
-            Run variables to be passed to the flow, where the key is the variable name
-            and the value is the variable value. Keys that start with an
-            underscore ("_") are reserved for future use and will be ignored.
+
+        **variables: dict
+            Run variables passed to the flow as keyword arguments, where each
+            key is the variable name and each value is the corresponding value.
+            Keys starting with an underscore (``"_"``) are reserved for future
+            use and ignored.
 
         Returns
         -------
+
         RunLog
-            The final run log of the flow after completion
+            The run log of the flow after completion.
         """
         run_variables: datax.RunVariablesRequest = {
             key: {"value": value}
@@ -461,6 +711,16 @@ class Flow(BaseModel):
         return self.__await_run()
 
     def describe(self) -> datax.FlowDict:
+        """
+        Get details about the flow, including name, creation time, directory
+        location, definition, and other information.
+
+        Returns
+        -------
+
+        datax.FlowDict
+            The flow details.
+        """
         flow = self.__client.component.get_flow(flow_id=self.flow_id)
         # Apply flow_versioning_shim to allow migration of older flows
         # TODO: Remove this shim after "important" flows are migrated
@@ -525,6 +785,9 @@ class Flow(BaseModel):
 
 
 class FlowBrowser(ComponentBrowser[Flow]):
+    """
+    Provides access to flows by name and search functionality.
+    """
     __app_id: str
     __client: Client
 
@@ -552,6 +815,19 @@ class FlowBrowser(ComponentBrowser[Flow]):
 
     @override
     def search(self, query: str) -> NamedMapping[Flow]:
+        """
+        Search for flows in the current app matching a query string.
+
+        Parameters
+        ----------
+        query : str
+            String used to match flows.
+
+        Returns
+        -------
+        NamedMapping[Flow]
+            A mapping of flows that match the provided string.
+        """
         matched_flows = {
             flow["pipeline_id"]: Flow.from_dict(data=flow, client=self.__client)
             for flow in self.__client.search.search_flows_for_project(
@@ -563,6 +839,20 @@ class FlowBrowser(ComponentBrowser[Flow]):
 
 
 class FlowDirectoryBuilder:
+    """
+    Builder class for creating a flow directory.
+
+    Configure a flow directory using the ``new`` method, then
+    call ``build`` to create the directory. The resulting FlowDirectory
+    instance is returned.
+
+    Examples
+    --------
+    >>> ikigai = Ikigai(user_email="user@example.com", api_key="123abc")
+
+    >>> app = ikigai.apps['Example App']
+    >>> example_flow_dir = app.flow_directory.new("Example Dir").build()
+    """
     _app_id: str
     _name: str
     _parent: Directory | None
@@ -575,14 +865,66 @@ class FlowDirectoryBuilder:
         self._parent = None
 
     def new(self, name: str) -> Self:
+        """
+        Set the name of the flow directory to create.
+
+        Parameters
+        ----------
+
+        name: str
+            Name of the new flow directory.
+
+        Returns
+        -------
+
+        FlowDirectoryBuilder
+            The builder instance. Enables method chaining.
+
+        Examples
+        --------
+
+        >>> new_flow_dir = app.flow_directory.new("Example Dir")
+        """
         self._name = name
         return self
 
     def parent(self, parent: Directory) -> Self:
+        """
+        Set the parent directory for the new flow directory.
+
+        Parameters
+        ----------
+
+        parent: Directory
+            The parent directory for the new directory.
+
+        Returns
+        -------
+
+        FlowDirectoryBuilder
+            The builder instance. Enables method chaining.
+        """
         self._parent = parent
         return self
 
     def build(self) -> FlowDirectory:
+        """
+        Build the flow directory using the provided configurations.
+
+        This method creates a new flow directory using the configured name
+        and optional parent directory.
+
+        Returns
+        -------
+
+        FlowDirectory
+            The created flow directory.
+
+        Examples
+        --------
+
+        >>> example_flow_dir = app.flow_directory.new("Example Dir").build()
+        """
         directory_id = self.__client.component.create_flow_directory(
             app_id=self._app_id, name=self._name, parent=self._parent
         )
@@ -594,6 +936,24 @@ class FlowDirectoryBuilder:
 
 
 class FlowDirectory(BaseModel):
+    """
+    A flow directory within an app.
+
+    Provides methods to navigate the flow directory hierarchy and retrieve
+    its contents.
+
+    Attributes
+    ----------
+
+    app_id: str
+        The app this directory belongs to.
+
+    directory_id: str
+        Unique identifier of the flow directory.
+
+    name: str
+        Name of the directory.
+    """
     app_id: str = Field(validation_alias="project_id")
     directory_id: str
     name: str
@@ -611,9 +971,27 @@ class FlowDirectory(BaseModel):
         return self
 
     def to_dict(self) -> NamedDirectoryDict:
+        """
+        Convert the flow directory details to a dictionary representation.
+
+        Returns
+        -------
+
+        NamedDirectoryDict
+            Dictionary containing the flow directory details.
+        """
         return {"directory_id": self.directory_id, "type": self.type, "name": self.name}
 
     def directories(self) -> NamedMapping[Self]:
+        """
+        Get the subdirectories in the current flow directory.
+
+        Returns
+        -------
+
+        NamedMapping[FlowDirectory]
+            Mapping of directory IDs.
+        """
         directory_dicts = self.__client.component.get_flow_directories_for_app(
             app_id=self.app_id, parent=self
         )
@@ -628,6 +1006,15 @@ class FlowDirectory(BaseModel):
         return NamedMapping(directories)
 
     def flows(self) -> NamedMapping[Flow]:
+        """
+        Get the flows in the current flow directory.
+
+        Returns
+        -------
+
+        NamedMapping[Flow]
+            Mapping of flow IDs.
+        """
         flow_dicts = self.__client.component.get_flows_for_app(
             app_id=self.app_id, directory_id=self.directory_id
         )
