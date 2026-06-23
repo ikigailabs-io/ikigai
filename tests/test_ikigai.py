@@ -15,6 +15,10 @@ def test_client_init(cred: dict[str, Any]) -> None:
     assert ikigai
 
 
+def test_client_base_url(random_email: str, random_name: str) -> None:
+    _ = Ikigai(user_email=random_email, api_key=random_name)
+
+
 def test_client_init_bad_base_url(cred: dict[str, Any], random_name: str) -> None:
     bad_cred = {
         **cred,

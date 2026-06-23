@@ -44,7 +44,9 @@ class Ikigai:
 
     user_email: EmailStr
     api_key: InitVar[str]
-    base_url: HttpUrl = Field(default=HttpUrl("https://api.ikigailabs.io"))
+    base_url: HttpUrl = Field(
+        default="https://api.ikigailabs.io", validate_default=True
+    )
     ssl: InitVar[SSLConfig | MissingType] = MISSING
     __client: Client = Field(init=False)
 
