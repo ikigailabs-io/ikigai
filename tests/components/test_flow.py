@@ -794,3 +794,21 @@ def test_iplt_7641_flows(
     with pytest.raises(KeyError):
         directory_flows[flow.name]
     assert directory_flows[cloned_flow.name]
+
+
+def test_flow_agent_access(
+    ikigai: Ikigai,
+    app_name: str,
+    flow_name: str,
+    cleanup: ExitStack,
+) -> None:
+    app = ikigai.app.new(name=app_name).description("A test app").build()
+    cleanup.callback(app.delete)
+
+    flow = app.flow.new(name=flow_name).build()
+    flow.update_agent_access(agent_access=True)
+    assert flow.agent_access is True
+    assert app.flows[flow.name].agent_access is True
+    flow.update_agent_access(agent_access=False)
+    assert flow.agent_access is False
+    assert app.flows[flow.name].agent_access is False

@@ -245,6 +245,7 @@ class Dataset(BaseModel):
     size: int
     created_at: datetime
     modified_at: datetime
+    agent_access: bool | None = None
     __client: Client = PrivateAttr()
 
     @classmethod
@@ -264,6 +265,7 @@ class Dataset(BaseModel):
             "size": self.size,
             "created_at": self.created_at,
             "modified_at": self.modified_at,
+            "agent_access": self.agent_access,
         }
 
     def delete(self) -> None:
@@ -312,6 +314,15 @@ class Dataset(BaseModel):
         return self.__client.component.get_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )
+
+    def update_agent_access(self, agent_access: bool) -> Self:
+        _ = self.__client.component.edit_dataset(
+            app_id=self.app_id,
+            dataset_id=self.dataset_id,
+            agent_access=agent_access,
+        )
+        self.agent_access = agent_access
+        return self
 
 
 class DatasetBrowser(ComponentBrowser[Dataset]):
