@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from ikigai.utils.compatibility import Self, StrEnum
@@ -40,13 +41,25 @@ class CustomFacetArgumentType(StrEnum):
         return cls(type_name)
 
     @property
-    def python_type(self) -> type[bool | int | str | float]:
-        return {
+    def python_type(
+        self,
+    ) -> Callable[[bool | int | str | float], bool | int | str | float | None]:
+        _type = {
             CustomFacetArgumentType.BOOLEAN: bool,
             CustomFacetArgumentType.INTEGER: int,
             CustomFacetArgumentType.STRING: str,
             CustomFacetArgumentType.FLOAT: float,
         }[self]
+
+        def cons(value):
+            try:
+                return _type(value)
+            except (TypeError, ValueError):
+                if not value:
+                    return None
+                raise
+
+        return cons
 
     def to_facet_argument_type(self) -> FacetArgumentType:
         return {

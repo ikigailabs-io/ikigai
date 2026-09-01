@@ -121,6 +121,7 @@ class DatasetDict(TypedDict):
     is_optimized: bool
     file_extension: str
     size: int
+    agent_access: bool
     is_visible: bool
     created_at: str
     modified_at: str
@@ -161,6 +162,7 @@ class FlowDict(TypedDict):
     definition: FlowDefinitionDict
     trigger_downstream_pipelines: bool
     high_volume_preference: bool
+    agent_access: bool
     schedule: NotRequired[ScheduleDict]
     last_run: NotRequired[dict]
     next_run: NotRequired[dict]

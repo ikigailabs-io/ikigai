@@ -60,23 +60,20 @@ def test_custom_facet_creation_2(
         """
     )
 
-    # Also test system_access flag but only for pre-setup user
-    system_access = ikigai.user_email == "harsh+github-ci@ikigailabs.io"
-
     facet_types = ikigai.facet_types
+    # Test that system_access flag will be ignored
     custom_facet = (
         ikigai.custom_facet.new(
             name=custom_facet_name, facet_type=facet_types.MID.CUSTOM_FACET
         )
-        .script(
-            script_file, requirements=requirements_file, system_access=system_access
-        )
+        .script(script_file, requirements=requirements_file, system_access=True)
         .description("A test custom facet")
         .build()
     )
     cleanup.callback(custom_facet.delete)
 
     assert custom_facet.name == custom_facet_name
+    assert custom_facet.rootkit_token == "", "Rootkit token should be empty"
 
 
 def test_custom_facet_creation_browsing(

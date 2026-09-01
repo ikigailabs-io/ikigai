@@ -52,14 +52,9 @@ class AccessAPI:
     def __post_init__(self, session: Session) -> None:
         self.__session = session
 
-    def generate_rootkit_token(self, script: str) -> str:
-        # This is a weird endpoint, technically it should be under ComponentAPI
-        # but it is more about giving privileges to a user to run arbitrary code.
-        resp = self.__session.post(
-            path="/component/generate-rootkit-token",
-            json={"script": script},
-        ).json()
-        return resp["token"]
+    def heartbeat(self) -> None:
+        self.__session.get(path="/access/heartbeat", suppress_logging=True)
+        return None
 
 
 @dataclass
@@ -219,7 +214,6 @@ class ComponentAPI:
         tags: list[str],
         python_script: str,
         libraries: list[str],
-        rootkit_token: str,
         arguments: list[CustomFacetArgumentDict],
     ) -> str:
         resp = self.__session.post(
@@ -232,7 +226,6 @@ class ComponentAPI:
                     "tags": tags,
                     "python_script": python_script,
                     "libraries": libraries,
-                    "rootkit_token": rootkit_token,
                     "arguments": arguments,
                 }
             },
@@ -270,7 +263,6 @@ class ComponentAPI:
         tags: list[str] | MissingType = MISSING,
         python_script: str | MissingType = MISSING,
         libraries: list[str] | MissingType = MISSING,
-        rootkit_token: str | MissingType = MISSING,
         arguments: list[CustomFacetArgumentDict] | MissingType = MISSING,
     ) -> str:
         custom_facet: dict[str, Any] = {
@@ -288,8 +280,6 @@ class ComponentAPI:
             custom_facet["python_script"] = python_script
         if libraries is not MISSING:
             custom_facet["libraries"] = libraries
-        if rootkit_token is not MISSING:
-            custom_facet["rootkit_token"] = rootkit_token
         if arguments is not MISSING:
             custom_facet["arguments"] = arguments
 
@@ -409,19 +399,27 @@ class ComponentAPI:
     """
 
     def create_dataset(
-        self, app_id: str, name: str, directory: Directory | None
+        self,
+        app_id: str,
+        name: str,
+        directory: Directory | None,
+        agent_access: bool | None,
     ) -> str:
         directory_dict = (
             cast(dict, directory.to_dict()) if directory is not None else {}
         )
+        dataset: dict[str, Any] = {
+            "project_id": app_id,
+            "name": name,
+            "directory": directory_dict,
+        }
+        if agent_access is not None:
+            dataset["agent_access"] = agent_access
+
         resp = self.__session.post(
             path="/component/create-dataset",
             json={
-                "dataset": {
-                    "project_id": app_id,
-                    "name": name,
-                    "directory": directory_dict,
-                },
+                "dataset": dataset,
             },
         ).json()
         return resp["dataset_id"]
@@ -511,6 +509,7 @@ class ComponentAPI:
         dataset_id: str,
         name: str | MissingType = MISSING,
         directory: Directory | MissingType = MISSING,
+        agent_access: bool | MissingType = MISSING,
     ) -> str:
         dataset: dict[str, Any] = {
             "project_id": app_id,
@@ -521,6 +520,8 @@ class ComponentAPI:
             dataset["name"] = name
         if directory is not MISSING:
             dataset["directory"] = directory.to_dict()
+        if agent_access is not MISSING:
+            dataset["agent_access"] = agent_access
 
         resp = self.__session.post(
             path="/component/edit-dataset",
@@ -610,23 +611,28 @@ class ComponentAPI:
         directory: Directory | None,
         high_volume_preference: bool,
         flow_definition: FlowDefinitionDict,
+        agent_access: bool | None,
         schedule: ScheduleDict | None,
     ) -> str:
         directory_dict = (
             cast(dict, directory.to_dict()) if directory is not None else {}
         )
         schedule_dict = schedule if schedule else None
+        pipeline: dict[str, Any] = {
+            "project_id": app_id,
+            "name": name,
+            "directory": directory_dict,
+            "high_volume_preference": high_volume_preference,
+            "definition": flow_definition,
+            "schedule": schedule_dict,
+        }
+        if agent_access is not None:
+            pipeline["agent_access"] = agent_access
+
         resp = self.__session.post(
             path="/component/create-pipeline",
             json={
-                "pipeline": {
-                    "project_id": app_id,
-                    "name": name,
-                    "directory": directory_dict,
-                    "high_volume_preference": high_volume_preference,
-                    "definition": flow_definition,
-                    "schedule": schedule_dict,
-                },
+                "pipeline": pipeline,
             },
         ).json()
         return resp["pipeline_id"]
@@ -685,6 +691,7 @@ class ComponentAPI:
         directory: Directory | None = None,
         high_volume_preference: bool | None = None,
         flow_definition: FlowDefinitionDict | None = None,
+        agent_access: bool | MissingType = MISSING,
         schedule: ScheduleDict | None | MissingType = MISSING,
     ) -> str:
         pipeline: dict[str, Any] = {
@@ -700,6 +707,8 @@ class ComponentAPI:
             pipeline["high_volume_preference"] = high_volume_preference
         if flow_definition is not None:
             pipeline["definition"] = flow_definition
+        if agent_access is not MISSING:
+            pipeline["agent_access"] = agent_access
         if schedule is not MISSING:
             if schedule is not None:
                 pipeline["schedule"] = schedule

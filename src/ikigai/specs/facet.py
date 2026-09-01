@@ -348,10 +348,13 @@ class CustomFacetArgumentSpec(BaseModel):
     argument_type: CustomFacetArgumentType = Field(
         validation_alias=AliasChoices("type", "argument_type"),
     )
-    value: str | int | float | bool
+    value: str | int | float | bool | None
 
     @model_validator(mode="after")
     def validate_value(self) -> Self:
+        if self.value is None:
+            return self
+
         self.value = self.argument_type.python_type(self.value)
         return self
 

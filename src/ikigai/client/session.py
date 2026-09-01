@@ -10,10 +10,11 @@ from http import HTTPStatus
 from typing import Annotated, Any, TypeAlias
 
 import requests
-from pydantic import ConfigDict, EmailStr, Field, HttpUrl
+from pydantic import ConfigDict, EmailStr, Field, field_validator
 from pydantic.dataclasses import dataclass
 from requests import Response
 
+from ikigai.typing.pydantic_extensions import UrlStr
 from ikigai.utils.compatibility import HTTPMethod
 
 logger = logging.getLogger("ikigai.client")
@@ -28,17 +29,20 @@ CertKeyPair: TypeAlias = Annotated[
 SSLConfig: TypeAlias = bool | PEMfilePath | CertKeyPair
 
 
-@dataclass(
-    config=ConfigDict(arbitrary_types_allowed=True, url_preserve_empty_path=True)
-)
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class Session:
     # Init only vars
     user_email: InitVar[EmailStr]
     api_key: InitVar[str]
     ssl: InitVar[SSLConfig]
 
-    base_url: HttpUrl
+    base_url: UrlStr
     __session: requests.Session = Field(init=False)
+
+    @field_validator("base_url", mode="after")
+    @classmethod
+    def validate_base_url(cls, v: UrlStr) -> UrlStr:
+        return v.rstrip("/")
 
     def __post_init__(self, user_email: EmailStr, api_key: str, ssl: SSLConfig) -> None:
         self.__session = requests.Session()

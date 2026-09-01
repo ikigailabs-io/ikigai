@@ -8,6 +8,7 @@ from ikigai.typing.pydantic_extensions.types import (
     OptionalStr,
     TimestampSerializableDatetime,
     TimestampSerializableOptionalDatetime,
+    UrlStr,
 )
 
 __all__: list[str] = [
@@ -16,4 +17,5 @@ __all__: list[str] = [
     "OptionalStr",
     "TimestampSerializableDatetime",
     "TimestampSerializableOptionalDatetime",
+    "UrlStr",
 ]

@@ -8,25 +8,25 @@ import logging
 from dataclasses import InitVar
 from typing import Any
 
-from pydantic import ConfigDict, EmailStr, Field, HttpUrl
+from pydantic import EmailStr, Field
 from pydantic.dataclasses import dataclass
 from requests import Response
 from requests.exceptions import ConnectionError
 
 from ikigai.client.api import AccessAPI, ComponentAPI, SearchAPI
 from ikigai.client.session import Session, SSLConfig
+from ikigai.typing.pydantic_extensions import UrlStr
 from ikigai.utils.compatibility import HTTPMethod
 
 logger = logging.getLogger("ikigai.client")
 
 
-# Config to avoid extra '/' in url paths: https://pydantic.dev/articles/pydantic-v2-12-release#preserve-empty-url-paths
-@dataclass(config=ConfigDict(url_preserve_empty_path=True))
+@dataclass
 class Client:
     # Init only vars
     user_email: InitVar[EmailStr]
     api_key: InitVar[str]
-    base_url: InitVar[HttpUrl]
+    base_url: InitVar[UrlStr]
     ssl: InitVar[SSLConfig]
 
     __session: Session = Field(init=False)
@@ -35,7 +35,7 @@ class Client:
     __search_api: SearchAPI = Field(init=False)
 
     def __post_init__(
-        self, user_email: EmailStr, api_key: str, base_url: HttpUrl, ssl: SSLConfig
+        self, user_email: EmailStr, api_key: str, base_url: UrlStr, ssl: SSLConfig
     ) -> None:
         self.__session = Session(
             user_email=user_email, api_key=api_key, base_url=base_url, ssl=ssl
@@ -48,7 +48,10 @@ class Client:
         self.__validate_base_url__()
 
     def __validate_base_url__(self) -> None:
-        heartbeats = {"Search": self.__search_api.heartbeat}
+        heartbeats = {
+            "Access": self.__access_api.heartbeat,
+            "Search": self.__search_api.heartbeat,
+        }
         # Validate Base URL by making test requests
         service: str = ""
         try:

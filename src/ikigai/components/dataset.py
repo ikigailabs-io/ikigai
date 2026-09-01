@@ -168,6 +168,7 @@ class DatasetBuilder:
     _name: str
     _data: bytes | None
     _directory: Directory | None
+    _agent_access: bool | None
     __client: Client
 
     def __init__(self, client: Client, app_id: str) -> None:
@@ -176,9 +177,14 @@ class DatasetBuilder:
         self._name = ""
         self._data = None
         self._directory = None
+        self._agent_access = None
 
     def new(self, name: str) -> Self:
         self._name = name
+        return self
+
+    def agent_access(self, agent_access: bool) -> Self:
+        self._agent_access = agent_access
         return self
 
     def df(self, data: pd.DataFrame) -> Self:
@@ -204,7 +210,10 @@ class DatasetBuilder:
             raise ValueError(error_msg)
 
         dataset_id = self.__client.component.create_dataset(
-            app_id=self._app_id, name=self._name, directory=self._directory
+            app_id=self._app_id,
+            name=self._name,
+            directory=self._directory,
+            agent_access=self._agent_access,
         )
 
         try:
@@ -243,6 +252,7 @@ class Dataset(BaseModel):
     file_extension: str
     data_types: dict[str, ColumnDataType]
     size: int
+    agent_access: bool
     created_at: datetime
     modified_at: datetime
     __client: Client = PrivateAttr()
@@ -262,6 +272,7 @@ class Dataset(BaseModel):
             "file_extension": self.file_extension,
             "data_types": self.data_types,
             "size": self.size,
+            "agent_access": self.agent_access,
             "created_at": self.created_at,
             "modified_at": self.modified_at,
         }
@@ -312,6 +323,15 @@ class Dataset(BaseModel):
         return self.__client.component.get_dataset(
             app_id=self.app_id, dataset_id=self.dataset_id
         )
+
+    def update_agent_access(self, agent_access: bool) -> Self:
+        _ = self.__client.component.edit_dataset(
+            app_id=self.app_id,
+            dataset_id=self.dataset_id,
+            agent_access=agent_access,
+        )
+        self.agent_access = agent_access
+        return self
 
 
 class DatasetBrowser(ComponentBrowser[Dataset]):

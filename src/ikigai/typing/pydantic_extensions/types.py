@@ -15,6 +15,7 @@ from ikigai.typing.pydantic_extensions.custom_serializers import (
 from ikigai.typing.pydantic_extensions.custom_validators import (
     cron_str,
     optional_str,
+    url_str,
 )
 
 TimestampSerializableDatetime = Annotated[
@@ -29,3 +30,5 @@ OptionalStr = Annotated[str | None, BeforeValidator(optional_str)]
 LowercaseStr = Annotated[str, StringConstraints(to_lower=True)]
 
 CronStr = Annotated[str, BeforeValidator(cron_str)]
+
+UrlStr = Annotated[str, BeforeValidator(url_str)]

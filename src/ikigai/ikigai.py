@@ -6,18 +6,18 @@ from __future__ import annotations
 
 from dataclasses import InitVar
 
-from pydantic import ConfigDict, EmailStr, Field, HttpUrl
+from pydantic import EmailStr, Field
 from pydantic.dataclasses import dataclass
 
 from ikigai import components, specs
 from ikigai.client import Client, SSLConfig
 from ikigai.typing import ComponentBrowser, NamedMapping
+from ikigai.typing.pydantic_extensions import UrlStr
 from ikigai.utils.compatibility import deprecated
 from ikigai.utils.missing import MISSING, MissingType
 
 
-# Config to avoid extra '/' in url paths: https://pydantic.dev/articles/pydantic-v2-12-release#preserve-empty-url-paths
-@dataclass(config=ConfigDict(url_preserve_empty_path=True))
+@dataclass
 class Ikigai:
     """
     Main Ikigai class to interact with the Ikigai platform.
@@ -44,9 +44,7 @@ class Ikigai:
 
     user_email: EmailStr
     api_key: InitVar[str]
-    base_url: HttpUrl = Field(
-        default="https://api.ikigailabs.io", validate_default=True
-    )
+    base_url: UrlStr = Field(default="https://api.ikigailabs.io", validate_default=True)
     ssl: InitVar[SSLConfig | MissingType] = MISSING
     __client: Client = Field(init=False)
 

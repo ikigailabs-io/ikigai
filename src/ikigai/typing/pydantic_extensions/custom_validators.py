@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
 
 __ONE_HOUR_AS_MINUTES = 60
 __CRON_PARTS = ["minute", "hour", "day", "month", "day_of_week"]
@@ -14,6 +15,29 @@ def optional_str(value: Any) -> str | None:
     if not value:
         return None
     return str(value)
+
+
+def url_str(value: Any) -> str:
+    if not isinstance(value, str):
+        error_msg = "URL must be a string"
+        raise TypeError(error_msg)
+
+    url = value.strip()
+    parts = urlsplit(url)
+
+    if not parts.scheme:
+        error_msg = f"URL must have a scheme (e.g. https), but got {value}"
+        raise ValueError(error_msg)
+
+    if not parts.hostname:
+        error_msg = f"URL must have a host, but got {value}"
+        raise ValueError(error_msg)
+
+    if any(char.isspace() for char in url):
+        error_msg = f"URL must not contain whitespace, but got {value}"
+        raise ValueError(error_msg)
+
+    return url
 
 
 def cron_str(value: Any) -> str:

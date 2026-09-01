@@ -86,6 +86,7 @@ class FlowBuilder:
     _directory: Directory | None
     _high_volume_preference: bool
     _flow_definition: datax.FlowDefinitionDict
+    _agent_access: bool | None
     _schedule: Schedule | None
     __client: Client
 
@@ -116,10 +117,15 @@ class FlowBuilder:
         self._directory = None
         self._high_volume_preference = False
         self._flow_definition = FlowDefinition().to_dict()
+        self._agent_access = None
         self._schedule = None
 
     def new(self, name: str) -> Self:
         self._name = name
+        return self
+
+    def agent_access(self, agent_access: bool) -> Self:
+        self._agent_access = agent_access
         return self
 
     def definition(
@@ -233,6 +239,7 @@ class FlowBuilder:
             directory=self._directory,
             high_volume_preference=self._high_volume_preference,
             flow_definition=self._flow_definition,
+            agent_access=self._agent_access,
             schedule=self._schedule.to_dict() if self._schedule else None,
         )
 
@@ -269,6 +276,7 @@ class Flow(BaseModel):
     app_id: str = Field(validation_alias=AliasChoices("app_id", "project_id"))
     flow_id: str = Field(validation_alias=AliasChoices("flow_id", "pipeline_id"))
     name: str
+    agent_access: bool
     schedule: Schedule | None = None
     created_at: datetime
     modified_at: datetime
@@ -295,6 +303,7 @@ class Flow(BaseModel):
         return {
             "flow_id": self.flow_id,
             "name": self.name,
+            "agent_access": self.agent_access,
             "schedule": self.schedule.to_dict() if self.schedule else None,
             "created_at": self.created_at,
             "modified_at": self.modified_at,
@@ -522,6 +531,15 @@ class Flow(BaseModel):
             progress_bar.update(progress - last_progress)
 
             return run_log
+
+    def update_agent_access(self, agent_access: bool) -> Self:
+        _ = self.__client.component.edit_flow(
+            app_id=self.app_id,
+            flow_id=self.flow_id,
+            agent_access=agent_access,
+        )
+        self.agent_access = agent_access
+        return self
 
 
 class FlowBrowser(ComponentBrowser[Flow]):

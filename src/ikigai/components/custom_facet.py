@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import ast
 import textwrap
+import warnings
 from collections.abc import Mapping
 from datetime import datetime
 from functools import cached_property
@@ -42,7 +43,6 @@ class CustomFacetBuilder:
     _description: str
     _script: str
     _requirements: list[str]
-    _system_access: bool
     _arguments: dict[str, CustomFacetArgumentSpec]
     __client: Client
 
@@ -65,7 +65,6 @@ class CustomFacetBuilder:
         self._description = ""
         self._script = ""
         self._requirements = []
-        self._system_access = False
         self._arguments = {}
 
     def new(self, name: str, facet_type: FacetType) -> Self:
@@ -103,13 +102,6 @@ class CustomFacetBuilder:
 
         You can specify the script and any PyPI libraries,
         as well as the arguments that are required to run the script.
-        By default, the script has limited access to filesystem and environment,
-        but you can request for more access to the environment, filesystem, and syscalls
-        by setting the system_access flag to True.
-
-        Note
-        -----
-        The user must have rootkit access to request system access.
 
         Parameters
         ----------
@@ -124,11 +116,8 @@ class CustomFacetBuilder:
             or be a list of strings each representing a single requirement.
 
         system_access : bool, optional
-            Whether to grant system access to the custom facet, by default False.
-            If True, the custom facet will have unrestricted access to the
-            python environment and libraries.
-            Creating a custom facet with system access will fail if
-            the user does not have rootkit access.
+            Deprecated and will be ignored.
+            If your use case requires system access, please contact support.
 
         arguments : dict[str, str | int | float | bool]
             The arguments for the custom facet script and their default values.
@@ -143,7 +132,6 @@ class CustomFacetBuilder:
         >>> builder.script(
         ...    script="result = data  # no-op",
         ...    requirements=["scikit-learn", "pandas==1.5.2"],
-        ...    system_access=True,
         ...    arguments={"input-1": "input-1"},
         ... )
 
@@ -152,7 +140,6 @@ class CustomFacetBuilder:
         >>> builder.script(
         ...    script=script_file,
         ...    requirements=Path("requirements.txt"),
-        ...    system_access=True,
         ...    arguments={"input-1": "input-1", "input-2": "input-2"},
         ... )
 
@@ -188,7 +175,11 @@ class CustomFacetBuilder:
             for name, value in arguments.items()
         }
 
-        self._system_access = system_access
+        if system_access:
+            warnings.warn(
+                "Setting system access no longer supported, and will be ignored. "
+                "If your use case requires system access, please contact support."
+            )
         return self
 
     def build(self) -> CustomFacet:
@@ -208,13 +199,6 @@ class CustomFacetBuilder:
             error_msg = "Facet type is required to build a CustomFacet"
             raise ValueError(error_msg)
 
-        # If rootkit is required, generate it from the script
-        rootkit_token = (
-            self.__client.access.generate_rootkit_token(script=self._script)
-            if self._system_access
-            else ""
-        )
-
         # Create the custom facet
         arguments = [argument.to_dict() for argument in self._arguments.values()]
 
@@ -225,7 +209,6 @@ class CustomFacetBuilder:
             tags=[],
             python_script=self._script,
             libraries=self._requirements,
-            rootkit_token=rootkit_token,
             arguments=arguments,
         )
 
@@ -415,13 +398,7 @@ class CustomFacet(BaseModel):
 
         You can specify the script and any PyPI libraries,
         as well as the arguments that are required to run the script.
-        By default, the script has limited access to filesystem and environment,
-        but you can request for more access to the environment, filesystem, and syscalls
-        by setting the system_access flag to True.
 
-        Note
-        -----
-        The user must have rootkit access to request system access.
 
         Parameters
         ----------
@@ -436,11 +413,8 @@ class CustomFacet(BaseModel):
             or be a list of strings each representing a single requirement.
 
         system_access : bool, optional
-            Whether to grant system access to the custom facet, by default False.
-            If True, the custom facet will have unrestricted access to the
-            python environment and libraries.
-            Creating a custom facet with system access will fail if
-            the user does not have rootkit access.
+            Deprecated and will be ignored.
+            If your use case requires system access, please contact support.
 
         arguments : dict[str, str | int | float | bool]
             The arguments for the custom facet script and their default values.
@@ -475,12 +449,11 @@ class CustomFacet(BaseModel):
             for name, value in arguments.items()
         }
 
-        # If rootkit is required, generate it from the script
-        rootkit_token = (
-            self.__client.access.generate_rootkit_token(script=script)
-            if system_access
-            else ""
-        )
+        if system_access:
+            warnings.warn(
+                "Setting system access no longer supported, and will be ignored. "
+                "If your use case requires system access, please contact support."
+            )
 
         # Update the custom facet
         arguments_list = [argument.to_dict() for argument in new_arguments.values()]
@@ -490,13 +463,11 @@ class CustomFacet(BaseModel):
             chain_group=self.facet_type.facet_info.chain_group,
             python_script=script,
             libraries=requirements,
-            rootkit_token=rootkit_token,
             arguments=arguments_list,
         )
 
         self.script = script
         self.requirements = requirements
-        self.rootkit_token = rootkit_token
         self.arguments = new_arguments
         return self
 

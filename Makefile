@@ -49,18 +49,24 @@ check:			## Run Linter and Type-Checker
 check: .init
 	hatch run check
 
+.PHONY: bump
+bump:           ## Bump the version string
+bump: .init
+ifdef TAG
+	@./scripts/bump_version.py $(DEV) --part $(TAG)
+else
+	@./scripts/bump_version.py $(DEV)
+endif
+	@git add src/ikigai/__about__.py
+	git commit -m "Bump version to v$$(hatch version)"
+	git push
+
 .PHONY: tag
 tag:			## Create a new tag
 tag: .init
-ifdef TAG
-	@./scripts/tag.py $(DEV) --part $(TAG)
-else
-	@./scripts/tag.py $(DEV)
-endif
-	@git add src/ikigai/__about__.py
-	git commit -m "Bump version to v$$(hatch version)" && git tag "pcl-v$$(hatch version)"
-	@echo "Bumped tag ($(TAG))\nPushing..."
-	git push && git push --tags
+	git tag "pcl-v$$(hatch version)"
+	@echo "Created tag pcl-v$$(hatch version)\nPushing..."
+	git push origin "pcl-v$$(hatch version)"
 
 .PHONY: clean
 clean:			## Clean the workspace
