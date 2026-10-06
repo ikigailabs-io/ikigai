@@ -22,6 +22,18 @@ logger = logging.getLogger("ikigai.components")
 
 
 class FlowVariable(BaseModel):
+    """
+    A mapping from a flow variable to a specific argument on a facet.
+
+    Attributes
+    ----------
+
+    facet_name: str
+        Name of the facet the variable is associated with.
+
+    argument_name: str
+        Name of the argument within the facet that the variable targets.
+    """
     facet_name: str
     argument_name: str = Field(serialization_alias="name")
 
@@ -29,6 +41,12 @@ class FlowVariable(BaseModel):
 
 
 class FacetBuilder:
+    """
+    Builder for constructing a facet.
+
+    Provides a way to configure facet arguments, variables, and arrow
+    connections to other facets.
+    """
     __name: str
     _arguments: dict[str, Any]
     __arrow_builders: list[ArrowBuilder]
@@ -64,6 +82,57 @@ class FacetBuilder:
         args: dict[str, Any] | None = None,
         arrow_args: dict[str, Any] | None = None,
     ) -> FacetBuilder:
+        """
+        Create a new facet and connect it to this facet.
+
+        Parameters
+        ----------
+
+        facet_type: FacetType
+            Type of the new facet.
+
+        name: str
+            Name of the new facet.
+
+        args : dict[str, Any] or None
+            Arguments for the new facet.
+
+        arrow_args : dict[str, Any]
+            Arguments for the connecting arrow between facets. The available
+            options depend on the facet type.
+
+        Returns
+        -------
+
+        FacetBuilder
+            Builder for the new facet.
+
+        Examples
+        --------
+        >>> flow_builder = ikigai.builder
+        >>>
+        >>> facet_1 = (
+        ...         flow_builder.facet(
+        ...             facet_type=facet_types.INPUT.Imported
+        ...         ).arguments(
+        ...             dataset_id="my-input-dataset-id",
+        ...             file_type="csv",
+        ...             header=True,
+        ...             use_raw_file=False,
+        ...         )
+        ... )
+        >>>
+        >>> facet_2 = (
+        ...         facet_1.facet(
+        ...             # Adds a COUNT facet attached to the imported facet.
+        ...             facet_type=facet_types.MID.COUNT
+        ...         ).arguments(
+        ...             output_column_name="count",
+        ...             sort=True,
+        ...             target_columns=["col1", "col2"],
+        ...         )
+        ... )
+        """
         if arrow_args is None:
             arrow_args = {}
 
@@ -78,6 +147,31 @@ class FacetBuilder:
         args: dict[str, Any] | None = None,
         arrow_args: dict[str, Any] | None = None,
     ) -> CustomFacetFacetBuilder:
+        """
+        Create a custom facet and connect it to this facet.
+
+        Parameters
+        ----------
+
+        custom_facet_version: CustomFacetVersion
+            Version of the custom facet.
+
+        name: str, optional
+            Name of the facet.
+
+        args: dict[str, Any], optional
+            Initial arguments.
+
+        arrow_args: dict[str, Any], optional
+            Arguments for the connecting arrow between facets. The available
+            options depend on the facet type.
+
+        Returns
+        -------
+
+        CustomFacetFacetBuilder
+            Builder for the custom facet.
+        """
         if arrow_args is None:
             arrow_args = {}
 
@@ -93,6 +187,35 @@ class FacetBuilder:
         args: dict[str, Any] | None = None,
         arrow_args: dict[str, Any] | None = None,
     ) -> ModelFacetBuilder:
+        """
+        Create a model facet and connect it to this facet.
+
+        Parameters
+        ----------
+
+        facet_type: FacetType
+            Model facet type.
+
+        model_type: ModelType
+            Model type. Use ``model_types.types`` to view all available Ikigai
+            model types.
+
+        name: str
+            Name of the facet.
+
+        args: dict[str, Any]
+            Initial model arguments.
+
+        arrow_args: dict[str, Any]
+            Arguments for the connecting arrow between facets. The available
+            options depend on the facet type.
+
+        Returns
+        -------
+
+        ModelFacetBuilder
+            Builder for the model facet.
+        """
         if arrow_args is None:
             arrow_args = {}
 
@@ -101,57 +224,79 @@ class FacetBuilder:
         ).add_arrow(self, **arrow_args)
 
     def arguments(self, **arguments: Any) -> Self:
+        """
+        Set or update facet arguments.
+
+        Parameters
+        ----------
+
+        **arguments: dict
+            Key-value pairs representing facet arguments.
+
+        Returns
+        -------
+
+        Self
+            Updated builder instance.
+
+        Raises
+        ------
+
+        ValueError
+            If an argument is invalid or fails validation.
+        """
         self._validate_arguments(**arguments)
         return self._update_arguments(**arguments)
 
     def variables(self, **variables: str) -> Self:
         """
-        Add flow variable that target an arguments of this facet.
+        Attach flow variables to this facet's arguments.
 
-        To add a variable targeting an argument of this facet,
-        the facet must have a name.
+        To target an argument with a variable, the facet must have a name.
 
         Parameters
         ----------
-        **variables : dict
-            Any number of keyword arguments where key is the variable name and value is
-            the name of the argument of this facet that it should target.
+
+        **variables: str
+            Keyword arguments where each key is the variable name and each value
+            is the name of the facet argument it targets.
+
+        Returns
+        -------
+        Self
+            The current FacetBuilder object.
+
+        Raises
+        ------
+        RuntimeError
+            If the facet has already been built.
+
+        ValueError
+            If the facet does not have a name.
+
+        ValueError
+            If any specified arguments do not exist on the facet.
+
+        ValueError
+            If any of the arguments are of type ``MAP`` or ``LIST``, which are
+            not currently supported by the Ikigai platform.
 
         Examples
         --------
-        Add a variable called 'dataset' targeting the dataset_id argument
+
+        # Add a variable called 'dataset' targeting the dataset_id argument
         >>> IMPORTED = facet_types.INPUT.IMPORTED
         >>> builder = ikigai.builder
         >>> builder.facet(facet_type=IMPORTED, name="input").variables(
         ...     dataset="dataset_id",
         ... )
 
-        Add a variable called 'dataset' targeting the dataset_name argument
+        # Add a variable called 'dataset' targeting the dataset_name argument
         >>> EXPORTED = facet_types.OUTPUT.EXPORTED
         >>> builder = ikigai.builder
         >>> builder.facet(facet_type=EXPORTED, name="output").variables(
         ...     dataset="dataset_name",
         ... )
-
-        Returns
-        -------
-        Self
-            The current FacetBuilder object
-
-        Raises
-        ------
-        RuntimeError
-            If the facet is already built
-
-        ValueError
-            If the facet does not have a name
-
-        ValueError
-            If any of the arguments do not exist on the facet
-
-        ValueError
-            If any of the arguments are of type MAP or LIST.
-            (Currently ikigai platform does not support MAP or LIST arguments)
         """
         if self.__facet:
             error_msg = "Facet already built, cannot set arguments"
@@ -217,6 +362,70 @@ class FacetBuilder:
         return self
 
     def add_arrow(self, parent: FacetBuilder, /, **args) -> Self:
+        """
+        Add a connection arrow from another facet.
+
+        Parameters
+        ----------
+
+        parent: FacetBuilder
+            Source facet builder.
+
+        **args: dict
+            Configuration arguments for the arrow connection. The available
+            options depend on the facet types involved.
+
+        Returns
+        -------
+
+        Self
+            Updated builder instance.
+
+        Examples
+        --------
+
+        >>> flow_builder = ikigai.builder
+        >>>
+        >>> import_1 = (
+        ...         flow_builder.facet(
+        ...             facet_type=facet_types.INPUT.Imported
+        ...         ).arguments(
+        ...             dataset_id="my-input-dataset-id",
+        ...             file_type="csv",
+        ...             header=True,
+        ...             use_raw_file=False,
+        ...         )
+        ... )  # The first import facet
+        >>>
+        >>> import_2 = (
+        ...         import_1.facet(
+        ...             facet_type=facet_types.INPUT.Imported
+        ...         ).arguments(
+        ...             dataset_id="my-input-dataset-id-2",
+        ...             file_type="csv",
+        ...             header=True,
+        ...             use_raw_file=False,
+        ...         )
+        ... )  # The second import facet
+        >>>
+        >>> union_facet = (
+        ...         flow_builder.facet(
+        ...             facet_type=facet_types.MID.UNION,
+        ...             name="union",
+        ...         )
+        ...         .add_arrow(
+        ...             import_1,
+        ...             table_side="top",
+        ...         )
+        ...         .add_arrow(
+        ...             import_2,
+        ...             table_side="bottom",
+        ...         )
+        ...         .arguments(
+        ...             option="full",
+        ...         )
+        ... )
+        """
         self.__arrow_builders.append(
             ArrowBuilder(source=parent, destination=self, arguments=args)
         )
@@ -264,12 +473,27 @@ class FacetBuilder:
         return self.__facet, self.__arrows
 
     def build(self) -> FlowDefinition:
+        """
+        Build the flow definition using the configurations.
+
+        Returns
+        -------
+
+        FlowDefinition
+            The created flow definition.
+        """
+
         flow_definition = self._builder.build()
         logger.debug("Built flow definition: %s", flow_definition.to_dict())
         return flow_definition
 
 
 class CustomFacetFacetBuilder(FacetBuilder):
+    """
+    Builder for custom facets.
+
+    Supports both standard facet arguments and custom-defined arguments.
+    """
     __custom_facet_type: CustomFacetType
     _custom_facet_arguments: dict[str, Any]
 
@@ -298,6 +522,25 @@ class CustomFacetFacetBuilder(FacetBuilder):
 
     @override
     def arguments(self, **arguments: Any) -> Self:
+        """
+        Set arguments for both standard and custom facet parameters.
+
+        Parameters
+        ----------
+
+        **arguments: Any
+            Argument values.
+
+        Returns
+        -------
+        Self
+            Updated builder instance.
+
+        Raises
+        ------
+        ValueError
+            If any argument is invalid.
+        """
         # if the argument is present in the facet spec, then try to add it directly.
         facet_arguments = {
             name: value
@@ -358,6 +601,36 @@ class CustomFacetFacetBuilder(FacetBuilder):
 
 
 class ModelFacetBuilder(FacetBuilder):
+    """
+    Builder for model facets.
+
+    Configure hyperparameters and parameters according to the model
+    specification.
+
+    Examples
+    --------
+
+    >>> model_facet = (
+    ...     facet_1.model_facet(
+    ...         facet_type=facet_types.MID.PREDICT,
+    ...         model_type=model_types.Linear.Lasso,
+    ...     )
+    ...     .arguments(
+    ...         # Refer to the facet type help for list of arguments
+    ...         model_name="my-model-name",  # Name of existing model in the app
+    ...         model_version="initial",     # Model version to use or train
+    ...     )
+    ...     .hyperparameters(
+    ...         # Refer to the model type help for list of hyperparameters
+    ...         alpha=0.1,
+    ...         fit_intercept=True,
+    ...     )
+    ...     .parameters(
+    ...         # Refer to the model type help for list of model parameters
+    ...         target_column="target_column_name",
+    ...     )
+    ... )
+    """
     __model_type: ModelType
 
     def __init__(
@@ -376,6 +649,30 @@ class ModelFacetBuilder(FacetBuilder):
         self.__model_type = model_type
 
     def hyperparameters(self, **hyperparameters: Any) -> Self:
+        """
+        Set the model hyperparameters.
+
+        Parameters
+        ----------
+
+        **hyperparameters: Any
+            Hyperparameter values.
+
+        Returns
+        -------
+
+        Self
+            Updated builder.
+
+        Raises
+        ------
+
+        ValueError
+            If a hyperparameter is invalid.
+
+        RuntimeError
+            If the model does not support hyperparameters.
+        """
         # Validate the hyperparameters
         self._validate_hyperparameters(**hyperparameters)
 
@@ -406,6 +703,27 @@ class ModelFacetBuilder(FacetBuilder):
         return self
 
     def parameters(self, **parameters: Any) -> Self:
+        """
+        Set model parameters.
+
+        Parameters
+        ----------
+
+        **parameters: Any
+            Parameter values.
+
+        Returns
+        -------
+
+        Self
+            Updated builder.
+
+        Raises
+        ------
+
+        ValueError
+            If a parameter is invalid.
+        """
         self._validate_parameters(**parameters)
         self._update_arguments(parameters=parameters)
         return self
@@ -453,6 +771,21 @@ class ModelFacetBuilder(FacetBuilder):
 
 
 class ArrowBuilder:
+    """
+    Builder for creating arrow connections between facets.
+
+    Attributes
+    ----------
+
+    source: FacetBuilder
+        The source facet of the arrow connection.
+
+    destination: FacetBuilder
+        The destination facet of the arrow connection.
+
+    arguments: dict[str, Any]
+        Arguments that control the behavior of the arrow connection.
+    """
     source: FacetBuilder
     destination: FacetBuilder
     arguments: dict[str, Any]
@@ -473,6 +806,21 @@ class ArrowBuilder:
 
 
 class FlowDefinitionBuilder:
+    """
+    Builder for creating a flow definition.
+
+    The flow definition is used to add and configure facets, including
+    custom and model facets. Once you have created a flow definition, you can
+    build the definition using the FlowBuilder class.
+
+    At a high-level, the process for creating a flow definition is the
+    following:
+
+    - Create a new instance of the FlowBuilder class.
+    - Add facets to the instance of the FlowBuilder class.
+    - Configure the facets.
+    - Build the flow definition.
+    """
     _facets: list[FacetBuilder]
     _variables: dict[str, FlowVariable]
 
@@ -483,6 +831,27 @@ class FlowDefinitionBuilder:
     def facet(
         self, facet_type: FacetType, name: str = "", args: dict[str, Any] | None = None
     ) -> FacetBuilder:
+        """
+        Add a facet to the flow definition.
+
+        Parameters
+        ----------
+
+        facet_type: FacetType
+            The facet type to add.
+
+        name: str
+            Name of the facet.
+
+        args: dict[str, Any] or None
+            Arguments to initialize the facet with.
+
+        Returns
+        -------
+
+        FacetBuilder
+            Builder for the facet.
+        """
         if args is None:
             args = {}
         facet_builder = FacetBuilder(
@@ -497,6 +866,27 @@ class FlowDefinitionBuilder:
         name: str = "",
         args: dict[str, Any] | None = None,
     ) -> CustomFacetFacetBuilder:
+        """
+        Add a custom facet to the flow definition.
+
+        Parameters
+        ----------
+
+        custom_facet_version: CustomFacetVersion
+            The custom facet version to use.
+
+        name: str
+            Name of the custom facet.
+
+        args: dict[str, Any] or None
+            Arguments to initialize the custom facet with.
+
+        Returns
+        -------
+
+        CustomFacetFacetBuilder
+            Builder for the created custom facet.
+        """
         if args is None:
             args = {}
         custom_facet_builder = CustomFacetFacetBuilder(
@@ -512,6 +902,36 @@ class FlowDefinitionBuilder:
         name: str = "",
         args: dict[str, Any] | None = None,
     ) -> ModelFacetBuilder:
+        """
+        Add a model facet to the flow definition.
+
+        Parameters
+        ----------
+
+        facet_type: FacetType
+            The facet type to add.
+
+        model_type: ModelType
+            The model type to add.
+
+        name: str
+            Name of the model facet.
+
+        args: dict[str, Any] or None
+            Arguments to initialize the model facet with.
+
+        Returns
+        -------
+
+        ModelFacetBuilder
+            Builder for the created model facet.
+
+        Raises
+        ------
+
+        ValueError
+            If ``facet_type`` is not a valid facet type.
+        """
         if not facet_type.is_ml_facet():
             error_msg = f"{facet_type.name.title()} is not a known Model Facet"
             raise ValueError(error_msg)
@@ -529,6 +949,15 @@ class FlowDefinitionBuilder:
         return self
 
     def build(self) -> FlowDefinition:
+        """
+        Build the flow definition using the configured facets.
+
+        Returns
+        -------
+
+        FlowDefinition
+            The constructed flow definition.
+        """
         facets: list[Facet] = []
         arrows: list[Arrow] = []
         for idx, facet_builder in enumerate(self._facets):
@@ -545,6 +974,24 @@ class FlowDefinitionBuilder:
 
 
 class Facet(BaseModel):
+    """
+    A facet on the Ikigai platform.
+
+    Attributes
+    ----------
+
+    facet_id: str
+        Unique identifier of the facet.
+
+    facet_uid: str
+        Globally unique identifier for the facet.
+
+    name: str
+        Name of the facet.
+
+    arguments: dict[str, Any]
+        Arguments for the facet.
+    """
     facet_id: str
     facet_uid: str
     name: str = ""
@@ -552,12 +999,45 @@ class Facet(BaseModel):
 
 
 class Arrow(BaseModel):
+    """
+    An arrow connection between two facets.
+
+    Attributes
+    ----------
+
+    source: str
+       The source facet.
+
+    destination: str
+        The destination facet.
+
+    arguments: dict[str, Any]
+        Configuration arguments for the arrow connection.
+    """
     source: str
     destination: str
     arguments: dict[str, Any]
 
 
 class FlowDefinition(BaseModel):
+    """
+    A flow definition.
+
+    Attributes
+    ----------
+
+    facets: list[Facet]
+        List of facets that make up the flow definition.
+
+    arrows: list[Arrow]
+        List of arrow connections between facets.
+
+    variables: dict[str, FlowVariable]
+        Variables associated with the facet.
+
+    model_variables: dict
+        Variables associated with model facets.
+    """
     facets: list[Facet] = Field(default_factory=list)
     arrows: list[Arrow] = Field(default_factory=list)
     variables: dict[str, FlowVariable] = Field(default_factory=dict)
